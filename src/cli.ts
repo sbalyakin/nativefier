@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 
-import electronPackager = require('electron-packager');
+import type { Win32MetadataOptions } from '@electron/packager';
 import * as log from 'loglevel';
 import yargs from 'yargs';
 
@@ -501,8 +501,7 @@ export function initArgs(argv: string[]): yargs.Argv<RawOptions> {
       type: 'string',
     })
     .option('win32metadata', {
-      coerce: (value: string) =>
-        parseJson<electronPackager.Win32MetadataOptions>(value),
+      coerce: (value: string) => parseJson<Win32MetadataOptions>(value),
       description:
         '(windows only) a JSON string of key/value pairs (ProductName, InternalName, FileDescription) to embed as executable metadata',
     })
@@ -546,7 +545,7 @@ export function initArgs(argv: string[]): yargs.Argv<RawOptions> {
 
   // We must access argv in order to get yargs to actually process args
   // Do this now to go ahead and get any errors out of the way
-  args.argv as YargsArgvSync<RawOptions>;
+  void (args.argv as YargsArgvSync<RawOptions>);
 
   return args as yargs.Argv<RawOptions>;
 }
@@ -674,11 +673,10 @@ if (require.main === module) {
   if (options.verbose) {
     log.setLevel('trace');
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      require('debug').enable('electron-packager');
-    } catch (err: unknown) {
+      require('debug').enable('@electron/packager');
+    } catch {
       log.debug(
-        'Failed to enable electron-packager debug output. This should not happen,',
+        'Failed to enable @electron/packager debug output. This should not happen,',
         'and suggests their internals changed. Please report an issue.',
       );
     }

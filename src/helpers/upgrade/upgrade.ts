@@ -117,15 +117,15 @@ function getInfoPListOptions(
       bundleVersion === undefined || bundleVersion === '1.0.0' // If it's 1.0.0, that's just the default
         ? undefined
         : bundleVersion;
-    (newOptions.darwinDarkModeSupport =
+    newOptions.darwinDarkModeSupport =
       newOptions.darwinDarkModeSupport === undefined
         ? undefined
-        : newOptions.darwinDarkModeSupport === false),
-      log.debug(
-        `Extracted app version from Info.plist: ${
-          newOptions.appVersion as string
-        }`,
-      );
+        : newOptions.darwinDarkModeSupport === false;
+    log.debug(
+      `Extracted app version from Info.plist: ${
+        newOptions.appVersion as string
+      }`,
+    );
   }
 
   if (newOptions.darwinDarkModeSupport === undefined) {
@@ -227,6 +227,9 @@ export function useOldAppOptions(
   log.debug('oldApp', oldApp);
 
   const combinedOptions = { ...rawOptions, ...oldApp.options };
+  if (Array.isArray(combinedOptions.icon)) {
+    combinedOptions.icon = combinedOptions.icon[0];
+  }
 
   log.debug('Combined options', combinedOptions);
 

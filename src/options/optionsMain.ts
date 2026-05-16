@@ -6,17 +6,17 @@ import * as log from 'loglevel';
 
 // package.json is `require`d to let tsc strip the `src` folder by determining
 // baseUrl=src. A static import would prevent that and cause an ugly extra `src` folder in `lib`
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
 const packageJson: {
   name: string;
   version: string;
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
 } = require('../../package.json');
 import {
   DEFAULT_ELECTRON_VERSION,
   PLACEHOLDER_APP_DIR,
   ELECTRON_MAJOR_VERSION,
 } from '../constants';
+import type { SupportedArch, SupportedPlatform } from '@electron/packager';
 import { inferPlatform, inferArch } from '../infer/inferOs';
 import { asyncConfig } from './asyncConfig';
 import {
@@ -32,13 +32,13 @@ const SEMVER_VERSION_NUMBER_REGEX = /\d+\.\d+\.\d+[-_\w\d.]*/;
 /**
  * Process and validate raw user arguments
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+
 export async function getOptions(rawOptions: RawOptions): Promise<AppOptions> {
   const options: AppOptions = {
     packager: {
       appCopyright: rawOptions.appCopyright,
       appVersion: rawOptions.appVersion,
-      arch: rawOptions.arch ?? inferArch(),
+      arch: (rawOptions.arch ?? inferArch()) as SupportedArch,
       asar: rawOptions.asar ?? rawOptions.conceal ?? false,
       buildVersion: rawOptions.buildVersion,
       darwinDarkModeSupport: rawOptions.darwinDarkModeSupport ?? false,
@@ -49,13 +49,13 @@ export async function getOptions(rawOptions: RawOptions): Promise<AppOptions> {
       out: rawOptions.out ?? process.cwd(),
       overwrite: rawOptions.overwrite,
       quiet: rawOptions.quiet ?? false,
-      platform: rawOptions.platform,
+      platform: rawOptions.platform as SupportedPlatform | undefined,
       portable: rawOptions.portable ?? false,
       targetUrl:
         rawOptions.targetUrl === undefined
           ? '' // We'll plug this in later via upgrade
           : normalizeUrl(rawOptions.targetUrl),
-      tmpdir: false, // workaround for electron-packager#375
+      tmpdir: false, // workaround for packager issue #375
       upgrade: rawOptions.upgrade !== undefined ? true : false,
       upgradeFrom:
         (rawOptions.upgradeFrom as string) ??
@@ -128,10 +128,10 @@ export async function getOptions(rawOptions: RawOptions): Promise<AppOptions> {
   if (options.nativefier.verbose) {
     log.setLevel('trace');
     try {
-      debug.enable('electron-packager');
+      debug.enable('@electron/packager');
     } catch (err: unknown) {
       log.error(
-        'Failed to enable electron-packager debug output. This should not happen,',
+        'Failed to enable @electron/packager debug output. This should not happen,',
         'and suggests their internals changed. Please report an issue.',
         err,
       );
@@ -208,7 +208,9 @@ export async function getOptions(rawOptions: RawOptions): Promise<AppOptions> {
     );
   }
 
-  options.packager.platform = normalizePlatform(options.packager.platform);
+  options.packager.platform = normalizePlatform(
+    options.packager.platform,
+  ) as SupportedPlatform;
 
   if (
     options.nativefier.maxWidth &&

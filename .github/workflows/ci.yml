@@ -18,11 +18,11 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js 20
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: |
             npm-shrinkwrap.json
@@ -36,11 +36,11 @@ jobs:
   playwright:
     runs-on: windows-latest # Doesn't work on headless ubuntu, and is slow on mac
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js 20
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: |
             npm-shrinkwrap.json
@@ -59,14 +59,14 @@ jobs:
     strategy:
       matrix:
         node-version:
-          - '20'
-          - '16' # the oldest we require in package.json -> engines.node, to check we run on this minimum
+          - '22'
+          - '24'
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'

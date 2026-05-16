@@ -5,7 +5,7 @@ jest.mock('./windowHelpers');
 import { dialog, BrowserWindow, HandlerDetails, WebContents } from 'electron';
 import { WindowOptions } from '../../../shared/src/options/model';
 import { linkIsInternal, openExternal, nativeTabsSupported } from './helpers';
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
 const {
   onNewWindowHelper,
   onWillNavigate,

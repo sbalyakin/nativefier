@@ -7,10 +7,10 @@ jobs:
   playwright:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2 # Setup .npmrc file to publish to npm
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4 # Setup .npmrc file to publish to npm
         with:
-          node-version: '20' # Align the version of Node here with ci.yml.
+          node-version: '24' # Align the version of Node here with ci.yml.
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci --no-fund # Will also (via `prepare` hook): 1. install ./app, 2. build
       - run: npm run test:playwright
@@ -20,10 +20,10 @@ jobs:
     needs: playwright
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2 # Setup .npmrc file to publish to npm
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4 # Setup .npmrc file to publish to npm
         with:
-          node-version: '20' # Align the version of Node here with ci.yml.
+          node-version: '24' # Align the version of Node here with ci.yml.
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci --no-fund # Will also (via `prepare` hook): 1. install ./app, 2. build
       - run: npm run test:noplaywright
@@ -36,7 +36,7 @@ jobs:
     needs: [ playwright, build ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build Docker image
         run: docker build . --file Dockerfile --tag "nativefier/nativefier:latest"
       - name: Login to Docker Hub

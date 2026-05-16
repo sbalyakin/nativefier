@@ -1,6 +1,11 @@
-import { CreateOptions } from '@electron/asar';
+import type { CreateOptions } from '@electron/asar';
+import type {
+  Options as PackagerOptions,
+  SupportedArch,
+  SupportedPlatform,
+  Win32MetadataOptions,
+} from '@electron/packager';
 import { randomUUID } from 'crypto';
-import * as electronPackager from 'electron-packager';
 
 export type TitleBarValue =
   | 'default'
@@ -9,13 +14,18 @@ export type TitleBarValue =
   | 'customButtonsOnHover';
 export type TrayValue = 'true' | 'false' | 'start-in-tray';
 
-export interface ElectronPackagerOptions extends electronPackager.Options {
-  arch: string;
+export interface ElectronPackagerOptions extends Omit<
+  PackagerOptions,
+  'icon' | 'arch' | 'platform'
+> {
+  arch: SupportedArch;
   portable: boolean;
-  platform?: string;
+  platform?: SupportedPlatform;
   targetUrl: string;
   upgrade: boolean;
   upgradeFrom?: string;
+  /** Nativefier always uses a single filesystem path for the app icon. */
+  icon?: string;
 }
 
 export interface AppOptions {
@@ -200,7 +210,7 @@ export type RawOptions = {
   versionString?: string;
   widevine?: boolean;
   width?: number;
-  win32metadata?: electronPackager.Win32MetadataOptions;
+  win32metadata?: Win32MetadataOptions;
   x?: number;
   y?: number;
   zoom?: number;
@@ -231,7 +241,7 @@ export function outputOptionsToWindowOptions(
     autoHideMenuBar: !options.showMenuBar,
     insecure: options.insecure ?? false,
     tabbingIdentifier: generateTabbingIdentifierIfMissing
-      ? options.tabbingIdentifier ?? randomUUID()
+      ? (options.tabbingIdentifier ?? randomUUID())
       : options.tabbingIdentifier,
     zoom: options.zoom ?? 1.0,
   };

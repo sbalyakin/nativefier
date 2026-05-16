@@ -1,9 +1,9 @@
-import {
+import electron, {
   BrowserWindow,
   ContextMenuParams,
   Event as ElectronEvent,
 } from 'electron';
-import contextMenu from 'electron-context-menu';
+import contextMenu, { type Actions } from 'electron-context-menu';
 
 import { nativeTabsSupported, openExternal } from '../helpers/helpers';
 import * as log from '../helpers/loggingHelper';
@@ -20,12 +20,21 @@ export function initContextMenu(
 ): void {
   log.debug('initContextMenu');
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   contextMenu({
-    prepend: (actions: contextMenu.Actions, params: ContextMenuParams) => {
-      log.debug('contextMenu.prepend', { actions, params });
+    window,
+    prepend: (
+      _actions: Actions,
+      params: ContextMenuParams,
+      browserWindow:
+        | BrowserWindow
+        | electron.BrowserView
+        | electron.WebviewTag
+        | electron.WebContents,
+      _event: ElectronEvent,
+    ) => {
+      log.debug('contextMenu.prepend', { params, browserWindow });
       const items = [];
-      if (params.linkURL && window) {
+      if (params.linkURL && browserWindow) {
         items.push({
           label: 'Open Link in Default Browser',
           click: () => {
@@ -44,31 +53,11 @@ export function initContextMenu(
               // window,
             ),
         });
-        if (nativeTabsSupported()) {
+        if (nativeTabsSupported() && browserWindow instanceof BrowserWindow) {
           items.push({
             label: 'Open Link in New Tab',
             click: () =>
-              // // Fire a new window event for a foreground tab
-              // // Previously we called createNewTab directly, but it had incosistent and buggy behavior
-              // // as it was mostly designed for running off of events. So this will create a new event
-              // // for a foreground-tab for the event handler to grab and take care of instead.
-              // (window as BrowserWindow).webContents.emit(
-              //   // event name
-              //   'new-window',
-              //   // event object
-              //   {
-              //     // Leave to the default for a NewWindowWebContentsEvent
-              //     newGuest: undefined,
-              //     ...new Event('new-window'),
-              //   }, // as NewWindowWebContentsEvent,
-              //   // url
-              //   params.linkURL,
-              //   // frameName
-              //   window?.webContents.mainFrame.name ?? '',
-              //   // disposition
-              //   'foreground-tab',
-              // ),
-              window.emit('new-window-for-tab', {
+              browserWindow.emit('new-window-for-tab', {
                 ...new Event('new-window-for-tab'),
                 url: params.linkURL,
               } as ElectronEvent<{ url: string }>),

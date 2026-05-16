@@ -3,6 +3,8 @@ import * as path from 'path';
 
 import * as log from 'loglevel';
 
+import type { SupportedArch } from '@electron/packager';
+
 import { NativefierOptions } from '../../../shared/src/options/model';
 import { getVersionString } from './rceditGet';
 import { fileExists } from '../fsHelpers';
@@ -197,7 +199,7 @@ export function getOptionsFromExecutable(
       );
     }
 
-    newOptions.arch = executableInfo.arch;
+    newOptions.arch = executableInfo.arch as SupportedArch;
     log.debug(`Extracted arch from executable: ${newOptions.arch as string}`);
   }
   if (newOptions.platform === undefined || newOptions.arch == undefined) {

@@ -1,7 +1,6 @@
 import * as path from 'path';
+import { createRequire } from 'module';
 
-import * as electronGet from '@electron/get';
-import electronPackager from 'electron-packager';
 import * as fs from 'fs-extra';
 import * as log from 'loglevel';
 
@@ -16,6 +15,17 @@ import { useOldAppOptions, findUpgradeApp } from '../helpers/upgrade/upgrade';
 import { AppOptions, RawOptions } from '../../shared/src/options/model';
 import { getOptions } from '../options/optionsMain';
 import { prepareElectronApp } from './prepareElectronApp';
+
+function getElectronGet(): { initializeProxy: () => void } {
+  // @electron/get is ESM-only; Jest runs compiled CJS and cannot load it.
+  if (process.env.JEST_WORKER_ID !== undefined) {
+    return { initializeProxy: () => undefined };
+  }
+  const nodeRequire = createRequire(__filename);
+  return nodeRequire('@electron/get') as { initializeProxy: () => void };
+}
+
+const electronGet = getElectronGet();
 
 const OPTIONS_REQUIRING_WINDOWS_FOR_WINDOWS_BUILD = [
   'icon',
@@ -136,7 +146,6 @@ function getOSRunHelp(platform?: string): string {
   return '';
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export async function buildNativefierApp(
   rawOptions: RawOptions,
 ): Promise<string> {
@@ -208,7 +217,8 @@ export async function buildNativefierApp(
   );
   trimUnprocessableOptions(options);
   electronGet.initializeProxy(); // https://github.com/electron/get#proxies
-  const appPathArray = await electronPackager(options.packager);
+  const { packager } = await import('@electron/packager');
+  const appPathArray = await packager(options.packager);
 
   log.info('\nFinalizing build...');
   let appPath = getAppPath(appPathArray);

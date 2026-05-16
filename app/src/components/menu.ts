@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import path from 'path';
 
 import {
+  BaseWindow,
   BrowserWindow,
   clipboard,
   Menu,
@@ -40,6 +41,13 @@ type BookmarksMenuConfig = {
   menuLabel: string;
   bookmarks: BookmarkConfig[];
 };
+
+function focusedBrowserWindow(
+  focusedWindow: BaseWindow | undefined,
+  fallback: BrowserWindow,
+): BrowserWindow {
+  return (focusedWindow ?? fallback) as BrowserWindow;
+}
 
 export function createMenu(
   options: OutputOptions,
@@ -130,17 +138,15 @@ export function generateMenu(
         label: 'Clear App Data',
         click: (
           item: MenuItem,
-          focusedWindow: BrowserWindow | undefined,
+          focusedWindow: BaseWindow | undefined,
         ): void => {
           log.debug('Clear App Data.click', {
             item,
             focusedWindow,
             mainWindow,
           });
-          if (!focusedWindow) {
-            focusedWindow = mainWindow;
-          }
-          clearAppData(focusedWindow).catch((err) =>
+          const target = focusedBrowserWindow(focusedWindow, mainWindow);
+          clearAppData(target).catch((err) =>
             log.error('clearAppData ERROR', err),
           );
         },
@@ -189,23 +195,25 @@ export function generateMenu(
         visible: mainWindow.isFullScreenable() || isOSX(),
         click: (
           item: MenuItem,
-          focusedWindow: BrowserWindow | undefined,
+          focusedWindow: BaseWindow | undefined,
         ): void => {
           log.debug('Toggle Full Screen.click()', {
             item,
             focusedWindow,
-            isFullScreen: focusedWindow?.isFullScreen(),
-            isFullScreenable: focusedWindow?.isFullScreenable(),
+            isFullScreen: focusedBrowserWindow(
+              focusedWindow,
+              mainWindow,
+            ).isFullScreen(),
+            isFullScreenable: focusedBrowserWindow(
+              focusedWindow,
+              mainWindow,
+            ).isFullScreenable(),
           });
-          if (!focusedWindow) {
-            focusedWindow = mainWindow;
-          }
-          if (focusedWindow.isFullScreenable()) {
-            focusedWindow.setFullScreen(!focusedWindow.isFullScreen());
+          const w = focusedBrowserWindow(focusedWindow, mainWindow);
+          if (w.isFullScreenable()) {
+            w.setFullScreen(!w.isFullScreen());
           } else if (isOSX()) {
-            focusedWindow.setSimpleFullScreen(
-              !focusedWindow.isSimpleFullScreen(),
-            );
+            w.setSimpleFullScreen(!w.isSimpleFullScreen());
           }
         },
       },
@@ -256,12 +264,12 @@ export function generateMenu(
       {
         label: 'Toggle Developer Tools',
         accelerator: isOSX() ? 'Alt+Cmd+I' : 'Ctrl+Shift+I',
-        click: (item: MenuItem, focusedWindow: BrowserWindow | undefined) => {
+        click: (item: MenuItem, focusedWindow: BaseWindow | undefined) => {
           log.debug('Toggle Developer Tools.click()', { item, focusedWindow });
-          if (!focusedWindow) {
-            focusedWindow = mainWindow;
-          }
-          focusedWindow.webContents.toggleDevTools();
+          focusedBrowserWindow(
+            focusedWindow,
+            mainWindow,
+          ).webContents.toggleDevTools();
         },
       },
     );

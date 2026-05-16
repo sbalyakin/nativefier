@@ -19,7 +19,7 @@ describe('initArgs + parseArgs', () => {
     const mockLog = jest.spyOn(console, 'log').mockImplementation();
     initArgs(['https://www.google.com', '--help']);
     expect(mockExit).toHaveBeenCalledTimes(1);
-    expect(mockLog).toBeCalled();
+    expect(mockLog).toHaveBeenCalled();
     mockLog.mockRestore();
   });
 
@@ -28,7 +28,7 @@ describe('initArgs + parseArgs', () => {
     const mockLog = jest.spyOn(console, 'log').mockImplementation();
     initArgs(['https://www.google.com', '--version']);
     expect(mockExit).toHaveBeenCalledTimes(1);
-    expect(mockLog).toBeCalled();
+    expect(mockLog).toHaveBeenCalled();
     mockLog.mockRestore();
   });
 
@@ -179,7 +179,7 @@ describe('initArgs + parseArgs', () => {
     const mockError = jest.spyOn(console, 'error').mockImplementation();
     initArgs(['https://google.com', `--${arg}`, badValue]);
     expect(mockExit).toHaveBeenCalledTimes(1);
-    expect(mockError).toBeCalled();
+    expect(mockError).toHaveBeenCalled();
     mockExit.mockClear();
     mockError.mockClear();
 
@@ -191,7 +191,7 @@ describe('initArgs + parseArgs', () => {
 
       initArgs(['https://google.com', `-${shortArg}`, badValue]);
       expect(mockExit).toHaveBeenCalledTimes(1);
-      expect(mockError).toBeCalled();
+      expect(mockError).toHaveBeenCalled();
     }
     mockError.mockRestore();
   });

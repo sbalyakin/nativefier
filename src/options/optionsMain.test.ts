@@ -1,3 +1,4 @@
+import type { SupportedArch, SupportedPlatform } from '@electron/packager';
 import { getOptions, normalizePlatform } from './optionsMain';
 import * as asyncConfig from './asyncConfig';
 import { inferPlatform } from '../infer/inferOs';
@@ -60,9 +61,9 @@ const mockedAsyncConfig: AppOptions = {
     zoom: 1,
   },
   packager: {
-    arch: process.arch,
+    arch: process.arch as SupportedArch,
     dir: '',
-    platform: process.platform,
+    platform: process.platform as SupportedPlatform,
     portable: false,
     targetUrl: '',
     upgrade: false,

@@ -4,7 +4,7 @@
  * would delay the attachment till after the event has been raised.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  injectScripts(); // eslint-disable-line @typescript-eslint/no-use-before-define
+  injectScripts();
 });
 
 import * as fs from 'fs';

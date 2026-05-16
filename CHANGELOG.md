@@ -1,4 +1,14 @@
 
+53.0.0 / 2026-05-15
+===================
+  **[BREAKING]**
+  * Require **Node.js 22.12+** (aligned with `@electron/packager` 20 and modern CI).
+  * Default **Electron 42.1** with matching Chrome user-agent defaults.
+  * Replace deprecated `electron-packager` with **`@electron/packager`**, upgrade **`@electron/asar`** to 4.x.
+  * **ESLint 9** flat config (`eslint.config.mjs`), **Jest 30**, **Playwright** refresh, **TypeScript 5.7**.
+  * App dependencies: **electron-context-menu** 4.x, **electron-dl** 4.x.
+  * Jest: all test scripts set `NODE_OPTIONS=--experimental-vm-modules` (via **cross-env**) so ESM `@electron/packager` loads under Jest; Playwright e2e updated for npmjs.com title and login submit race.
+
 52.0.0 / 2023-08-25
 ===================
   **[BREAKING]**

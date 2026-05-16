@@ -14,7 +14,7 @@ test('it returns the correct title', async () => {
     status: 200,
     statusText: 'OK',
     headers: {},
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     config: {} as unknown as InternalAxiosRequestConfig<unknown>,
   };
   axiosGetMock.mockResolvedValue(mockedResponse);

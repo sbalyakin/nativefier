@@ -17,16 +17,30 @@ import {
 } from '../shared/src/options/model';
 import { parseJson } from './utils/parseUtils';
 
+// Stable icon path for integration builds (target sites often return 403 to scrapers).
+function integrationTestIconPath(): string {
+  return path.join(
+    __dirname,
+    '..',
+    'node_modules',
+    '@jest',
+    'reporters',
+    'assets',
+    'jest_logo.png',
+  );
+}
+
 async function checkApp(
   appRoot: string,
   inputOptions: RawOptions,
 ): Promise<void> {
   const arch = inputOptions.arch ? inputOptions.arch : inferArch();
+  const appName = inputOptions.name ?? 'npm';
   if (inputOptions.out !== undefined) {
     expect(
       path.join(
         inputOptions.out,
-        `npm-${inputOptions.platform as string}-${arch}`,
+        `${appName}-${inputOptions.platform as string}-${arch}`,
       ),
     ).toBe(appRoot);
   }
@@ -34,7 +48,7 @@ async function checkApp(
   let relativeResourcesDir = 'resources';
 
   if (inputOptions.platform === 'darwin') {
-    relativeResourcesDir = path.join('npm.app', 'Contents', 'Resources');
+    relativeResourcesDir = path.join(`${appName}.app`, 'Contents', 'Resources');
   }
 
   const appPath = path.join(appRoot, relativeResourcesDir, 'app');
@@ -54,8 +68,8 @@ async function checkApp(
     inputOptions.platform === 'darwin'
       ? path.join('..', 'electron.icns')
       : inputOptions.platform === 'linux'
-      ? 'icon.png'
-      : 'icon.ico';
+        ? 'icon.png'
+        : 'icon.ico';
   const iconPath = path.join(appPath, iconFile);
   expect(fs.existsSync(iconPath)).toEqual(true);
   expect(fs.statSync(iconPath).size).toBeGreaterThan(1000);
@@ -114,7 +128,9 @@ describe('Nativefier', () => {
     async (platform) => {
       const tempDirectory = getTempDir('integtest');
       const options: RawOptions = {
+        icon: integrationTestIconPath(),
         lang: 'en-US',
+        name: 'npm',
         out: tempDirectory,
         overwrite: true,
         platform,
@@ -175,6 +191,8 @@ describe('Nativefier upgrade', () => {
       const options: RawOptions = {
         electronVersion: '11.2.3',
         globalShortcuts: shortcuts,
+        icon: integrationTestIconPath(),
+        name: 'npm',
         out: tempDirectory,
         overwrite: true,
         targetUrl: 'https://npmjs.com/',

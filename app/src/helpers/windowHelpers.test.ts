@@ -156,7 +156,7 @@ describe('injectCSS', () => {
 
     window.webContents.emit('did-navigate');
     // @ts-expect-error this function doesn't exist in the actual electron version, but will in our mock
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
     window.webContents.session.webRequest.send('onResponseStarted', {
       responseHeaders,
       webContents: window.webContents,
@@ -186,7 +186,7 @@ describe('injectCSS', () => {
       expect(window.webContents.emit('did-navigate')).toBe(true);
       mockWebContentsInsertCSS.mockReset().mockResolvedValue(undefined);
       // @ts-expect-error this function doesn't exist in the actual electron version, but will in our mock
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
       window.webContents.session.webRequest.send('onResponseStarted', {
         responseHeaders,
         webContents: window.webContents,
@@ -218,7 +218,7 @@ describe('injectCSS', () => {
       window.webContents.emit('did-navigate');
       mockWebContentsInsertCSS.mockReset().mockResolvedValue(undefined);
       // @ts-expect-error this function doesn't exist in the actual electron version, but will in our mock
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
       window.webContents.session.webRequest.send('onResponseStarted', {
         responseHeaders,
         webContents: window.webContents,
@@ -248,7 +248,7 @@ describe('injectCSS', () => {
       window.webContents.emit('did-navigate');
       mockWebContentsInsertCSS.mockReset().mockResolvedValue(undefined);
       // @ts-expect-error this function doesn't exist in the actual electron version, but will in our mock
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
       window.webContents.session.webRequest.send('onResponseStarted', {
         responseHeaders,
         webContents: window.webContents,
@@ -279,7 +279,7 @@ describe('injectCSS', () => {
       window.webContents.emit('did-navigate');
       mockWebContentsInsertCSS.mockReset().mockResolvedValue(undefined);
       // @ts-expect-error this function doesn't exist in the actual electron version, but will in our mock
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
       window.webContents.session.webRequest.send('onResponseStarted', {
         responseHeaders,
         webContents: window.webContents,

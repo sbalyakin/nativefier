@@ -1,3 +1,4 @@
+import type { SupportedArch, SupportedPlatform } from '@electron/packager';
 import { AppOptions } from '../../../shared/src/options/model';
 import { processOptions } from './fields';
 describe('fields', () => {
@@ -60,9 +61,9 @@ describe('fields', () => {
         zoom: 1,
       },
       packager: {
-        arch: process.arch,
+        arch: process.arch as SupportedArch,
         dir: '',
-        platform: process.platform,
+        platform: process.platform as SupportedPlatform,
         portable: false,
         targetUrl: '',
         upgrade: false,

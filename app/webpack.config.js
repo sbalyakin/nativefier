@@ -21,7 +21,7 @@ module.exports = {
   },
   // Prevent bundling of certain imported packages and instead retrieve these
   // external deps at runtime. This is what we want for electron, placed in the
-  // app by electron-packager. https://webpack.js.org/configuration/externals/
+  // app by @electron/packager. https://webpack.js.org/configuration/externals/
   externals: {
     electron: 'commonjs electron',
   },

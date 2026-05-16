@@ -189,7 +189,8 @@ function setupCloseEvent(options: OutputOptions, window: BrowserWindow): void {
         window.moveTabToNewWindow();
       }
       window.setFullScreen(false);
-      window.once('leave-full-screen', (event: Event) =>
+      // Use the outer `close` event for preventDefault; `leave-full-screen` has no event in Electron 42 typings.
+      window.once('leave-full-screen', () =>
         hideWindow(
           window,
           event,
@@ -284,7 +285,7 @@ function setupSessionInteraction(window: BrowserWindow): void {
 
           // Call func with funcArgs
           // @ts-expect-error accessing a func by string name
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
           result.value = window.webContents.session[request.func](
             ...request.funcArgs,
           );
