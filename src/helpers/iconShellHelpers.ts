@@ -1,8 +1,41 @@
+import * as fs from 'fs';
 import * as path from 'path';
 import { spawnSync } from 'child_process';
 
 import { isWindows, isOSX, getTempDir } from './helpers';
 import * as log from 'loglevel';
+
+function runSips(args: string[]): void {
+  const { status, stderr } = spawnSync('sips', args, { encoding: 'utf8' });
+  if (status) {
+    throw new Error(
+      `sips ${args.join(' ')} failed with status ${status}: ${stderr}`,
+    );
+  }
+}
+
+/**
+ * Indexed-color PNGs from favicon services break iconutil and produce a generic
+ * Electron-looking .icns on recent macOS. Re-encode as RGB via a JPEG roundtrip.
+ */
+export function normalizePngForIcns(pngPath: string): void {
+  if (!isOSX() || path.extname(pngPath).toLowerCase() !== '.png') {
+    return;
+  }
+
+  const jpgPath = `${pngPath}.nativefier-rgb.jpg`;
+  log.debug('Normalizing PNG for .icns conversion:', pngPath);
+  try {
+    runSips(['-s', 'format', 'jpeg', pngPath, '--out', jpgPath]);
+    runSips(['-s', 'format', 'png', jpgPath, '--out', pngPath]);
+  } finally {
+    try {
+      fs.unlinkSync(jpgPath);
+    } catch {
+      // ignore missing temp file
+    }
+  }
+}
 
 const SCRIPT_PATHS = {
   singleIco: path.join(__dirname, '../..', 'icon-scripts/singleIco'),
@@ -79,6 +112,8 @@ export function convertToIcns(icoSrc: string): string {
   if (!isOSX()) {
     throw new Error('macOS is required to convert to a .icns icon');
   }
+
+  normalizePngForIcns(icoSrc);
 
   return iconShellHelper(
     SCRIPT_PATHS.convertToIcns,

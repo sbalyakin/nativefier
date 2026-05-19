@@ -11,6 +11,7 @@ import {
   getAllowedIconFormats,
   getTempDir,
 } from '../helpers/helpers';
+import { getHostnameFromUrl } from '../helpers/urlHelpers';
 import * as log from 'loglevel';
 
 const writeFileAsync = promisify(writeFile);
@@ -98,6 +99,32 @@ async function inferIconFromStore(
   return downloadFile(iconUrl);
 }
 
+async function inferIconFromFaviconService(
+  targetUrl: string,
+): Promise<DownloadResult | undefined> {
+  const hostname = getHostnameFromUrl(targetUrl);
+  if (!hostname) {
+    log.debug('Invalid URL for favicon service:', targetUrl);
+    return undefined;
+  }
+
+  const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`;
+  log.debug(`Trying favicon service for ${hostname}`);
+  try {
+    const result = await downloadFile(faviconUrl);
+    if (!result?.data?.length) {
+      return undefined;
+    }
+    return {
+      data: result.data,
+      ext: '.png',
+    };
+  } catch (err: unknown) {
+    log.debug('Favicon service failed:', err);
+    return undefined;
+  }
+}
+
 export async function inferIcon(
   targetUrl: string,
   platform: string,
@@ -110,14 +137,21 @@ export async function inferIcon(
   if (!icon) {
     const ext = platform === 'win32' ? '.ico' : '.png';
     log.debug(`Trying to extract a ${ext} icon from the page.`);
-    icon = await pageIcon(targetUrl, { ext });
+    try {
+      icon = await pageIcon(targetUrl, { ext });
+    } catch (err: unknown) {
+      log.debug('Page icon extraction failed:', err);
+    }
+  }
+  if (!icon) {
+    icon = await inferIconFromFaviconService(targetUrl);
   }
   if (!icon) {
     return undefined;
   }
   log.debug(`Got an icon from the page.`);
 
-  const iconPath = path.join(tmpDirPath, `/icon${icon.ext}`);
+  const iconPath = path.join(tmpDirPath, `icon${icon.ext}`);
   log.debug(
     `Writing ${(icon.data.length / 1024).toFixed(1)} kb icon to ${iconPath}`,
   );

@@ -97,11 +97,11 @@ describe('handling inferTitle results', () => {
     );
   });
 
-  test('it should return the default app name when inferTitle rejects', async () => {
+  test('it should return a hostname-based name when inferTitle rejects', async () => {
     (inferTitle as jest.Mock).mockRejectedValue('some error');
     const result = await name(NAME_PARAMS_NEEDS_INFER);
 
-    expect(result).toEqual(DEFAULT_APP_NAME);
+    expect(result).toEqual('Google');
     expect(inferTitle).toHaveBeenCalledWith(
       NAME_PARAMS_NEEDS_INFER.packager.targetUrl,
     );

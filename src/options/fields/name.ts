@@ -3,6 +3,10 @@ import * as log from 'loglevel';
 import { sanitizeFilename } from '../../utils/sanitizeFilename';
 import { inferTitle } from '../../infer/inferTitle';
 import { DEFAULT_APP_NAME } from '../../constants';
+import {
+  getAppNameFromHostname,
+  getHostnameFromUrl,
+} from '../../helpers/urlHelpers';
 
 type NameParams = {
   packager: {
@@ -18,6 +22,15 @@ async function tryToInferName(targetUrl: string): Promise<string> {
     const pageTitle = await inferTitle(targetUrl);
     return pageTitle || DEFAULT_APP_NAME;
   } catch (err: unknown) {
+    const hostname = getHostnameFromUrl(targetUrl);
+    if (hostname) {
+      const nameFromHostname = getAppNameFromHostname(hostname);
+      log.warn(
+        `Unable to automatically determine app name from page title, using '${nameFromHostname}' from hostname.`,
+        err,
+      );
+      return nameFromHostname;
+    }
     log.warn(
       `Unable to automatically determine app name, falling back to '${DEFAULT_APP_NAME}'.`,
       err,
