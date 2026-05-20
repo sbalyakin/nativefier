@@ -32,7 +32,7 @@
   },
   "scripts": {
     "build-app": "cd app && webpack",
-    "build-app-static": "ncp app/src/static/ app/lib/static/ && ncp app/dist/preload.js app/lib/preload.js && ncp app/dist/preload.js.map app/lib/preload.js.map",
+    "build-app-static": "ncp app/src/static/ app/lib/static/ && ncp app/dist/preload.js app/lib/preload.js && ncp app/dist/preload.js.map app/lib/preload.js.map && mkdir -p app/lib/preload && ncp app/dist/preload/injectScripts.js app/lib/preload/injectScripts.js && ncp app/dist/preload/injectScripts.js.map app/lib/preload/injectScripts.js.map && ncp app/dist/preload/ipcEvents.js app/lib/preload/ipcEvents.js && ncp app/dist/preload/ipcEvents.js.map app/lib/preload/ipcEvents.js.map && ncp app/dist/preload/notifications.js app/lib/preload/notifications.js && ncp app/dist/preload/notifications.js.map app/lib/preload/notifications.js.map && ncp app/dist/preload/platform.js app/lib/preload/platform.js && ncp app/dist/preload/platform.js.map app/lib/preload/platform.js.map && ncp app/dist/preload/screenSharePicker.js app/lib/preload/screenSharePicker.js && ncp app/dist/preload/screenSharePicker.js.map app/lib/preload/screenSharePicker.js.map",
     "build": "npm run clean && tsc --build shared src app && npm run build-app && npm run build-app-static",
     "build:watch": "npm run clean && tsc --build shared src app --watch",
     "changelog": "./.github/generate-changelog",

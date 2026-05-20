@@ -179,10 +179,6 @@ export function isOSX(): boolean {
   return os.platform() === 'darwin';
 }
 
-export function isLinux(): boolean {
-  return os.platform() === 'linux';
-}
-
 export function isWindows(): boolean {
   return os.platform() === 'win32';
 }
@@ -286,15 +282,7 @@ export function openExternal(
   return openExternalUrl(url, options);
 }
 
-// Copy-pastaed as unable to get imports to work in preload.
-// If modifying, update also app/src/preload.ts
-export function isWayland(): boolean {
-  return (
-    isLinux() &&
-    (Boolean(process.env.WAYLAND_DISPLAY) ||
-      process.env.XDG_SESSION_TYPE === 'wayland')
-  );
-}
+export { isLinux, isWayland } from '../preload/platform';
 
 export function removeUserAgentSpecifics(
   userAgentFallback: string,
