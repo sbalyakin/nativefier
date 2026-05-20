@@ -4,11 +4,14 @@ import path from 'path';
 import {
   BaseWindow,
   BrowserWindow,
-  clipboard,
   MenuItem,
   MenuItemConstructorOptions,
 } from 'electron';
 
+import {
+  readClipboardText,
+  writeClipboardText,
+} from '../adapters/clipboardAdapter';
 import {
   buildApplicationMenu,
   setApplicationMenu,
@@ -111,14 +114,14 @@ export function generateMenu(
         accelerator: 'CmdOrCtrl+Shift+C',
         click: (): void => {
           // We use clipboard.readText to strip down formatting
-          const text = clipboard.readText('selection');
-          clipboard.writeText(cleanupPlainText(text), 'clipboard');
+          const text = readClipboardText('selection');
+          writeClipboardText(cleanupPlainText(text), 'clipboard');
         },
       },
       {
         label: 'Copy Current URL',
         accelerator: 'CmdOrCtrl+L',
-        click: (): void => clipboard.writeText(getCurrentURL()),
+        click: (): void => writeClipboardText(getCurrentURL()),
       },
       {
         label: 'Paste',

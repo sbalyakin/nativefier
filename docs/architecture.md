@@ -42,7 +42,7 @@ Do not pass new settings across the boundary by importing builder modules into `
 | New CLI flag / default / validation | `src/options/optionSchema.ts` (metadata + mapping), `src/cli.ts` (positionals only), `shared/src/options/model.ts` (types) |
 | New field in packaged app config | `shared/src/options/model.ts`, `OUTPUT_FIELD_MAPPINGS` in `outputOptionsMapper.ts`, runtime consumer in `app/src/` |
 | Packaging / icons / Electron download | `src/build/` |
-| Window, tray, menus, preload behavior | `app/src/` (Electron API via `app/src/adapters/`) |
+| Window, tray, menus, preload behavior | `app/src/` (Electron API via `app/src/adapters/`: `appAdapter`, `windowAdapter`, `trayAdapter`, `menuAdapter`, `shellAdapter`, `downloadAdapter`, `ipcAdapter`, `dialogAdapter`, `clipboardAdapter`, `globalShortcutAdapter`) |
 | Runtime config load/validate/persist | `app/src/config/` |
 | Cross-layer constant (e.g. config filename) | `shared/src/contract.ts` |
 

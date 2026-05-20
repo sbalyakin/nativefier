@@ -1,7 +1,6 @@
 import path from 'path';
 
 import {
-  dialog,
   BrowserWindow,
   BrowserWindowConstructorOptions,
   Event,
@@ -10,6 +9,11 @@ import {
   OnResponseStartedListenerDetails,
 } from 'electron';
 
+import { showMessageBox } from '../adapters/dialogAdapter';
+import {
+  createBrowserWindow,
+  getFocusedBrowserWindow,
+} from '../adapters/windowAdapter';
 import { getCSSToInject, isOSX, nativeTabsSupported } from './helpers';
 import * as log from './loggingHelper';
 import { TrayValue, WindowOptions } from '../runtimeContract';
@@ -29,12 +33,11 @@ export function showNavigationBlockedMessage(
 ): Promise<MessageBoxReturnValue> {
   return new Promise((resolve, reject) => {
     withFocusedWindow((focusedWindow) => {
-      dialog
-        .showMessageBox(focusedWindow, {
-          message,
-          type: 'error',
-          title: 'Navigation blocked',
-        })
+      showMessageBox(focusedWindow, {
+        message,
+        type: 'error',
+        title: 'Navigation blocked',
+      })
         .then((result) => resolve(result))
         .catch((err) => {
           reject(err);
@@ -44,7 +47,7 @@ export function showNavigationBlockedMessage(
 }
 
 export async function clearAppData(window: BrowserWindow): Promise<void> {
-  const response = await dialog.showMessageBox(window, {
+  const response = await showMessageBox(window, {
     type: 'warning',
     buttons: ['Yes', 'Cancel'],
     defaultId: 1,
@@ -92,7 +95,7 @@ export function createNewTab(
   url: string,
   foreground: boolean,
 ): BrowserWindow | undefined {
-  const focusedWindow = BrowserWindow.getFocusedWindow();
+  const focusedWindow = getFocusedBrowserWindow();
   log.debug('createNewTab', {
     url,
     foreground,
@@ -119,7 +122,7 @@ export function createNewWindow(
     url,
     parent,
   });
-  const window = new BrowserWindow({
+  const window = createBrowserWindow({
     parent: nativeTabsSupported() ? undefined : parent,
     ...getDefaultWindowOptions(options),
   });
@@ -339,7 +342,7 @@ export function setProxyRules(
 export function withFocusedWindow<T>(
   block: (window: BrowserWindow) => T,
 ): T | undefined {
-  const focusedWindow = BrowserWindow.getFocusedWindow();
+  const focusedWindow = getFocusedBrowserWindow();
   if (focusedWindow) {
     return block(focusedWindow);
   }

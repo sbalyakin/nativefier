@@ -1,14 +1,14 @@
 import 'source-map-support/register';
 
-import electron, {
-  app,
-  dialog,
-  globalShortcut,
-  systemPreferences,
-  BrowserWindow,
-  Event,
-} from 'electron';
+import electron, { app, BrowserWindow, Event } from 'electron';
 
+import {
+  exitApp,
+  isTrustedAccessibilityClient,
+  quitApp,
+} from './adapters/appAdapter';
+import { showMessageBox, showMessageBoxSync } from './adapters/dialogAdapter';
+import { registerGlobalShortcut } from './adapters/globalShortcutAdapter';
 import { createLoginWindow } from './components/loginWindow';
 import { createMainWindow } from './components/mainWindow';
 import { createTrayIcon } from './components/trayIcon';
@@ -23,7 +23,7 @@ import { registerSingleInstance } from './services/singleInstanceService';
 
 // Entrypoint for Squirrel, a windows update framework. See https://github.com/nativefier/nativefier/pull/744
 if (require('electron-squirrel-startup')) {
-  app.exit();
+  exitApp();
 }
 
 if (process.argv.indexOf('--verbose') > -1 || safeGetEnv('VERBOSE') === '1') {
@@ -52,7 +52,7 @@ const OLD_BUILD_WARNING_THRESHOLD_MS =
 app.on('window-all-closed', () => {
   log.debug('app.window-all-closed');
   if (!isOSX() || appArgs.fastQuit || IS_PLAYWRIGHT) {
-    app.quit();
+    quitApp();
   }
 });
 
@@ -65,7 +65,7 @@ app.on('before-quit', () => {
     // e.prevent default appears to persist
 
     // might cause issues in the future as before-quit and will-quit events are not called
-    app.exit(0);
+    exitApp(0);
   }
 });
 
@@ -171,7 +171,7 @@ async function onReady(): Promise<void> {
   // Register global shortcuts
   if (appArgs.globalShortcuts) {
     appArgs.globalShortcuts.forEach((shortcut) => {
-      globalShortcut.register(shortcut.key, () => {
+      registerGlobalShortcut(shortcut.key, () => {
         shortcut.inputEvents.forEach((inputEvent) => {
           // @ts-expect-error without including electron in our models, these will never match
           mainWindow.webContents.sendInputEvent(inputEvent);
@@ -190,31 +190,25 @@ async function onReady(): Promise<void> {
       const mediaKeyWasSet = globalShortcutsKeys.find((g) =>
         mediaKeys.includes(g),
       );
-      if (
-        mediaKeyWasSet &&
-        !systemPreferences.isTrustedAccessibilityClient(false)
-      ) {
+      if (mediaKeyWasSet && !isTrustedAccessibilityClient(false)) {
         // Since we're trying to set global keyboard shortcuts for media keys, we need to prompt
         // the user for permission on Mac.
         // For reference:
         // https://www.electronjs.org/docs/api/global-shortcut?q=MediaPlayPause#globalshortcutregisteraccelerator-callback
-        const accessibilityPromptResult = dialog.showMessageBoxSync(
-          mainWindow,
-          {
-            type: 'question',
-            message: 'Accessibility Permissions Needed',
-            buttons: ['Yes', 'No', 'No and never ask again'],
-            defaultId: 0,
-            detail:
-              `${appArgs.name} would like to use one or more of your keyboard's media keys (start, stop, next track, or previous track) to control it.\n\n` +
-              `Would you like Mac OS to ask for your permission to do so?\n\n` +
-              `If so, you will need to restart ${appArgs.name} after granting permissions for these keyboard shortcuts to begin working.`,
-          },
-        );
+        const accessibilityPromptResult = showMessageBoxSync(mainWindow, {
+          type: 'question',
+          message: 'Accessibility Permissions Needed',
+          buttons: ['Yes', 'No', 'No and never ask again'],
+          defaultId: 0,
+          detail:
+            `${appArgs.name} would like to use one or more of your keyboard's media keys (start, stop, next track, or previous track) to control it.\n\n` +
+            `Would you like Mac OS to ask for your permission to do so?\n\n` +
+            `If so, you will need to restart ${appArgs.name} after granting permissions for these keyboard shortcuts to begin working.`,
+        });
         switch (accessibilityPromptResult) {
           // User clicked Yes, prompt for accessibility
           case 0:
-            systemPreferences.isTrustedAccessibilityClient(true);
+            isTrustedAccessibilityClient(true);
             break;
           // User cliecked Never Ask Me Again, save that info
           case 2:
@@ -235,13 +229,11 @@ async function onReady(): Promise<void> {
     const oldBuildWarningText =
       appArgs.oldBuildWarningText ||
       'This app was built a long time ago. Nativefier uses the Chrome browser (through Electron), and it is insecure to keep using an old version of it. Please upgrade Nativefier and rebuild this app.';
-    dialog
-      .showMessageBox(mainWindow, {
-        type: 'warning',
-        message: 'Old build detected',
-        detail: oldBuildWarningText,
-      })
-      .catch((err) => log.error('dialog.showMessageBox ERROR', err));
+    showMessageBox(mainWindow, {
+      type: 'warning',
+      message: 'Old build detected',
+      detail: oldBuildWarningText,
+    }).catch((err) => log.error('showMessageBox ERROR', err));
   }
 
   if (appArgs.targetUrl) {

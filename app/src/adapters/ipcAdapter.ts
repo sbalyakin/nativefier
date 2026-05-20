@@ -7,6 +7,13 @@ export function onIpcMainEvent(
   ipcMain.on(channel, listener);
 }
 
+export function onceIpcMainEvent(
+  channel: string,
+  listener: Parameters<typeof ipcMain.once>[1],
+): void {
+  ipcMain.once(channel, listener);
+}
+
 export function handleIpcMainInvoke(
   channel: string,
   listener: Parameters<typeof ipcMain.handle>[1],

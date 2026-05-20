@@ -41,3 +41,13 @@ export function focusMainWindow(window: BrowserWindow): void {
   }
   window.focus();
 }
+
+export function getFocusedBrowserWindow(): BrowserWindow | null {
+  return BrowserWindow.getFocusedWindow();
+}
+
+export function getBrowserWindowFromWebContents(
+  webContents: Parameters<typeof BrowserWindow.fromWebContents>[0],
+): BrowserWindow | null {
+  return BrowserWindow.fromWebContents(webContents);
+}

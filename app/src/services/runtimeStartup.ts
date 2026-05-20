@@ -1,7 +1,15 @@
 import * as path from 'path';
 
-import { app } from 'electron';
-
+import {
+  appendCommandLineSwitch,
+  disableHardwareAcceleration,
+  getAppName,
+  getAppVersion,
+  getUserAgentFallback,
+  setAppPath,
+  setAppUserModelId,
+  setUserAgentFallback,
+} from '../adapters/appAdapter';
 import { configureFileDownloads } from '../adapters/downloadAdapter';
 import { inferFlashPath } from '../helpers/inferFlash';
 import {
@@ -22,8 +30,8 @@ export function applyPortablePaths(appArgs: OutputOptions): void {
     'App was built as portable; setting appData and userData to the app folder: ',
     appDataPath,
   );
-  app.setPath('appData', appDataPath);
-  app.setPath('userData', appDataPath);
+  setAppPath('appData', appDataPath);
+  setAppPath('userData', appDataPath);
 }
 
 export function applyUserAgent(appArgs: OutputOptions): void {
@@ -32,19 +40,21 @@ export function applyUserAgent(appArgs: OutputOptions): void {
   }
 
   if (appArgs.userAgent) {
-    app.userAgentFallback = appArgs.userAgent;
+    setUserAgentFallback(appArgs.userAgent);
   } else {
-    app.userAgentFallback = removeUserAgentSpecifics(
-      app.userAgentFallback,
-      app.getName(),
-      app.getVersion(),
+    setUserAgentFallback(
+      removeUserAgentSpecifics(
+        getUserAgentFallback(),
+        getAppName(),
+        getAppVersion(),
+      ),
     );
   }
 }
 
 export function applyWindowsNotificationIdentity(): void {
   if (isWindows()) {
-    app.setAppUserModelId(app.getName());
+    setAppUserModelId(getAppName());
   }
 }
 
@@ -74,50 +84,44 @@ export function applyProcessEnvs(appArgs: OutputOptions): void {
 
 export function applyCommandLineSwitches(appArgs: OutputOptions): void {
   if (typeof appArgs.flashPluginDir === 'string') {
-    app.commandLine.appendSwitch('ppapi-flash-path', appArgs.flashPluginDir);
+    appendCommandLineSwitch('ppapi-flash-path', appArgs.flashPluginDir);
   } else if (appArgs.flashPluginDir) {
-    app.commandLine.appendSwitch('ppapi-flash-path', inferFlashPath());
+    appendCommandLineSwitch('ppapi-flash-path', inferFlashPath());
   }
 
   if (appArgs.ignoreCertificate) {
-    app.commandLine.appendSwitch('ignore-certificate-errors');
+    appendCommandLineSwitch('ignore-certificate-errors');
   }
 
   if (appArgs.disableGpu) {
-    app.disableHardwareAcceleration();
+    disableHardwareAcceleration();
   }
 
   if (appArgs.ignoreGpuBlacklist) {
-    app.commandLine.appendSwitch('ignore-gpu-blacklist');
+    appendCommandLineSwitch('ignore-gpu-blacklist');
   }
 
   if (appArgs.enableEs3Apis) {
-    app.commandLine.appendSwitch('enable-es3-apis');
+    appendCommandLineSwitch('enable-es3-apis');
   }
 
   if (appArgs.diskCacheSize) {
-    app.commandLine.appendSwitch(
+    appendCommandLineSwitch(
       'disk-cache-size',
       appArgs.diskCacheSize.toString(),
     );
   }
 
   if (appArgs.basicAuthUsername) {
-    app.commandLine.appendSwitch(
-      'basic-auth-username',
-      appArgs.basicAuthUsername,
-    );
+    appendCommandLineSwitch('basic-auth-username', appArgs.basicAuthUsername);
   }
 
   if (appArgs.basicAuthPassword) {
-    app.commandLine.appendSwitch(
-      'basic-auth-password',
-      appArgs.basicAuthPassword,
-    );
+    appendCommandLineSwitch('basic-auth-password', appArgs.basicAuthPassword);
   }
 
   if (isWayland()) {
-    app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
+    appendCommandLineSwitch('enable-features', 'WebRTCPipeWireCapturer');
   }
 
   if (appArgs.lang) {
@@ -127,7 +131,7 @@ export function applyCommandLineSwitches(appArgs: OutputOptions): void {
     );
     const langFlag = langPartsParsed.join(',');
     log.debug('Setting --lang flag to', langFlag);
-    app.commandLine.appendSwitch('--lang', langFlag);
+    appendCommandLineSwitch('--lang', langFlag);
   }
 }
 

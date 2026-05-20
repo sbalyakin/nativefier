@@ -1,5 +1,4 @@
-import { app } from 'electron';
-
+import { bounceDock, setDockBadge } from '../adapters/appAdapter';
 import { isOSX } from '../helpers/helpers';
 
 export type DockBadgeSetter = (
@@ -15,10 +14,10 @@ export function createDockBadgeSetter(): DockBadgeSetter {
   let currentBadgeCount = 0;
 
   return (count?: number | string, bounce = false): void => {
-    if (count !== undefined && app.dock) {
-      app.dock.setBadge(count.toString());
+    if (count !== undefined) {
+      setDockBadge(count.toString());
       if (bounce && typeof count === 'number' && count > currentBadgeCount) {
-        app.dock.bounce();
+        bounceDock();
       }
       currentBadgeCount = typeof count === 'number' ? count : 0;
     }

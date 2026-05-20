@@ -1,5 +1,6 @@
-import { app, Tray, BrowserWindow } from 'electron';
+import { Tray, BrowserWindow } from 'electron';
 
+import { exitApp } from '../adapters/appAdapter';
 import { onIpcMainEvent } from '../adapters/ipcAdapter';
 import {
   buildTrayContextMenu,
@@ -49,7 +50,7 @@ export function createTrayIcon(
       },
       {
         label: 'Quit',
-        click: (): void => app.exit(0),
+        click: (): void => exitApp(0),
       },
     ]);
 

@@ -1,11 +1,10 @@
-import {
-  dialog,
-  BrowserWindow,
-  Event,
-  WebContents,
-  HandlerDetails,
-} from 'electron';
+import { BrowserWindow, Event, WebContents, HandlerDetails } from 'electron';
 
+import { showMessageBoxSync } from '../adapters/dialogAdapter';
+import {
+  getBrowserWindowFromWebContents,
+  getFocusedBrowserWindow,
+} from '../adapters/windowAdapter';
 import { linkIsInternal, nativeTabsSupported, openExternal } from './helpers';
 import * as log from './loggingHelper';
 import {
@@ -148,10 +147,9 @@ export function onWillPreventUnload(
   }
 
   const browserWindow =
-    BrowserWindow.fromWebContents(webContents) ??
-    BrowserWindow.getFocusedWindow();
+    getBrowserWindowFromWebContents(webContents) ?? getFocusedBrowserWindow();
   if (browserWindow) {
-    const choice = dialog.showMessageBoxSync(browserWindow, {
+    const choice = showMessageBoxSync(browserWindow, {
       type: 'question',
       buttons: ['Proceed', 'Stay'],
       message:

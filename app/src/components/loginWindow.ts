@@ -1,7 +1,9 @@
 import * as path from 'path';
 
-import { BrowserWindow, ipcMain } from 'electron';
+import { BrowserWindow } from 'electron';
 
+import { onceIpcMainEvent } from '../adapters/ipcAdapter';
+import { createBrowserWindow } from '../adapters/windowAdapter';
 import * as log from '../helpers/loggingHelper';
 import { nativeTabsSupported } from '../helpers/helpers';
 
@@ -14,7 +16,7 @@ export async function createLoginWindow(
     parent,
   });
 
-  const loginWindow = new BrowserWindow({
+  const loginWindow = createBrowserWindow({
     parent: nativeTabsSupported() ? undefined : parent,
     width: 300,
     height: 400,
@@ -30,7 +32,7 @@ export async function createLoginWindow(
     `file://${path.join(__dirname, 'static/login.html')}`,
   );
 
-  ipcMain.once('login-message', (event, usernameAndPassword: string[]) => {
+  onceIpcMainEvent('login-message', (event, usernameAndPassword: string[]) => {
     log.debug('login-message', { event, username: usernameAndPassword[0] });
     loginCallback(usernameAndPassword[0], usernameAndPassword[1]);
     loginWindow.close();

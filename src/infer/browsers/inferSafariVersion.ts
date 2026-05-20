@@ -1,6 +1,10 @@
 import axios from 'axios';
 import * as log from 'loglevel';
+
+import packageJson from '../../../package.json';
 import { DEFAULT_SAFARI_VERSION } from '../../constants';
+
+const WIKIPEDIA_USER_AGENT = `Nativefier/${packageJson.version} (https://github.com/nativefier/nativefier; +https://github.com/nativefier/nativefier/issues)`;
 
 export type SafariVersion = {
   majorVersion: number;
@@ -16,7 +20,10 @@ export async function getLatestSafariVersion(
 ): Promise<SafariVersion> {
   try {
     log.debug('Grabbing apple version data from', url);
-    const response = await axios.get<string>(url, { timeout: 5000 });
+    const response = await axios.get<string>(url, {
+      timeout: 5000,
+      headers: { 'User-Agent': WIKIPEDIA_USER_AGENT },
+    });
     if (response.status !== 200) {
       throw new Error(`Bad request: Status code ${response.status}`);
     }
@@ -70,7 +77,10 @@ export async function getLatestSafariVersion(
     }
     return DEFAULT_SAFARI_VERSION;
   } catch (err: unknown) {
-    log.error('getLatestSafariVersion ERROR', err);
+    log.warn(
+      'getLatestSafariVersion failed; using default Safari version',
+      err,
+    );
     log.debug('Falling back to default Safari version', DEFAULT_SAFARI_VERSION);
     return DEFAULT_SAFARI_VERSION;
   }

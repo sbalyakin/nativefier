@@ -1,7 +1,14 @@
-import { dialog, BrowserWindow } from 'electron';
+import { BrowserWindow } from 'electron';
 jest.mock('loglevel');
 import { error } from 'loglevel';
 import { WindowOptions } from '../runtimeContract';
+
+const mockShowMessageBox = jest.fn();
+jest.mock('../adapters/dialogAdapter', () => ({
+  ...jest.requireActual('../adapters/dialogAdapter'),
+  showMessageBox: (...args: unknown[]): ReturnType<typeof mockShowMessageBox> =>
+    mockShowMessageBox(...args),
+}));
 
 jest.mock('./helpers');
 import { getCSSToInject } from './helpers';
@@ -12,7 +19,7 @@ describe('clearAppData', () => {
   let window: BrowserWindow;
   let mockClearCache: jest.SpyInstance;
   let mockClearStorageData: jest.SpyInstance;
-  const mockShowDialog: jest.SpyInstance = jest.spyOn(dialog, 'showMessageBox');
+  const mockShowDialog = mockShowMessageBox;
 
   beforeEach(() => {
     window = new BrowserWindow();

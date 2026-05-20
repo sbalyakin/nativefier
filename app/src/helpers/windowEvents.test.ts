@@ -1,8 +1,27 @@
+const mockGetBrowserWindowFromWebContents = jest.fn();
+const mockShowMessageBoxSync = jest.fn();
+
+jest.mock('../adapters/windowAdapter', () => ({
+  ...jest.requireActual('../adapters/windowAdapter'),
+  getBrowserWindowFromWebContents: (
+    ...args: unknown[]
+  ): ReturnType<typeof mockGetBrowserWindowFromWebContents> =>
+    mockGetBrowserWindowFromWebContents(...args),
+}));
+
+jest.mock('../adapters/dialogAdapter', () => ({
+  ...jest.requireActual('../adapters/dialogAdapter'),
+  showMessageBoxSync: (
+    ...args: unknown[]
+  ): ReturnType<typeof mockShowMessageBoxSync> =>
+    mockShowMessageBoxSync(...args),
+}));
+
 jest.mock('./helpers');
 jest.mock('./windowEvents');
 jest.mock('./windowHelpers');
 
-import { dialog, BrowserWindow, HandlerDetails, WebContents } from 'electron';
+import { BrowserWindow, HandlerDetails, WebContents } from 'electron';
 import { WindowOptions } from '../runtimeContract';
 import { linkIsInternal, openExternal, nativeTabsSupported } from './helpers';
 
@@ -300,24 +319,16 @@ describe('onWillNavigate', () => {
 });
 
 describe('onWillPreventUnload', () => {
-  const mockFromWebContents: jest.SpyInstance = jest
-    .spyOn(BrowserWindow, 'fromWebContents')
-    .mockImplementation(() => new BrowserWindow());
-  const mockShowDialog: jest.SpyInstance = jest.spyOn(
-    dialog,
-    'showMessageBoxSync',
-  );
+  const mockFromWebContents = mockGetBrowserWindowFromWebContents;
+  const mockShowDialog = mockShowMessageBoxSync;
   const preventDefault: jest.SpyInstance = jest.fn();
 
   beforeEach(() => {
-    mockFromWebContents.mockReset();
+    mockFromWebContents
+      .mockReset()
+      .mockImplementation(() => new BrowserWindow());
     mockShowDialog.mockReset().mockReturnValue(undefined);
     preventDefault.mockReset();
-  });
-
-  afterAll(() => {
-    mockFromWebContents.mockRestore();
-    mockShowDialog.mockRestore();
   });
 
   test('with no sender', () => {
