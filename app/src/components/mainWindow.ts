@@ -1,9 +1,23 @@
-import { BrowserWindow, Event, HandlerDetails } from 'electron';
-
+import type { BrowserWindow, Event, HandlerDetails } from '../adapters/electronTypes';
+import {
+  getBrowserWindowSession,
+  getSessionProperty,
+  invokeSessionMethod,
+  normalizeSessionFuncArgs,
+  setDefaultPermissionHandlers,
+  setSessionProperty,
+} from '../adapters/sessionAdapter';
 import {
   createBrowserWindow,
   createWindowState,
+  isFullScreen,
+  loadUrl,
+  moveTabToNewWindow,
+  onBrowserWindowEvent,
+  onceBrowserWindowEvent,
+  setFullScreen,
   setWindowOpenHandler,
+  showBrowserWindow,
 } from '../adapters/windowAdapter';
 import {
   getDesktopCapturerSources,
@@ -92,7 +106,7 @@ export async function createMainWindow(
 
   // Just load about:blank to start, gives playwright something to latch onto initially for testing.
   if (IS_PLAYWRIGHT) {
-    await mainWindow.loadURL('about:blank');
+    await loadUrl(mainWindow, 'about:blank');
   }
 
   mainWindowState.manage(mainWindow);
@@ -108,7 +122,7 @@ export async function createMainWindow(
     mainWindow.hide();
   } else if (process.platform === 'win32') {
     // See other "Maximize window visual glitch on Windows fix" comment above.
-    mainWindow.show();
+    showBrowserWindow(mainWindow);
   }
 
   const windowOptions = outputOptionsToWindowOptions(
@@ -129,7 +143,7 @@ export async function createMainWindow(
       mainWindow,
     );
   });
-  mainWindow.on('new-window-for-tab', (event?: Event<{ url?: string }>) => {
+  onBrowserWindowEvent(mainWindow, 'new-window-for-tab', (event?: Event<{ url?: string }>) => {
     log.debug('mainWindow.new-window-for-tab', { event });
     createNewTab(
       windowOptions,
@@ -148,7 +162,7 @@ export async function createMainWindow(
 
   onIpcMainEvent('notification-click', () => {
     log.debug('ipcMain.notification-click');
-    mainWindow.show();
+    showBrowserWindow(mainWindow);
   });
 
   setupSessionInteraction(mainWindow);
@@ -178,15 +192,15 @@ export function saveAppArgs(newAppArgs: OutputOptions): void {
 }
 
 function setupCloseEvent(options: OutputOptions, window: BrowserWindow): void {
-  window.on('close', (event: Event) => {
+  onBrowserWindowEvent(window, 'close', (event: Event) => {
     log.debug('mainWindow.close', event);
-    if (window.isFullScreen()) {
+    if (isFullScreen(window)) {
       if (nativeTabsSupported()) {
-        window.moveTabToNewWindow();
+        moveTabToNewWindow(window);
       }
-      window.setFullScreen(false);
+      setFullScreen(window, false);
       // Use the outer `close` event for preventDefault; `leave-full-screen` has no event in Electron 42 typings.
-      window.once('leave-full-screen', () =>
+      onceBrowserWindowEvent(window, 'leave-full-screen', () =>
         hideWindow(
           window,
           event,
@@ -213,7 +227,7 @@ function setupCounter(
   window: BrowserWindow,
   setDockBadge: (value: number | string, bounce?: boolean) => void,
 ): void {
-  window.on('page-title-updated', (event, title) => {
+  onBrowserWindowEvent(window, 'page-title-updated', (event, title) => {
     log.debug('mainWindow.page-title-updated', { event, title });
     const counterValue = getCounterValue(title);
     if (counterValue) {
@@ -225,14 +239,7 @@ function setupCounter(
 }
 
 function setupSessionPermissionHandler(window: BrowserWindow): void {
-  window.webContents.session.setPermissionCheckHandler(() => {
-    return true;
-  });
-  window.webContents.session.setPermissionRequestHandler(
-    (_webContents, _permission, callback) => {
-      callback(true);
-    },
-  );
+  setDefaultPermissionHandlers(getBrowserWindowSession(window));
   handleIpcMainInvoke('desktop-capturer-get-sources', () => {
     return getDesktopCapturerSources({
       types: ['screen', 'window'],
@@ -252,13 +259,15 @@ function setupNotificationBadge(
     }
     setDockBadge('•', options.bounce);
   });
-  window.on('focus', () => {
+  onBrowserWindowEvent(window, 'focus', () => {
     log.debug('mainWindow.focus');
     setDockBadge('');
   });
 }
 
 function setupSessionInteraction(window: BrowserWindow): void {
+  const session = getBrowserWindowSession(window);
+
   // See API.md / "Accessing The Electron Session"
   onIpcMainEvent(
     'session-interaction',
@@ -269,21 +278,11 @@ function setupSessionInteraction(window: BrowserWindow): void {
       let awaitingPromise = false;
       try {
         if (request.func !== undefined) {
-          // If no funcArgs provided, we'll just use an empty array
-          if (request.funcArgs === undefined || request.funcArgs === null) {
-            request.funcArgs = [];
-          }
-
-          // If funcArgs isn't an array, we'll be nice and make it a single item array
-          if (typeof request.funcArgs[Symbol.iterator] !== 'function') {
-            request.funcArgs = [request.funcArgs];
-          }
-
-          // Call func with funcArgs
-          // @ts-expect-error accessing a func by string name
-
-          result.value = window.webContents.session[request.func](
-            ...request.funcArgs,
+          const funcArgs = normalizeSessionFuncArgs(request.funcArgs);
+          result.value = invokeSessionMethod(
+            session,
+            request.func,
+            funcArgs,
           );
 
           if (result.value !== undefined && result.value instanceof Promise) {
@@ -301,15 +300,10 @@ function setupSessionInteraction(window: BrowserWindow): void {
           }
         } else if (request.property !== undefined) {
           if (request.propertyValue !== undefined) {
-            // Set the property
-            // @ts-expect-error setting a property by string name
-            window.webContents.session[request.property] =
-              request.propertyValue;
+            setSessionProperty(session, request.property, request.propertyValue);
           }
 
-          // Get the property value
-          // @ts-expect-error accessing a property by string name
-          result.value = window.webContents.session[request.property];
+          result.value = getSessionProperty(session, request.property);
         } else {
           // Why even send the event if you're going to do this? You're just wasting time! ;)
           throw new Error(

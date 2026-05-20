@@ -8,6 +8,13 @@ import {
 } from './adapters/appAdapter';
 import type { BrowserWindow, Event } from './adapters/electronTypes';
 import { showMessageBox, showMessageBoxSync } from './adapters/dialogAdapter';
+import {
+  emitBrowserWindowEvent,
+  loadUrl,
+  sendInputEventToWebContents,
+  sendToWebContents,
+  showBrowserWindow,
+} from './adapters/windowAdapter';
 import { registerGlobalShortcut } from './adapters/globalShortcutAdapter';
 import { createLoginWindow } from './components/loginWindow';
 import { createMainWindow } from './components/mainWindow';
@@ -86,7 +93,7 @@ onAppEvent<[Event, string]>('open-url', (event, url) => {
 
   event.preventDefault();
   if (mainWindow) {
-    mainWindow.webContents.send('open-url', url);
+    sendToWebContents(mainWindow, 'open-url', url);
   }
 });
 
@@ -121,7 +128,7 @@ onAppEvent('activate', (event: Event, hasVisibleWindows: boolean) => {
   if (isOSX() && !IS_PLAYWRIGHT) {
     // this is called when the dock is clicked
     if (!hasVisibleWindows) {
-      mainWindow.show();
+      showBrowserWindow(mainWindow);
     }
   }
 });
@@ -131,7 +138,7 @@ registerSingleInstance(appArgs, () => mainWindow);
 onAppEvent('new-window-for-tab', (event: Event) => {
   log.debug('app.new-window-for-tab', { event });
   if (mainWindow) {
-    mainWindow.emit('new-window-for-tab', event);
+    emitBrowserWindowEvent(mainWindow, 'new-window-for-tab', event);
   }
 });
 
@@ -172,8 +179,7 @@ async function onReady(): Promise<void> {
     appArgs.globalShortcuts.forEach((shortcut) => {
       registerGlobalShortcut(shortcut.key, () => {
         shortcut.inputEvents.forEach((inputEvent) => {
-          // @ts-expect-error without including electron in our models, these will never match
-          mainWindow.webContents.sendInputEvent(inputEvent);
+          sendInputEventToWebContents(mainWindow, inputEvent);
         });
       });
     });
@@ -236,7 +242,7 @@ async function onReady(): Promise<void> {
   }
 
   if (appArgs.targetUrl) {
-    await mainWindow.loadURL(appArgs.targetUrl);
+    await loadUrl(mainWindow, appArgs.targetUrl);
   }
 }
 
