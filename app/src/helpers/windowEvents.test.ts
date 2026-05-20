@@ -21,7 +21,8 @@ jest.mock('./helpers');
 jest.mock('./windowEvents');
 jest.mock('./windowHelpers');
 
-import { BrowserWindow, HandlerDetails, WebContents } from 'electron';
+import type { BrowserWindow, HandlerDetails, WebContents } from '../adapters/electronTypes';
+import { BrowserWindow as BrowserWindowCtor } from 'electron';
 import { WindowOptions } from '../runtimeContract';
 import { linkIsInternal, openExternal, nativeTabsSupported } from './helpers';
 
@@ -326,7 +327,7 @@ describe('onWillPreventUnload', () => {
   beforeEach(() => {
     mockFromWebContents
       .mockReset()
-      .mockImplementation(() => new BrowserWindow());
+      .mockImplementation(() => new BrowserWindowCtor());
     mockShowDialog.mockReset().mockReturnValue(undefined);
     preventDefault.mockReset();
   });

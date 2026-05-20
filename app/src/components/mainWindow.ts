@@ -227,7 +227,7 @@ function setupCounter(
   window: BrowserWindow,
   setDockBadge: (value: number | string, bounce?: boolean) => void,
 ): void {
-  onBrowserWindowEvent(window, 'page-title-updated', (event, title) => {
+  onBrowserWindowEvent(window, 'page-title-updated', (event, title: string) => {
     log.debug('mainWindow.page-title-updated', { event, title });
     const counterValue = getCounterValue(title);
     if (counterValue) {

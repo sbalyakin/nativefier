@@ -179,7 +179,12 @@ async function onReady(): Promise<void> {
     appArgs.globalShortcuts.forEach((shortcut) => {
       registerGlobalShortcut(shortcut.key, () => {
         shortcut.inputEvents.forEach((inputEvent) => {
-          sendInputEventToWebContents(mainWindow, inputEvent);
+          sendInputEventToWebContents(
+            mainWindow,
+            inputEvent as Parameters<
+              BrowserWindow['webContents']['sendInputEvent']
+            >[0],
+          );
         });
       });
     });

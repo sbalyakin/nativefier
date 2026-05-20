@@ -13,8 +13,11 @@ export type {
   IpcRenderer,
   Menu,
   MenuItemConstructorOptions,
+  MessageBoxReturnValue,
+  OnResponseStartedListenerDetails,
   OpenExternalOptions,
   Session,
   Tray,
   WebContents,
+  WebPreferences,
 } from 'electron';

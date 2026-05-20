@@ -1,6 +1,9 @@
-import { Session } from 'electron';
+import { Session, type WebRequestFilter } from 'electron';
 
-import type { BrowserWindow } from './electronTypes';
+import type {
+  BrowserWindow,
+  OnResponseStartedListenerDetails,
+} from './electronTypes';
 
 export type SessionInteractionRequest = {
   id?: string;
@@ -37,6 +40,14 @@ export function setSessionProxy(
     pacScript: '',
     proxyBypassRules: '',
   });
+}
+
+export function onSessionWebRequestResponseStarted(
+  session: Session,
+  filter: WebRequestFilter,
+  listener: (details: OnResponseStartedListenerDetails) => void,
+): void {
+  session.webRequest.onResponseStarted(filter, listener);
 }
 
 /**

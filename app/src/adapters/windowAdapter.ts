@@ -190,3 +190,26 @@ export function adjustZoomFactor(
   window.webContents.zoomFactor =
     window.webContents.zoomFactor + adjustment;
 }
+
+export function setZoomFactor(window: BrowserWindow, zoomFactor: number): void {
+  window.webContents.zoomFactor = zoomFactor;
+}
+
+export function closeBrowserWindow(window: BrowserWindow): void {
+  window.close();
+}
+
+export function hideBrowserWindow(window: BrowserWindow): void {
+  window.hide();
+}
+
+export function focusBrowserWindow(window: BrowserWindow): void {
+  window.focus();
+}
+
+export function addTabbedWindow(
+  window: BrowserWindow,
+  tab: BrowserWindow,
+): void {
+  window.addTabbedWindow(tab);
+}

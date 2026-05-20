@@ -1,9 +1,14 @@
-import { BrowserWindow, Event, WebContents, HandlerDetails } from 'electron';
-
+import type {
+  BrowserWindow,
+  Event,
+  HandlerDetails,
+  WebContents,
+} from '../adapters/electronTypes';
 import { showMessageBoxSync } from '../adapters/dialogAdapter';
 import {
   getBrowserWindowFromWebContents,
   getFocusedBrowserWindow,
+  onWebContentsEvent,
 } from '../adapters/windowAdapter';
 import { linkIsInternal, nativeTabsSupported, openExternal } from './helpers';
 import * as log from './loggingHelper';
@@ -174,13 +179,13 @@ export function setupNativefierWindow(
 
   injectCSS(window);
 
-  window.webContents.on('will-navigate', (event: Event, url: string) => {
+  onWebContentsEvent(window, 'will-navigate', (event: Event, url: string) => {
     onWillNavigate(options, event, url).catch((err) => {
       log.error('window.webContents.on.will-navigate ERROR', err);
       event.preventDefault();
     });
   });
-  window.webContents.on('will-prevent-unload', onWillPreventUnload);
+  onWebContentsEvent(window, 'will-prevent-unload', onWillPreventUnload);
 
   sendParamsOnDidFinishLoad(options, window);
 }

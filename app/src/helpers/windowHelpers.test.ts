@@ -1,4 +1,5 @@
-import { BrowserWindow } from 'electron';
+import type { BrowserWindow } from '../adapters/electronTypes';
+import { BrowserWindow as BrowserWindowCtor } from 'electron';
 jest.mock('loglevel');
 import { error } from 'loglevel';
 import { WindowOptions } from '../runtimeContract';
@@ -22,7 +23,7 @@ describe('clearAppData', () => {
   const mockShowDialog = mockShowMessageBox;
 
   beforeEach(() => {
-    window = new BrowserWindow();
+    window = new BrowserWindowCtor();
     mockClearCache = jest.spyOn(window.webContents.session, 'clearCache');
     mockClearStorageData = jest.spyOn(
       window.webContents.session,
@@ -71,15 +72,15 @@ describe('createNewTab', () => {
   const setupWindow = jest.fn();
   const url = 'https://github.com/nativefier/nativefier';
   const mockAddTabbedWindow: jest.SpyInstance = jest.spyOn(
-    BrowserWindow.prototype,
+    BrowserWindowCtor.prototype,
     'addTabbedWindow',
   );
   const mockFocus: jest.SpyInstance = jest.spyOn(
-    BrowserWindow.prototype,
+    BrowserWindowCtor.prototype,
     'focus',
   );
   const mockLoadURL: jest.SpyInstance = jest.spyOn(
-    BrowserWindow.prototype,
+    BrowserWindowCtor.prototype,
     'loadURL',
   );
 
@@ -133,7 +134,7 @@ describe('injectCSS', () => {
   });
 
   test('will not inject if getCSSToInject is empty', () => {
-    const window = new BrowserWindow();
+    const window = new BrowserWindowCtor();
     const mockWebContentsInsertCSS: jest.SpyInstance = jest
       .spyOn(window.webContents, 'insertCSS')
       .mockResolvedValue('');
@@ -149,7 +150,7 @@ describe('injectCSS', () => {
 
   test('will inject on did-navigate + onResponseStarted', () => {
     mockGetCSSToInject.mockReturnValue(css);
-    const window = new BrowserWindow();
+    const window = new BrowserWindowCtor();
     const mockWebContentsInsertCSS: jest.SpyInstance = jest
       .spyOn(window.webContents, 'insertCSS')
       .mockResolvedValue('');
@@ -176,7 +177,7 @@ describe('injectCSS', () => {
     'will not inject for content-type %s',
     (contentType: string) => {
       mockGetCSSToInject.mockReturnValue(css);
-      const window = new BrowserWindow();
+      const window = new BrowserWindowCtor();
       const mockWebContentsInsertCSS: jest.SpyInstance = jest
         .spyOn(window.webContents, 'insertCSS')
         .mockResolvedValue('');
@@ -208,7 +209,7 @@ describe('injectCSS', () => {
     'will inject for content-type %s',
     (contentType: string) => {
       mockGetCSSToInject.mockReturnValue(css);
-      const window = new BrowserWindow();
+      const window = new BrowserWindowCtor();
       const mockWebContentsInsertCSS: jest.SpyInstance = jest
         .spyOn(window.webContents, 'insertCSS')
         .mockResolvedValue('');
@@ -240,7 +241,7 @@ describe('injectCSS', () => {
     'will not inject for resource type %s',
     (resourceType: string) => {
       mockGetCSSToInject.mockReturnValue(css);
-      const window = new BrowserWindow();
+      const window = new BrowserWindowCtor();
       const mockWebContentsInsertCSS: jest.SpyInstance = jest
         .spyOn(window.webContents, 'insertCSS')
         .mockResolvedValue('');
@@ -271,7 +272,7 @@ describe('injectCSS', () => {
     'will inject for resource type %s',
     (resourceType: string) => {
       mockGetCSSToInject.mockReturnValue(css);
-      const window = new BrowserWindow();
+      const window = new BrowserWindowCtor();
       const mockWebContentsInsertCSS: jest.SpyInstance = jest
         .spyOn(window.webContents, 'insertCSS')
         .mockResolvedValue('');

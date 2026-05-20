@@ -1,18 +1,40 @@
 import path from 'path';
 
-import {
+import type {
   BrowserWindow,
   BrowserWindowConstructorOptions,
   Event,
   MessageBoxReturnValue,
-  WebPreferences,
   OnResponseStartedListenerDetails,
-} from 'electron';
-
+  WebPreferences,
+} from '../adapters/electronTypes';
 import { showMessageBox } from '../adapters/dialogAdapter';
 import {
+  clearSessionData,
+  getBrowserWindowSession,
+  onSessionWebRequestResponseStarted,
+  setSessionProxy,
+} from '../adapters/sessionAdapter';
+import {
+  addTabbedWindow,
+  adjustZoomFactor,
+  closeBrowserWindow,
   createBrowserWindow,
+  focusBrowserWindow,
   getFocusedBrowserWindow,
+  getWebContentsUrl,
+  goBack as navigateBack,
+  goForward as navigateForward,
+  hideBrowserWindow,
+  insertCSS,
+  insertCSSInWebContents,
+  loadUrl,
+  onWebContentsEvent,
+  onWebContentsOnce,
+  sendToWebContents,
+  setVisualZoomLevelLimits,
+  setZoomFactor,
+  showBrowserWindow,
 } from '../adapters/windowAdapter';
 import { getCSSToInject, isOSX, nativeTabsSupported } from './helpers';
 import * as log from './loggingHelper';
@@ -22,9 +44,8 @@ import { randomUUID } from 'crypto';
 const ZOOM_INTERVAL = 0.1;
 
 export function adjustWindowZoom(adjustment: number): void {
-  withFocusedWindow((focusedWindow: BrowserWindow) => {
-    focusedWindow.webContents.zoomFactor =
-      focusedWindow.webContents.zoomFactor + adjustment;
+  withFocusedWindow((focusedWindow) => {
+    adjustZoomFactor(focusedWindow, adjustment);
   });
 }
 
@@ -63,9 +84,7 @@ export async function clearAppData(window: BrowserWindow): Promise<void> {
 }
 
 export async function clearCache(window: BrowserWindow): Promise<void> {
-  const { session } = window.webContents;
-  await session.clearStorageData();
-  await session.clearCache();
+  await clearSessionData(getBrowserWindowSession(window));
 }
 
 export function createAboutBlankWindow(
@@ -79,11 +98,11 @@ export function createAboutBlankWindow(
     'about:blank',
     nativeTabsSupported() ? undefined : parent,
   );
-  window.webContents.once('did-stop-loading', () => {
-    if (window.webContents.getURL() === 'about:blank') {
-      window.close();
+  onWebContentsOnce(window, 'did-stop-loading', () => {
+    if (getWebContentsUrl(window) === 'about:blank') {
+      closeBrowserWindow(window);
     } else {
-      window.show();
+      showBrowserWindow(window);
     }
   });
   return window;
@@ -104,9 +123,9 @@ export function createNewTab(
   return withFocusedWindow((focusedWindow) => {
     const newTab = createNewWindow(options, setupWindow, url);
     log.debug('createNewTab.withFocusedWindow', { focusedWindow, newTab });
-    focusedWindow.addTabbedWindow(newTab);
+    addTabbedWindow(focusedWindow, newTab);
     if (!foreground) {
-      focusedWindow.focus();
+      focusBrowserWindow(focusedWindow);
     }
     return newTab;
   });
@@ -127,13 +146,13 @@ export function createNewWindow(
     ...getDefaultWindowOptions(options),
   });
   setupWindow(options, window);
-  window.loadURL(url).catch((err) => log.error('window.loadURL ERROR', err));
+  loadUrl(window, url).catch((err) => log.error('window.loadURL ERROR', err));
   return window;
 }
 
 export function getCurrentURL(): string {
   return withFocusedWindow((focusedWindow) =>
-    focusedWindow.webContents.getURL(),
+    getWebContentsUrl(focusedWindow),
   ) as unknown as string;
 }
 
@@ -194,19 +213,19 @@ export function getDefaultWindowOptions(
 export function goBack(): void {
   log.debug('onGoBack');
   withFocusedWindow((focusedWindow) => {
-    focusedWindow.webContents.goBack();
+    navigateBack(focusedWindow);
   });
 }
 
 export function goForward(): void {
   log.debug('onGoForward');
   withFocusedWindow((focusedWindow) => {
-    focusedWindow.webContents.goForward();
+    navigateForward(focusedWindow);
   });
 }
 
 export function goToURL(url: string): Promise<void> | undefined {
-  return withFocusedWindow((focusedWindow) => focusedWindow.loadURL(url));
+  return withFocusedWindow((focusedWindow) => loadUrl(focusedWindow, url));
 }
 
 export function hideWindow(
@@ -218,10 +237,10 @@ export function hideWindow(
   if (isOSX() && !fastQuit) {
     // this is called when exiting from clicking the cross button on the window
     event.preventDefault();
-    window.hide();
+    hideBrowserWindow(window);
   } else if (!fastQuit && tray !== 'false') {
     event.preventDefault();
-    window.hide();
+    hideBrowserWindow(window);
   }
   // will close the window on other platforms
 }
@@ -233,20 +252,19 @@ export function injectCSS(browserWindow: BrowserWindow): void {
     return;
   }
 
-  browserWindow.webContents.on('did-navigate', () => {
+  onWebContentsEvent(browserWindow, 'did-navigate', () => {
     log.debug(
       'browserWindow.webContents.did-navigate',
-      browserWindow.webContents.getURL(),
+      getWebContentsUrl(browserWindow),
     );
 
-    browserWindow.webContents
-      .insertCSS(cssToInject)
-      .catch((err: unknown) =>
-        log.error('browserWindow.webContents.insertCSS', err),
-      );
+    insertCSS(browserWindow, cssToInject).catch((err: unknown) =>
+      log.error('browserWindow.webContents.insertCSS', err),
+    );
 
     // We must inject css early enough; so onResponseStarted is a good place.
-    browserWindow.webContents.session.webRequest.onResponseStarted(
+    onSessionWebRequestResponseStarted(
+      getBrowserWindowSession(browserWindow),
       { urls: [] }, // Pass an empty filter list; null will not match _any_ urls
       (details: OnResponseStartedListenerDetails): void => {
         log.debug('onResponseStarted', {
@@ -303,26 +321,26 @@ function injectCSSIntoResponse(
       details.resourceType
     } and content-type ${contentType as string}`,
   );
-  return details.webContents.insertCSS(cssToInject);
+  return insertCSSInWebContents(details.webContents, cssToInject);
 }
 
 export function sendParamsOnDidFinishLoad(
   options: WindowOptions,
   window: BrowserWindow,
 ): void {
-  window.webContents.on('did-finish-load', () => {
+  onWebContentsEvent(window, 'did-finish-load', () => {
     log.debug(
       'sendParamsOnDidFinishLoad.window.webContents.did-finish-load',
-      window.webContents.getURL(),
+      getWebContentsUrl(window),
     );
     // In children windows too: Restore pinch-to-zoom, disabled by default in recent Electron.
     // See https://github.com/nativefier/nativefier/issues/379#issuecomment-598612128
     // and https://github.com/electron/electron/pull/12679
-    window.webContents
-      .setVisualZoomLevelLimits(1, 3)
-      .catch((err) => log.error('webContents.setVisualZoomLevelLimits', err));
+    setVisualZoomLevelLimits(window, 1, 3).catch((err) =>
+      log.error('webContents.setVisualZoomLevelLimits', err),
+    );
 
-    window.webContents.send('params', JSON.stringify(options));
+    sendToWebContents(window, 'params', JSON.stringify(options));
   });
 }
 
@@ -330,13 +348,9 @@ export function setProxyRules(
   window: BrowserWindow,
   proxyRules?: string,
 ): void {
-  window.webContents.session
-    .setProxy({
-      proxyRules,
-      pacScript: '',
-      proxyBypassRules: '',
-    })
-    .catch((err) => log.error('session.setProxy ERROR', err));
+  setSessionProxy(getBrowserWindowSession(window), proxyRules).catch((err) =>
+    log.error('session.setProxy ERROR', err),
+  );
 }
 
 export function withFocusedWindow<T>(
@@ -358,7 +372,7 @@ export function zoomOut(): void {
 export function zoomReset(options: { zoom?: number }): void {
   log.debug('zoomReset');
   withFocusedWindow((focusedWindow) => {
-    focusedWindow.webContents.zoomFactor = options.zoom ?? 1.0;
+    setZoomFactor(focusedWindow, options.zoom ?? 1.0);
   });
 }
 
