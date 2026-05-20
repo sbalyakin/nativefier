@@ -41,7 +41,10 @@ export function onTrayEvent(
   listener: (...args: unknown[]) => void,
 ): void {
   // Tray.on overloads are narrow; runtime accepts standard tray events.
-  (tray.on as (e: string, fn: (...args: unknown[]) => void) => void)(event, listener);
+  (tray.on as (e: string, fn: (...args: unknown[]) => void) => void)(
+    event,
+    listener,
+  );
 }
 
 export function setTrayToolTip(tray: Tray, toolTip: string): void {

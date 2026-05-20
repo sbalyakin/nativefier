@@ -82,10 +82,7 @@ describe('windowAdapter', () => {
 
     const payload = { url: 'https://example.com' };
     emitBrowserWindowEvent(window, 'new-window-for-tab', payload);
-    expect(mockWindowEmit).toHaveBeenCalledWith(
-      'new-window-for-tab',
-      payload,
-    );
+    expect(mockWindowEmit).toHaveBeenCalledWith('new-window-for-tab', payload);
   });
 
   it('loadUrl, sendToWebContents, goBack, and insertCSS delegate to window/webContents', async () => {

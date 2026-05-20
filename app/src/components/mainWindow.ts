@@ -1,4 +1,8 @@
-import type { BrowserWindow, Event, HandlerDetails } from '../adapters/electronTypes';
+import type {
+  BrowserWindow,
+  Event,
+  HandlerDetails,
+} from '../adapters/electronTypes';
 import {
   getBrowserWindowSession,
   getSessionProperty,
@@ -143,16 +147,20 @@ export async function createMainWindow(
       mainWindow,
     );
   });
-  onBrowserWindowEvent(mainWindow, 'new-window-for-tab', (event?: Event<{ url?: string }>) => {
-    log.debug('mainWindow.new-window-for-tab', { event });
-    createNewTab(
-      windowOptions,
-      setupNativefierWindow,
-      event?.url ?? options.targetUrl,
-      true,
-      // mainWindow,
-    );
-  });
+  onBrowserWindowEvent(
+    mainWindow,
+    'new-window-for-tab',
+    (event?: Event<{ url?: string }>) => {
+      log.debug('mainWindow.new-window-for-tab', { event });
+      createNewTab(
+        windowOptions,
+        setupNativefierWindow,
+        event?.url ?? options.targetUrl,
+        true,
+        // mainWindow,
+      );
+    },
+  );
 
   if (options.counter) {
     setupCounter(options, mainWindow, setDockBadge);
@@ -279,11 +287,7 @@ function setupSessionInteraction(window: BrowserWindow): void {
       try {
         if (request.func !== undefined) {
           const funcArgs = normalizeSessionFuncArgs(request.funcArgs);
-          result.value = invokeSessionMethod(
-            session,
-            request.func,
-            funcArgs,
-          );
+          result.value = invokeSessionMethod(session, request.func, funcArgs);
 
           if (result.value !== undefined && result.value instanceof Promise) {
             // This is a promise. We'll resolve it here otherwise it will blow up trying to serialize it in the reply
@@ -300,7 +304,11 @@ function setupSessionInteraction(window: BrowserWindow): void {
           }
         } else if (request.property !== undefined) {
           if (request.propertyValue !== undefined) {
-            setSessionProperty(session, request.property, request.propertyValue);
+            setSessionProperty(
+              session,
+              request.property,
+              request.propertyValue,
+            );
           }
 
           result.value = getSessionProperty(session, request.property);

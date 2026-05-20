@@ -7,15 +7,34 @@ jest.mock('../helpers/helpers');
 import { isOSX } from '../helpers/helpers';
 import { generateMenu } from './menu';
 
-function createMockBrowserWindow(): BrowserWindow {
+function createMockBrowserWindow(): {
+  window: BrowserWindow;
+  mockIsFullScreen: jest.Mock;
+  mockIsFullScreenable: jest.Mock;
+  mockIsSimpleFullScreen: jest.Mock;
+  mockSetFullScreen: jest.Mock;
+  mockSetSimpleFullScreen: jest.Mock;
+} {
+  const mockIsFullScreen = jest.fn(() => false);
+  const mockIsFullScreenable = jest.fn(() => true);
+  const mockIsSimpleFullScreen = jest.fn(() => false);
+  const mockSetFullScreen = jest.fn();
+  const mockSetSimpleFullScreen = jest.fn();
   return {
-    isFullScreen: jest.fn(() => false),
-    isFullScreenable: jest.fn(() => true),
-    isSimpleFullScreen: jest.fn(() => false),
-    setFullScreen: jest.fn(),
-    setSimpleFullScreen: jest.fn(),
-    webContents: { toggleDevTools: jest.fn() },
-  } as unknown as BrowserWindow;
+    window: {
+      isFullScreen: mockIsFullScreen,
+      isFullScreenable: mockIsFullScreenable,
+      isSimpleFullScreen: mockIsSimpleFullScreen,
+      setFullScreen: mockSetFullScreen,
+      setSimpleFullScreen: mockSetSimpleFullScreen,
+      webContents: { toggleDevTools: jest.fn() },
+    } as unknown as BrowserWindow,
+    mockIsFullScreen,
+    mockIsFullScreenable,
+    mockIsSimpleFullScreen,
+    mockSetFullScreen,
+    mockSetSimpleFullScreen,
+  };
 }
 
 describe('generateMenu', () => {
@@ -28,12 +47,13 @@ describe('generateMenu', () => {
   let mockSetSimpleFullScreen: jest.Mock;
 
   beforeEach(() => {
-    window = createMockBrowserWindow();
-    mockIsFullScreen = window.isFullScreen as jest.Mock;
-    mockIsFullScreenable = window.isFullScreenable as jest.Mock;
-    mockIsSimpleFullScreen = window.isSimpleFullScreen as jest.Mock;
-    mockSetFullScreen = window.setFullScreen as jest.Mock;
-    mockSetSimpleFullScreen = window.setSimpleFullScreen as jest.Mock;
+    const mocks = createMockBrowserWindow();
+    window = mocks.window;
+    mockIsFullScreen = mocks.mockIsFullScreen;
+    mockIsFullScreenable = mocks.mockIsFullScreenable;
+    mockIsSimpleFullScreen = mocks.mockIsSimpleFullScreen;
+    mockSetFullScreen = mocks.mockSetFullScreen;
+    mockSetSimpleFullScreen = mocks.mockSetSimpleFullScreen;
     mockIsOSX.mockReset();
     mockIsFullScreen.mockReturnValue(false);
     mockIsFullScreenable.mockReturnValue(true);

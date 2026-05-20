@@ -75,16 +75,16 @@ export function createTrayIcon(
         mainWindow,
         'page-title-updated',
         (event, title: string) => {
-        log.debug('mainWindow.page-title-updated', { event, title });
-        const counterValue = getCounterValue(title);
-        if (counterValue) {
-          setTrayToolTip(
-            appIcon,
-            `(${counterValue})  ${options.name ?? 'Nativefier'}`,
-          );
-        } else {
-          setTrayToolTip(appIcon, options.name ?? '');
-        }
+          log.debug('mainWindow.page-title-updated', { event, title });
+          const counterValue = getCounterValue(title);
+          if (counterValue) {
+            setTrayToolTip(
+              appIcon,
+              `(${counterValue})  ${options.name ?? 'Nativefier'}`,
+            );
+          } else {
+            setTrayToolTip(appIcon, options.name ?? '');
+          }
         },
       );
     } else {

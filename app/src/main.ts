@@ -150,23 +150,20 @@ onAppEvent<
     unknown,
     (username?: string, password?: string) => void,
   ]
->(
-  'login',
-  (event, webContents, request, authInfo, callback) => {
-    log.debug('app.login', { event, request });
-    // for http authentication
-    event.preventDefault();
+>('login', (event, webContents, request, authInfo, callback) => {
+  log.debug('app.login', { event, request });
+  // for http authentication
+  event.preventDefault();
 
-    if (appArgs.basicAuthUsername && appArgs.basicAuthPassword) {
-      callback(appArgs.basicAuthUsername, appArgs.basicAuthPassword);
-    } else {
-      createLoginWindow(
-        callback,
-        // mainWindow
-      ).catch((err) => log.error('createLoginWindow ERROR', err));
-    }
-  },
-);
+  if (appArgs.basicAuthUsername && appArgs.basicAuthPassword) {
+    callback(appArgs.basicAuthUsername, appArgs.basicAuthPassword);
+  } else {
+    createLoginWindow(
+      callback,
+      // mainWindow
+    ).catch((err) => log.error('createLoginWindow ERROR', err));
+  }
+});
 
 async function onReady(): Promise<void> {
   // Warning: `mainWindow` below is the *global* unique `mainWindow`, created at init time

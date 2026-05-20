@@ -43,7 +43,7 @@ describe('trayAdapter', () => {
   });
 
   it('createEmptyTray and loadNativeImageFromPath delegate to electron', () => {
-    const tray = createEmptyTray();
+    createEmptyTray();
     expect(mockTray).toHaveBeenCalledWith('empty-image');
 
     const image = loadNativeImageFromPath('/icon.png');

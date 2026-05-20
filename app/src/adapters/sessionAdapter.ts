@@ -19,11 +19,9 @@ export function getBrowserWindowSession(window: BrowserWindow): Session {
 
 export function setDefaultPermissionHandlers(session: Session): void {
   session.setPermissionCheckHandler(() => true);
-  session.setPermissionRequestHandler(
-    (_webContents, _permission, callback) => {
-      callback(true);
-    },
-  );
+  session.setPermissionRequestHandler((_webContents, _permission, callback) => {
+    callback(true);
+  });
 }
 
 export async function clearSessionData(session: Session): Promise<void> {

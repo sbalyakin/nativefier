@@ -110,10 +110,7 @@ export function moveTabToNewWindow(window: BrowserWindow): void {
   window.moveTabToNewWindow();
 }
 
-export function loadUrl(
-  window: BrowserWindow,
-  url: string,
-): Promise<void> {
+export function loadUrl(window: BrowserWindow, url: string): Promise<void> {
   return window.loadURL(url);
 }
 
@@ -148,10 +145,7 @@ export function toggleDevTools(window: BrowserWindow): void {
   window.webContents.toggleDevTools();
 }
 
-export function insertCSS(
-  window: BrowserWindow,
-  css: string,
-): Promise<string> {
+export function insertCSS(window: BrowserWindow, css: string): Promise<string> {
   return window.webContents.insertCSS(css);
 }
 
@@ -199,8 +193,7 @@ export function adjustZoomFactor(
   window: BrowserWindow,
   adjustment: number,
 ): void {
-  window.webContents.zoomFactor =
-    window.webContents.zoomFactor + adjustment;
+  window.webContents.zoomFactor = window.webContents.zoomFactor + adjustment;
 }
 
 export function setZoomFactor(window: BrowserWindow, zoomFactor: number): void {
