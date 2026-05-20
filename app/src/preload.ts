@@ -11,6 +11,7 @@ import { ipcRenderer } from 'electron';
 
 import { injectScripts } from './preload/injectScripts';
 import { setupIpcEvents } from './preload/ipcEvents';
+import { setupNativefierBridge } from './preload/nativefierBridge';
 import { setupNotifications } from './preload/notifications';
 
 // Do *NOT* add 3rd-party imports here in preload (except for webpack `externals` like electron).
@@ -26,5 +27,6 @@ import { setupNotifications } from './preload/notifications';
 
 const log = console; // since we can't have `loglevel` here in preload
 
+setupNativefierBridge(ipcRenderer);
 setupNotifications(ipcRenderer);
 setupIpcEvents(ipcRenderer, log);

@@ -87,11 +87,13 @@
     - [[flash] and [flash-path] (DEPRECATED)](#flash-and-flash-path-deprecated)
 - [Programmatic API](#programmatic-api)
 - [Accessing The Electron Session](#accessing-the-electron-session)
+  - [Migration from `require('electron')` (breaking)](#migration-from-requireelectron-breaking)
+  - [`nativefier.session` API](#nativefiersession-api)
   - [Important Note On funcArgs](#important-note-on-funcargs)
-  - [session-interaction-reply](#session-interaction-reply)
   - [Errors](#errors)
   - [Complex Return Values](#complex-return-values)
   - [Example](#example)
+  - [Legacy IPC (internal)](#legacy-ipc-internal)
 
 ## Packaging Squirrel-based installers
 
@@ -671,7 +673,14 @@ Example `shortcuts.json` for `https://deezer.com` & `https://soundcloud.com` to 
 
 Allows you to inject JavaScript or CSS files. This command can be repeated multiple times to inject multiple files.
 
-_Note about JS injection:_ injected JS is loaded _after_ `DOMContentLoaded`, so you can assume the DOM is complete & available.
+_Note about JS injection:_ injected JS is loaded _after_ `DOMContentLoaded`, so you can assume the DOM is complete & available. JS runs in the **preload** context (not the page's main JavaScript world). You can manipulate the shared DOM from there.
+
+**Inject JavaScript contract (secure renderer):**
+
+- Do **not** use `require('electron')` or `ipcRenderer` in `--inject` scripts.
+- Use the global `nativefier` bridge instead, especially `nativefier.session` for Electron `session` access (see [Accessing The Electron Session](#accessing-the-electron-session)).
+- Injected code cannot expose globals to the loaded website's page scripts. To run code in the page world, use main-process `webContents.executeJavaScript` (advanced; rarely needed).
+- CSS injection is unchanged (injected via main process).
 
 _Note about CSS injection:_ to override existing CSS rules, you need to use the `!important` CSS keyword. Example: `#id_to_hide { display: none !important; }` , not just `#id_to_hide { display: none; }` .
 
@@ -1096,208 +1105,109 @@ nativefier(options, function (error, appPath) {
 
 ## Accessing The Electron Session
 
-Sometimes there are Electron features that are exposed via the [Electron `session` API](https://www.electronjs.org/docs/api/session), that may not be exposed via Nativefier options. These can be accessed with an injected javascript file (via the `--inject` command line argument when building your application). Within that javascript file, you may send an ipcRenderer `session-interaction` event, and listen for a `session-interaction-reply` event to get any result. Session properties and functions can be accessed via this event. This event takes an object as an argument with the desired interaction to be performed.
+Sometimes there are Electron features that are exposed via the [Electron `session` API](https://www.electronjs.org/docs/api/session), that may not be exposed via Nativefier options. These can be accessed from an injected JavaScript file (via `--inject`) through the `nativefier.session` bridge exposed in the preload context.
 
-**Warning**: using this feature in an `--inject` script means using Electron's `session` API, which is not a standard web API and subject to potential [Breaking Changes](https://www.electronjs.org/docs/breaking-changes) at each major Electron upgrade.
+**Warning**: using this feature means relying on Electron's `session` API, which is not a standard web API and subject to potential [Breaking Changes](https://www.electronjs.org/docs/breaking-changes) at each major Electron upgrade.
 
-To get a `session` property:
+### Migration from `require('electron')` (breaking)
 
-```javascript
-const electron = require('electron');
+| Before (removed) | After |
+| --- | --- |
+| `const electron = require('electron')` | Use global `nativefier` (no import) |
+| `electron.ipcRenderer.send('session-interaction', { property: 'x' })` | `await nativefier.session.get('x')` |
+| `electron.ipcRenderer.send('session-interaction', { property: 'x', propertyValue: v })` | `await nativefier.session.set('x', v)` |
+| `electron.ipcRenderer.send('session-interaction', { func: 'f', funcArgs: [a] })` | `await nativefier.session.call('f', [a])` |
+| `ipcRenderer.on('session-interaction-reply', ...)` | `await` on the promise returned by `get` / `set` / `call` |
+| `ipcRenderer.sendSync('session-interaction', ...)` | Not supported; use async `nativefier.session.*` |
 
-const request = {
-  property: 'availableSpellCheckerLanguages',
-};
-electron.ipcRenderer.send('session-interaction', request);
-```
+### `nativefier.session` API
 
-To set a `session` property:
+All methods return a `Promise`. Optional `{ id: 'my-step' }` correlates concurrent operations (same as the legacy `session-interaction` request `id`).
 
-```javascript
-const electron = require('electron');
-
-const request = {
-  property: 'spellCheckerEnabled',
-  propertyValue: true,
-};
-electron.ipcRenderer.send('session-interaction', request);
-```
-
-To call a `session` function:
+**Get** a `session` property:
 
 ```javascript
-const electron = require('electron');
-
-const request = {
-  func: 'clearCache',
-};
-electron.ipcRenderer.send('session-interaction', request);
+const languages = await nativefier.session.get('availableSpellCheckerLanguages');
 ```
 
-To call a `session` function, with arguments:
+**Set** a `session` property:
 
 ```javascript
-const electron = require('electron');
-
-const request = {
-  func: 'setDownloadPath',
-  funcArgs: [`/home/user/downloads`],
-};
-electron.ipcRenderer.send('session-interaction', request);
+await nativefier.session.set('spellCheckerEnabled', true);
 ```
 
-If neither a `func` nor a `property` is provided in the event, an error will be returned.
+**Call** a `session` function:
+
+```javascript
+await nativefier.session.call('clearCache');
+```
+
+**Call** with arguments (`funcArgs` is always an array of arguments, even for a single argument):
+
+```javascript
+await nativefier.session.call('setDownloadPath', ['/home/user/downloads']);
+await nativefier.session.call('setSpellCheckerLanguages', [['fr']]);
+```
+
+If neither a function nor a property is provided internally, the bridge rejects the promise.
 
 ### Important Note On funcArgs
 
-PLEASE NOTE: `funcArgs` is ALWAYS an array of arguments to be passed to the function, even if it is just one argument. If `funcArgs` is omitted from a request with a `func` provided, no arguments will be passed.
-
-### session-interaction-reply
-
-The results of the call, if desired, can be accessed one of two ways. Either you can listen for a `session-interaction-reply` event, and access the resulting value like so:
-
-```javascript
-const electron = require('electron');
-
-const request = {
-  property: 'availableSpellCheckerLanguages',
-};
-electron.ipcRenderer.send('session-interaction', request);
-
-electron.ipcRenderer.on('session-interaction-reply', (event, result) => {
-  console.log('session-interaction-reply', event, result.value);
-});
-```
-
-Or the result can be retrieved synchronously, though this is not recommended as it may cause slowdowns and freezes in your apps while the app stops and waits for the result to be returned. Heed this [warning from Electron](https://www.electronjs.org/docs/api/ipc-renderer):
-
-> ⚠️ WARNING: Sending a synchronous message will block the whole renderer process until the reply is received, so use this method only as a last resort. It's much better to use the asynchronous version.
-
-```javascript
-const electron = require('electron');
-
-const request = {
-  property: 'availableSpellCheckerLanguages',
-};
-console.log(
-  electron.ipcRenderer.sendSync('session-interaction', request).value,
-);
-```
-
-### Request IDs
-
-If desired, an id for the request may be provided to distinguish between event replies:
-
-```javascript
-const electron = require('electron');
-
-const request = {
-  id: 'availableSpellCheckerLanguages',
-  property: 'availableSpellCheckerLanguages',
-};
-electron.ipcRenderer.send('session-interaction', request);
-
-electron.ipcRenderer.on('session-interaction-reply', (event, result) => {
-  console.log('session-interaction-reply', event, result.id, result.value);
-});
-```
+`funcArgs` is ALWAYS an array of arguments passed to the function, even when there is only one argument. If omitted for `call`, no arguments are passed.
 
 ### Errors
 
-If an error occurs while handling the interaction, it will be returned in the `session-interaction-reply` event inside the result:
+Failed interactions reject the promise:
 
 ```javascript
-const electron = require('electron');
-
-electron.ipcRenderer.on('session-interaction-reply', (event, result) => {
-  console.log('session-interaction-reply', event, result.error);
-});
-
-electron.ipcRenderer.send('session-interaction', {
-  func: 'thisFunctionDoesNotExist',
-});
+try {
+  await nativefier.session.call('thisFunctionDoesNotExist');
+} catch (err) {
+  console.error('session call failed', err);
+}
 ```
 
 ### Complex Return Values
 
-Due to the nature of how these events are transmitted back and forth, session functions and properties that return full classes or class instances are not supported.
+Session functions and properties that return full classes or class instances are not supported over IPC.
 
-For example, the following code will return an error instead of the expected value:
+For example, reading `cookies` as a property returns an error instead of a usable object:
 
 ```javascript
-const electron = require('electron');
-
-const request = {
-  id: 'cookies',
-  property: 'cookies',
-};
-electron.ipcRenderer.send('session-interaction', request);
-
-electron.ipcRenderer.on('session-interaction-reply', (event, result) => {
-  console.log('session-interaction-reply', event, result);
-});
+try {
+  await nativefier.session.get('cookies');
+} catch (err) {
+  console.error(err);
+}
 ```
 
 ### Example
 
-This javascript, when injected as a file via `--inject`, will attempt to call the `isSpellCheckerEnabled` function to make sure the spell checker is enabled, enables it via the `spellCheckerEnabled` property, gets the value of the `availableSpellCheckerLanguages` property, and finally will call `setSpellCheckerLanguages` to set the `fr` language as the preferred spellcheck language if it's supported.
+This script, injected via `--inject`, enables spell check, reads available languages, and sets French when supported:
 
 ```javascript
-const electron = require('electron');
+(async () => {
+  const enabled = await nativefier.session.call('isSpellCheckerEnabled');
+  console.log('SpellChecker enabled?', enabled);
 
-electron.ipcRenderer.on('session-interaction-reply', (event, result) => {
-  console.log('session-interaction-reply', event, result);
-  switch (result.id) {
-    case 'isSpellCheckerEnabled':
-      console.log('SpellChecker enabled?', result.value);
-      if (result.value === true) {
-        console.log('Getting supported languages...');
-        electron.ipcRenderer.send('session-interaction', {
-          id: 'availableSpellCheckerLanguages',
-          property: 'availableSpellCheckerLanguages',
-        });
-      } else {
-        console.log('SpellChecker disabled. Enabling...');
-        electron.ipcRenderer.send('session-interaction', {
-          id: 'setSpellCheckerEnabled',
-          property: 'spellCheckerEnabled',
-          propertyValue: true,
-        });
-      }
-      break;
-    case 'setSpellCheckerEnabled':
-      console.log(
-        'SpellChecker has now been enabled. Getting supported languages...',
-      );
-      electron.ipcRenderer.send('session-interaction', {
-        id: 'availableSpellCheckerLanguages',
-        property: 'availableSpellCheckerLanguages',
-      });
-      break;
-    case 'availableSpellCheckerLanguages':
-      console.log('Avaliable spellChecker languages:', result.value);
-      if (result.value.indexOf('fr') > -1) {
-        electron.ipcRenderer.send('session-interaction', {
-          id: 'setSpellCheckerLanguages',
-          func: 'setSpellCheckerLanguages',
-          funcArgs: [['fr']],
-        });
-      } else {
-        console.log(
-          "Not changing spellChecker language. 'fr' is not supported.",
-        );
-      }
-      break;
-    case 'setSpellCheckerLanguages':
-      console.log('SpellChecker language was set.');
-      break;
-    default:
-      console.error('Unknown reply id:', result.id);
+  if (!enabled) {
+    await nativefier.session.set('spellCheckerEnabled', true);
   }
-});
 
-electron.ipcRenderer.send('session-interaction', {
-  id: 'isSpellCheckerEnabled',
-  func: 'isSpellCheckerEnabled',
-});
+  const languages = await nativefier.session.get(
+    'availableSpellCheckerLanguages',
+  );
+  console.log('Available spellChecker languages:', languages);
+
+  if (languages.indexOf('fr') > -1) {
+    await nativefier.session.call('setSpellCheckerLanguages', [['fr']]);
+    console.log('SpellChecker language was set to fr.');
+  } else {
+    console.log("Not changing spellChecker language. 'fr' is not supported.");
+  }
+})();
 ```
+
+### Legacy IPC (internal)
+
+The main process still handles `session-interaction` / `session-interaction-reply` IPC. Inject scripts must use `nativefier.session` only; direct `ipcRenderer` access from inject is not supported.
