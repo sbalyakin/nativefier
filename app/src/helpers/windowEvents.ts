@@ -10,6 +10,8 @@ import {
   getFocusedBrowserWindow,
   onWebContentsEvent,
 } from '../adapters/windowAdapter';
+import { registerDisplayMediaRequestHandler } from '../services/displayMediaService';
+import { getBrowserWindowSession } from '../adapters/sessionAdapter';
 import { linkIsInternal, nativeTabsSupported, openExternal } from './helpers';
 import * as log from './loggingHelper';
 import {
@@ -173,6 +175,8 @@ export function setupNativefierWindow(
   options: WindowOptions,
   window: BrowserWindow,
 ): void {
+  registerDisplayMediaRequestHandler(getBrowserWindowSession(window));
+
   if (options.proxyRules) {
     setProxyRules(window, options.proxyRules);
   }

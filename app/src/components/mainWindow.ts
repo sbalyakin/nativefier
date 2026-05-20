@@ -23,11 +23,7 @@ import {
   setWindowOpenHandler,
   showBrowserWindow,
 } from '../adapters/windowAdapter';
-import {
-  getDesktopCapturerSources,
-  handleIpcMainInvoke,
-  onIpcMainEvent,
-} from '../adapters/ipcAdapter';
+import { onIpcMainEvent } from '../adapters/ipcAdapter';
 import { persistRuntimeConfig } from '../config/persistRuntimeConfig';
 import { initContextMenu } from './contextMenu';
 import { createMenu } from './menu';
@@ -248,11 +244,6 @@ function setupCounter(
 
 function setupSessionPermissionHandler(window: BrowserWindow): void {
   setDefaultPermissionHandlers(getBrowserWindowSession(window));
-  handleIpcMainInvoke('desktop-capturer-get-sources', () => {
-    return getDesktopCapturerSources({
-      types: ['screen', 'window'],
-    });
-  });
 }
 
 function setupNotificationBadge(

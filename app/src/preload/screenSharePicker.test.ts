@@ -2,6 +2,7 @@ import {
   SCREEN_SHARE_PICKER_BASE_ID,
   buildScreenSharePickerInnerHtml,
   buildScreenShareSourceItemHtml,
+  escapeHtmlAttribute,
   screenSharePickerCloseId,
   type ScreenShareSource,
 } from './screenSharePicker';
@@ -26,6 +27,15 @@ test('buildScreenShareSourceItemHtml includes source metadata', () => {
   expect(html).toContain('title="Entire screen"');
   expect(html).toContain('data:image/png;base64,thumb');
   expect(html).toContain('Entire screen');
+});
+
+test('escapeHtmlAttribute escapes quotes in source names', () => {
+  expect(escapeHtmlAttribute('Say "hello"')).toBe('Say &quot;hello&quot;');
+  const html = buildScreenShareSourceItemHtml({
+    ...mockSource,
+    name: 'Window "A"',
+  });
+  expect(html).toContain('title="Window &quot;A&quot;"');
 });
 
 test('buildScreenSharePickerInnerHtml renders close button and source list', () => {

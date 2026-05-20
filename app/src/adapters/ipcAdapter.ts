@@ -1,4 +1,4 @@
-import { desktopCapturer, DesktopCapturerSource, ipcMain } from 'electron';
+import { ipcMain } from 'electron';
 
 export function onIpcMainEvent(
   channel: string,
@@ -19,10 +19,4 @@ export function handleIpcMainInvoke(
   listener: Parameters<typeof ipcMain.handle>[1],
 ): void {
   ipcMain.handle(channel, listener);
-}
-
-export function getDesktopCapturerSources(options: {
-  types: ('screen' | 'window')[];
-}): Promise<DesktopCapturerSource[]> {
-  return desktopCapturer.getSources(options);
 }

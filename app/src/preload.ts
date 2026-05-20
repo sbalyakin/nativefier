@@ -12,7 +12,6 @@ import { ipcRenderer } from 'electron';
 import { injectScripts } from './preload/injectScripts';
 import { setupIpcEvents } from './preload/ipcEvents';
 import { setupNotifications } from './preload/notifications';
-import { setDisplayMediaPromise } from './preload/screenSharePicker';
 
 // Do *NOT* add 3rd-party imports here in preload (except for webpack `externals` like electron).
 // They will work during development, but break in the prod build :-/ .
@@ -28,5 +27,4 @@ import { setDisplayMediaPromise } from './preload/screenSharePicker';
 const log = console; // since we can't have `loglevel` here in preload
 
 setupNotifications(ipcRenderer);
-setDisplayMediaPromise(ipcRenderer);
 setupIpcEvents(ipcRenderer, log);

@@ -1,29 +1,37 @@
-import { DesktopCapturerSource, IpcRenderer } from 'electron';
-
-import { isWayland } from './platform';
-
-const log = console;
-
 export const SCREEN_SHARE_PICKER_BASE_ID = 'native-screen-share-picker';
 
-export type ScreenShareSource = Pick<
-  DesktopCapturerSource,
-  'id' | 'name' | 'thumbnail'
->;
+export type ScreenShareThumbnail = {
+  toDataURL: () => string;
+};
+
+export type ScreenShareSource = {
+  id: string;
+  name: string;
+  thumbnail: ScreenShareThumbnail;
+};
 
 export function screenSharePickerCloseId(baseId: string): string {
   return `${baseId}-close`;
+}
+
+export function escapeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 export function buildScreenShareSourceItemHtml(
   source: ScreenShareSource,
 ): string {
   const { id, name, thumbnail } = source;
+  const safeName = escapeHtmlAttribute(name);
   return `
           <li class="desktop-capturer-selection__item">
-            <button class="desktop-capturer-selection__btn" data-id="${id}" title="${name}">
+            <button class="desktop-capturer-selection__btn" data-id="${id}" title="${safeName}">
               <img class="desktop-capturer-selection__thumbnail" src="${thumbnail.toDataURL()}" />
-              <span class="desktop-capturer-selection__name">${name}</span>
+              <span class="desktop-capturer-selection__name">${safeName}</span>
             </button>
           </li>
         `;
@@ -139,121 +147,3 @@ export const SCREEN_SHARE_PICKER_STYLES = `
       --selection-button-color: hsl(180, 1.3%, 85.3%);
     }
   }`;
-
-export function setupScreenSharePickerStyles(id: string): void {
-  const screenShareStyles = document.createElement('style');
-  screenShareStyles.id = id;
-  screenShareStyles.innerHTML = SCREEN_SHARE_PICKER_STYLES;
-  document.head.appendChild(screenShareStyles);
-}
-
-export function setupScreenSharePickerElement(
-  id: string,
-  sources: ScreenShareSource[],
-): void {
-  const selectionElem = document.createElement('div');
-  selectionElem.classList.add('desktop-capturer-selection');
-  selectionElem.id = id;
-  selectionElem.innerHTML = buildScreenSharePickerInnerHtml(id, sources);
-  document.body.appendChild(selectionElem);
-}
-
-export async function getDisplayMedia(
-  sourceId: number | string,
-): Promise<MediaStream> {
-  type OriginalVideoPropertyType = boolean | MediaTrackConstraints | undefined;
-  if (!window?.navigator?.mediaDevices) {
-    throw Error('window.navigator.mediaDevices is not present');
-  }
-  const stream = await window.navigator.mediaDevices.getUserMedia({
-    audio: false,
-    video: {
-      mandatory: {
-        chromeMediaSource: 'desktop',
-        chromeMediaSourceId: sourceId,
-      },
-    } as unknown as OriginalVideoPropertyType,
-  });
-
-  return stream;
-}
-
-export function setupScreenSharePicker(
-  resolve: (value: MediaStream | PromiseLike<MediaStream>) => void,
-  reject: (reason?: unknown) => void,
-  sources: ScreenShareSource[],
-): void {
-  const baseElementsId = SCREEN_SHARE_PICKER_BASE_ID;
-  const pickerStylesElementId = baseElementsId + '-styles';
-
-  setupScreenSharePickerElement(baseElementsId, sources);
-  setupScreenSharePickerStyles(pickerStylesElementId);
-
-  const clearElements = (): void => {
-    document.getElementById(pickerStylesElementId)?.remove();
-    document.getElementById(baseElementsId)?.remove();
-  };
-
-  document
-    .getElementById(screenSharePickerCloseId(baseElementsId))
-    ?.addEventListener('click', () => {
-      clearElements();
-      reject('Screen share was cancelled by the user.');
-    });
-
-  document
-    .querySelectorAll('.desktop-capturer-selection__btn')
-    .forEach((button) => {
-      button.addEventListener('click', () => {
-        const id = button.getAttribute('data-id');
-        if (!id) {
-          log.error("Couldn't find `data-id` of element");
-          clearElements();
-          return;
-        }
-        const source = sources.find((source) => source.id === id);
-        if (!source) {
-          log.error(`Source with id "${id}" does not exist`);
-          clearElements();
-          return;
-        }
-
-        getDisplayMedia(source.id)
-          .then((stream) => {
-            resolve(stream);
-          })
-          .catch((err) => {
-            log.error('Error selecting desktop capture source:', err);
-            reject(err);
-          })
-          .finally(() => {
-            clearElements();
-          });
-      });
-    });
-}
-
-export function setDisplayMediaPromise(ipcRenderer: IpcRenderer): void {
-  if (!window?.navigator?.mediaDevices) {
-    return;
-  }
-  window.navigator.mediaDevices.getDisplayMedia = (): Promise<MediaStream> => {
-    return new Promise((resolve, reject) => {
-      const sources = ipcRenderer.invoke(
-        'desktop-capturer-get-sources',
-      ) as Promise<DesktopCapturerSource[]>;
-      sources
-        .then(async (sources) => {
-          if (isWayland()) {
-            const stream = await getDisplayMedia(sources[0].id);
-            resolve(stream);
-          } else {
-            setupScreenSharePicker(resolve, reject, sources);
-          }
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  };
-}
