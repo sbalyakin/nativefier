@@ -220,6 +220,7 @@ export type WindowOptions = {
   autoHideMenuBar: boolean;
   blockExternalUrls: boolean;
   browserwindowOptions?: BrowserWindowOptions;
+  flashPluginDir?: string;
   insecure: boolean;
   internalUrls?: string | RegExp;
   strictInternalUrls?: boolean;

@@ -15,9 +15,85 @@ jest.mock('../adapters/dialogAdapter', () => ({
 }));
 
 jest.mock('./helpers');
-import { getCSSToInject } from './helpers';
+import { getCSSToInject, nativeTabsSupported } from './helpers';
 jest.mock('./windowEvents');
-import { clearAppData, createNewTab, injectCSS } from './windowHelpers';
+import {
+  clearAppData,
+  createNewTab,
+  getDefaultWindowOptions,
+  injectCSS,
+} from './windowHelpers';
+
+const baseWindowOptions: WindowOptions = {
+  autoHideMenuBar: true,
+  blockExternalUrls: false,
+  insecure: false,
+  name: 'Test App',
+  targetUrl: 'https://example.com',
+  zoom: 1.25,
+};
+
+describe('getDefaultWindowOptions', () => {
+  const mockNativeTabsSupported = nativeTabsSupported as jest.Mock;
+
+  beforeEach(() => {
+    mockNativeTabsSupported.mockReturnValue(false);
+  });
+
+  test('secure webPreferences by default', () => {
+    const result = getDefaultWindowOptions(baseWindowOptions);
+
+    expect(result.webPreferences).toMatchObject({
+      javascript: true,
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      webSecurity: true,
+      plugins: true,
+      zoomFactor: 1.25,
+    });
+    expect(result.webPreferences?.preload).toMatch(/preload\.js$/);
+  });
+
+  test('disables sandbox when flashPluginDir is set', () => {
+    const result = getDefaultWindowOptions({
+      ...baseWindowOptions,
+      flashPluginDir: '/opt/flash',
+    });
+
+    expect(result.webPreferences?.sandbox).toBe(false);
+    expect(result.webPreferences?.contextIsolation).toBe(true);
+  });
+
+  test('browserwindowOptions.webPreferences override secure defaults last', () => {
+    const result = getDefaultWindowOptions({
+      ...baseWindowOptions,
+      browserwindowOptions: {
+        webPreferences: {
+          contextIsolation: false,
+          nodeIntegration: true,
+        },
+      },
+    });
+
+    expect(result.webPreferences).toMatchObject({
+      contextIsolation: false,
+      nodeIntegration: true,
+      sandbox: true,
+    });
+  });
+
+  test('insecure disables webSecurity only', () => {
+    const result = getDefaultWindowOptions({
+      ...baseWindowOptions,
+      insecure: true,
+    });
+
+    expect(result.webPreferences?.webSecurity).toBe(false);
+    expect(result.webPreferences?.contextIsolation).toBe(true);
+    expect(result.webPreferences?.sandbox).toBe(true);
+  });
+});
 
 describe('clearAppData', () => {
   let window: BrowserWindow;
