@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import type { BrowserWindow } from '../adapters/electronTypes';
 
 import {
   onAppEvent,

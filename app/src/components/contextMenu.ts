@@ -1,9 +1,17 @@
-import electron, {
+import type {
   BrowserWindow,
   ContextMenuParams,
-  Event as ElectronEvent,
-} from 'electron';
-import contextMenu, { type Actions } from 'electron-context-menu';
+  Event,
+} from '../adapters/electronTypes';
+import {
+  initElectronContextMenu,
+  type Actions,
+  type ContextMenuBrowserTarget,
+} from '../adapters/contextMenuAdapter';
+import {
+  emitBrowserWindowEvent,
+  isBrowserWindow,
+} from '../adapters/windowAdapter';
 
 import { nativeTabsSupported, openExternal } from '../helpers/helpers';
 import * as log from '../helpers/loggingHelper';
@@ -20,17 +28,13 @@ export function initContextMenu(
 ): void {
   log.debug('initContextMenu');
 
-  contextMenu({
+  initElectronContextMenu({
     window,
     prepend: (
       _actions: Actions,
       params: ContextMenuParams,
-      browserWindow:
-        | BrowserWindow
-        | electron.BrowserView
-        | electron.WebviewTag
-        | electron.WebContents,
-      _event: ElectronEvent,
+      browserWindow: ContextMenuBrowserTarget,
+      _event: Event,
     ) => {
       log.debug('contextMenu.prepend', { params, browserWindow });
       const items = [];
@@ -50,17 +54,16 @@ export function initContextMenu(
               outputOptionsToWindowOptions(options, nativeTabsSupported()),
               setupNativefierWindow,
               params.linkURL,
-              // window,
             ),
         });
-        if (nativeTabsSupported() && browserWindow instanceof BrowserWindow) {
+        if (nativeTabsSupported() && isBrowserWindow(browserWindow)) {
           items.push({
             label: 'Open Link in New Tab',
             click: () =>
-              browserWindow.emit('new-window-for-tab', {
+              emitBrowserWindowEvent(browserWindow, 'new-window-for-tab', {
                 ...new Event('new-window-for-tab'),
                 url: params.linkURL,
-              } as ElectronEvent<{ url: string }>),
+              }),
           });
         }
       }

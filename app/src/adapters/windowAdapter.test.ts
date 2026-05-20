@@ -11,26 +11,34 @@ const mockIsFullScreen = jest.fn(() => false);
 const mockSetFullScreen = jest.fn();
 const mockMoveTabToNewWindow = jest.fn();
 const mockLoadURL = jest.fn(() => Promise.resolve());
+const mockIsVisible = jest.fn(() => true);
+const mockIsFocused = jest.fn(() => false);
+const mockHide = jest.fn();
+
+class MockBrowserWindow {
+  on = mockWindowOn;
+  once = mockWindowOnce;
+  show = mockWindowShow;
+  hide = mockHide;
+  emit = mockWindowEmit;
+  isVisible = mockIsVisible;
+  isFocused = mockIsFocused;
+  isFullScreen = mockIsFullScreen;
+  setFullScreen = mockSetFullScreen;
+  moveTabToNewWindow = mockMoveTabToNewWindow;
+  loadURL = mockLoadURL;
+  webContents = {
+    zoomFactor: 1,
+    on: mockWebContentsOn,
+    once: mockWebContentsOnce,
+    send: mockWebContentsSend,
+    goBack: mockWebContentsGoBack,
+    insertCSS: mockWebContentsInsertCSS,
+  };
+}
 
 jest.mock('electron', () => ({
-  BrowserWindow: jest.fn().mockImplementation(() => ({
-    on: mockWindowOn,
-    once: mockWindowOnce,
-    show: mockWindowShow,
-    emit: mockWindowEmit,
-    isFullScreen: mockIsFullScreen,
-    setFullScreen: mockSetFullScreen,
-    moveTabToNewWindow: mockMoveTabToNewWindow,
-    loadURL: mockLoadURL,
-    webContents: {
-      zoomFactor: 1,
-      on: mockWebContentsOn,
-      once: mockWebContentsOnce,
-      send: mockWebContentsSend,
-      goBack: mockWebContentsGoBack,
-      insertCSS: mockWebContentsInsertCSS,
-    },
-  })),
+  BrowserWindow: MockBrowserWindow,
 }));
 
 import {
@@ -38,7 +46,11 @@ import {
   createBrowserWindow,
   emitBrowserWindowEvent,
   goBack,
+  hideBrowserWindow,
   insertCSS,
+  isBrowserWindow,
+  isBrowserWindowFocused,
+  isBrowserWindowVisible,
   loadUrl,
   onBrowserWindowEvent,
   onceBrowserWindowEvent,
@@ -93,6 +105,22 @@ describe('windowAdapter', () => {
 
     await insertCSS(window, '.x { color: red; }');
     expect(mockWebContentsInsertCSS).toHaveBeenCalledWith('.x { color: red; }');
+  });
+
+  it('isBrowserWindow, visibility, focus, and hide delegate to BrowserWindow', () => {
+    const window = createBrowserWindow({});
+
+    expect(isBrowserWindow(window)).toBe(true);
+    expect(isBrowserWindow({})).toBe(false);
+
+    expect(isBrowserWindowVisible(window)).toBe(true);
+    expect(mockIsVisible).toHaveBeenCalled();
+
+    expect(isBrowserWindowFocused(window)).toBe(false);
+    expect(mockIsFocused).toHaveBeenCalled();
+
+    hideBrowserWindow(window);
+    expect(mockHide).toHaveBeenCalled();
   });
 
   it('adjustZoomFactor changes webContents.zoomFactor', () => {

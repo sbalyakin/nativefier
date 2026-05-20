@@ -1,40 +1,43 @@
-import { BrowserWindow, MenuItemConstructorOptions } from 'electron';
+import type {
+  BrowserWindow,
+  MenuItemConstructorOptions,
+} from '../adapters/electronTypes';
 
 jest.mock('../helpers/helpers');
 import { isOSX } from '../helpers/helpers';
 import { generateMenu } from './menu';
 
+function createMockBrowserWindow(): BrowserWindow {
+  return {
+    isFullScreen: jest.fn(() => false),
+    isFullScreenable: jest.fn(() => true),
+    isSimpleFullScreen: jest.fn(() => false),
+    setFullScreen: jest.fn(),
+    setSimpleFullScreen: jest.fn(),
+    webContents: { toggleDevTools: jest.fn() },
+  } as unknown as BrowserWindow;
+}
+
 describe('generateMenu', () => {
   let window: BrowserWindow;
   const mockIsOSX: jest.SpyInstance = isOSX as jest.Mock;
-  let mockIsFullScreen: jest.SpyInstance;
-  let mockIsFullScreenable: jest.SpyInstance;
-  let mockIsSimpleFullScreen: jest.SpyInstance;
-  let mockSetFullScreen: jest.SpyInstance;
-  let mockSetSimpleFullScreen: jest.SpyInstance;
+  let mockIsFullScreen: jest.Mock;
+  let mockIsFullScreenable: jest.Mock;
+  let mockIsSimpleFullScreen: jest.Mock;
+  let mockSetFullScreen: jest.Mock;
+  let mockSetSimpleFullScreen: jest.Mock;
 
   beforeEach(() => {
-    window = new BrowserWindow();
+    window = createMockBrowserWindow();
+    mockIsFullScreen = window.isFullScreen as jest.Mock;
+    mockIsFullScreenable = window.isFullScreenable as jest.Mock;
+    mockIsSimpleFullScreen = window.isSimpleFullScreen as jest.Mock;
+    mockSetFullScreen = window.setFullScreen as jest.Mock;
+    mockSetSimpleFullScreen = window.setSimpleFullScreen as jest.Mock;
     mockIsOSX.mockReset();
-    mockIsFullScreen = jest
-      .spyOn(window, 'isFullScreen')
-      .mockReturnValue(false);
-    mockIsFullScreenable = jest
-      .spyOn(window, 'isFullScreenable')
-      .mockReturnValue(true);
-    mockIsSimpleFullScreen = jest
-      .spyOn(window, 'isSimpleFullScreen')
-      .mockReturnValue(false);
-    mockSetFullScreen = jest.spyOn(window, 'setFullScreen');
-    mockSetSimpleFullScreen = jest.spyOn(window, 'setSimpleFullScreen');
-  });
-
-  afterAll(() => {
-    mockIsFullScreen.mockRestore();
-    mockIsFullScreenable.mockRestore();
-    mockIsSimpleFullScreen.mockRestore();
-    mockSetFullScreen.mockRestore();
-    mockSetSimpleFullScreen.mockRestore();
+    mockIsFullScreen.mockReturnValue(false);
+    mockIsFullScreenable.mockReturnValue(true);
+    mockIsSimpleFullScreen.mockReturnValue(false);
   });
 
   test('does not have fullscreen if not supported', () => {

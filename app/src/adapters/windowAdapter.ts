@@ -74,6 +74,18 @@ export function onceBrowserWindowEvent<T extends unknown[]>(
   );
 }
 
+export function isBrowserWindow(value: unknown): value is BrowserWindow {
+  return value instanceof BrowserWindow;
+}
+
+export function isBrowserWindowVisible(window: BrowserWindow): boolean {
+  return window.isVisible();
+}
+
+export function isBrowserWindowFocused(window: BrowserWindow): boolean {
+  return window.isFocused();
+}
+
 export function showBrowserWindow(window: BrowserWindow): void {
   window.show();
 }

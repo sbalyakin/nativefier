@@ -3,6 +3,8 @@
  * Runtime code may `import type` from here only; value imports stay in adapters.
  */
 export type {
+  BaseWindow,
+  BrowserView,
   BrowserWindow,
   BrowserWindowConstructorOptions,
   ContextMenuParams,
@@ -12,7 +14,9 @@ export type {
   IpcMainEvent,
   IpcRenderer,
   Menu,
+  MenuItem,
   MenuItemConstructorOptions,
+  NativeImage,
   MessageBoxReturnValue,
   OnResponseStartedListenerDetails,
   OpenExternalOptions,
@@ -20,4 +24,5 @@ export type {
   Tray,
   WebContents,
   WebPreferences,
+  WebviewTag,
 } from 'electron';

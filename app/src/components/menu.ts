@@ -1,13 +1,12 @@
 import * as fs from 'fs';
 import path from 'path';
 
-import {
+import type {
   BaseWindow,
   BrowserWindow,
   MenuItem,
   MenuItemConstructorOptions,
-} from 'electron';
-
+} from '../adapters/electronTypes';
 import {
   readClipboardText,
   writeClipboardText,
@@ -16,6 +15,7 @@ import {
   buildApplicationMenu,
   setApplicationMenu,
 } from '../adapters/menuAdapter';
+import { toggleDevTools } from '../adapters/windowAdapter';
 
 import { cleanupPlainText, isOSX, openExternal } from '../helpers/helpers';
 import * as log from '../helpers/loggingHelper';
@@ -273,10 +273,7 @@ export function generateMenu(
         accelerator: isOSX() ? 'Alt+Cmd+I' : 'Ctrl+Shift+I',
         click: (item: MenuItem, focusedWindow: BaseWindow | undefined) => {
           log.debug('Toggle Developer Tools.click()', { item, focusedWindow });
-          focusedBrowserWindow(
-            focusedWindow,
-            mainWindow,
-          ).webContents.toggleDevTools();
+          toggleDevTools(focusedBrowserWindow(focusedWindow, mainWindow));
         },
       },
     );

@@ -1,12 +1,24 @@
-import { Tray, BrowserWindow } from 'electron';
-
+import type { BrowserWindow, Tray } from '../adapters/electronTypes';
 import { exitApp } from '../adapters/appAdapter';
 import { onIpcMainEvent } from '../adapters/ipcAdapter';
 import {
   buildTrayContextMenu,
   createEmptyTray,
+  getTrayBounds,
   loadNativeImageFromPath,
+  onTrayEvent,
+  resizeNativeImage,
+  setTrayContextMenu,
+  setTrayImage,
+  setTrayToolTip,
 } from '../adapters/trayAdapter';
+import {
+  hideBrowserWindow,
+  isBrowserWindowFocused,
+  isBrowserWindowVisible,
+  onBrowserWindowEvent,
+  showBrowserWindow,
+} from '../adapters/windowAdapter';
 import { getAppIcon, getCounterValue, isOSX } from '../helpers/helpers';
 import * as log from '../helpers/loggingHelper';
 import { OutputOptions } from '../runtimeContract';
@@ -26,20 +38,22 @@ export function createTrayIcon(
     const appIcon = createEmptyTray();
 
     if (isOSX()) {
-      //sets the icon to the height of the tray.
-      appIcon.setImage(
-        nimage.resize({ height: appIcon.getBounds().height - 2 }),
+      setTrayImage(
+        appIcon,
+        resizeNativeImage(nimage, {
+          height: getTrayBounds(appIcon).height - 2,
+        }),
       );
     } else {
-      appIcon.setImage(nimage);
+      setTrayImage(appIcon, nimage);
     }
 
     const onClick = (): void => {
       log.debug('onClick');
-      if (mainWindow.isVisible()) {
-        mainWindow.hide();
+      if (isBrowserWindowVisible(mainWindow)) {
+        hideBrowserWindow(mainWindow);
       } else {
-        mainWindow.show();
+        showBrowserWindow(mainWindow);
       }
     };
 
@@ -54,39 +68,44 @@ export function createTrayIcon(
       },
     ]);
 
-    appIcon.on('click', onClick);
+    onTrayEvent(appIcon, 'click', onClick);
 
     if (options.counter) {
-      mainWindow.on('page-title-updated', (event, title) => {
+      onBrowserWindowEvent(
+        mainWindow,
+        'page-title-updated',
+        (event, title: string) => {
         log.debug('mainWindow.page-title-updated', { event, title });
         const counterValue = getCounterValue(title);
         if (counterValue) {
-          appIcon.setToolTip(
+          setTrayToolTip(
+            appIcon,
             `(${counterValue})  ${options.name ?? 'Nativefier'}`,
           );
         } else {
-          appIcon.setToolTip(options.name ?? '');
+          setTrayToolTip(appIcon, options.name ?? '');
         }
-      });
+        },
+      );
     } else {
       onIpcMainEvent('notification', () => {
         log.debug('ipcMain.notification');
-        if (mainWindow.isFocused()) {
+        if (isBrowserWindowFocused(mainWindow)) {
           return;
         }
         if (options.name) {
-          appIcon.setToolTip(`•  ${options.name}`);
+          setTrayToolTip(appIcon, `•  ${options.name}`);
         }
       });
 
-      mainWindow.on('focus', () => {
+      onBrowserWindowEvent(mainWindow, 'focus', () => {
         log.debug('mainWindow.focus');
-        appIcon.setToolTip(options.name ?? '');
+        setTrayToolTip(appIcon, options.name ?? '');
       });
     }
 
-    appIcon.setToolTip(options.name ?? '');
-    appIcon.setContextMenu(contextMenu);
+    setTrayToolTip(appIcon, options.name ?? '');
+    setTrayContextMenu(appIcon, contextMenu);
 
     return appIcon;
   }

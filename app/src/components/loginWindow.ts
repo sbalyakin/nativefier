@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { BrowserWindow } from 'electron';
+import type { BrowserWindow } from '../adapters/electronTypes';
 
 import { onceIpcMainEvent } from '../adapters/ipcAdapter';
 import { createBrowserWindow } from '../adapters/windowAdapter';
