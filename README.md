@@ -1,5 +1,3 @@
-Note: Nativefier is unmaintained, please see https://github.com/nativefier/nativefier/issues/1577.
-
 # Nativefier
 
 ![Example of Nativefier app in the macOS dock](.github/dock-screenshot.png)
