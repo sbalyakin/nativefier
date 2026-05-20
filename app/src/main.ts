@@ -1,12 +1,12 @@
 import 'source-map-support/register';
 
-import electron, { app, BrowserWindow, Event } from 'electron';
-
 import {
   exitApp,
   isTrustedAccessibilityClient,
+  onAppEvent,
   quitApp,
 } from './adapters/appAdapter';
+import type { BrowserWindow, Event } from './adapters/electronTypes';
 import { showMessageBox, showMessageBoxSync } from './adapters/dialogAdapter';
 import { registerGlobalShortcut } from './adapters/globalShortcutAdapter';
 import { createLoginWindow } from './components/loginWindow';
@@ -49,14 +49,14 @@ const OLD_BUILD_WARNING_THRESHOLD_DAYS = 90;
 const OLD_BUILD_WARNING_THRESHOLD_MS =
   OLD_BUILD_WARNING_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
 
-app.on('window-all-closed', () => {
+onAppEvent('window-all-closed', () => {
   log.debug('app.window-all-closed');
   if (!isOSX() || appArgs.fastQuit || IS_PLAYWRIGHT) {
     quitApp();
   }
 });
 
-app.on('before-quit', () => {
+onAppEvent('before-quit', () => {
   log.debug('app.before-quit');
   // not fired when the close button on the window is clicked
   if (isOSX()) {
@@ -69,19 +69,19 @@ app.on('before-quit', () => {
   }
 });
 
-app.on('will-quit', (event) => {
+onAppEvent('will-quit', (event) => {
   log.debug('app.will-quit', event);
 });
 
-app.on('quit', (event, exitCode) => {
+onAppEvent('quit', (event, exitCode) => {
   log.debug('app.quit', { event, exitCode });
 });
 
-app.on('will-finish-launching', () => {
+onAppEvent('will-finish-launching', () => {
   log.debug('app.will-finish-launching');
 });
 
-app.on('open-url', (event, url) => {
+onAppEvent('open-url', (event, url) => {
   log.debug('app.open-url', { event, url });
 
   event.preventDefault();
@@ -92,12 +92,12 @@ app.on('open-url', (event, url) => {
 
 if (appArgs.widevine) {
   // @ts-expect-error This event only appears on the widevine version of electron, which we'd see at runtime
-  app.on('widevine-ready', (version: string, lastVersion: string) => {
+  onAppEvent('widevine-ready', (version: string, lastVersion: string) => {
     log.debug('app.widevine-ready', { version, lastVersion });
     onReady().catch((err) => log.error('onReady ERROR', err));
   });
 
-  app.on(
+  onAppEvent(
     // @ts-expect-error This event only appears on the widevine version of electron, which we'd see at runtime
     'widevine-update-pending',
     (currentVersion: string, pendingVersion: string) => {
@@ -109,17 +109,17 @@ if (appArgs.widevine) {
   );
 
   // @ts-expect-error This event only appears on the widevine version of electron, which we'd see at runtime
-  app.on('widevine-error', (error: Error) => {
+  onAppEvent('widevine-error', (error: Error) => {
     log.error('app.widevine-error', error);
   });
 } else {
-  app.on('ready', () => {
+  onAppEvent('ready', () => {
     log.debug('ready');
     onReady().catch((err) => log.error('onReady ERROR', err));
   });
 }
 
-app.on('activate', (event: electron.Event, hasVisibleWindows: boolean) => {
+onAppEvent('activate', (event: Event, hasVisibleWindows: boolean) => {
   log.debug('app.activate', { event, hasVisibleWindows });
   if (isOSX() && !IS_PLAYWRIGHT) {
     // this is called when the dock is clicked
@@ -131,14 +131,14 @@ app.on('activate', (event: electron.Event, hasVisibleWindows: boolean) => {
 
 registerSingleInstance(appArgs, () => mainWindow);
 
-app.on('new-window-for-tab', (event: Event) => {
+onAppEvent('new-window-for-tab', (event: Event) => {
   log.debug('app.new-window-for-tab', { event });
   if (mainWindow) {
     mainWindow.emit('new-window-for-tab', event);
   }
 });
 
-app.on(
+onAppEvent(
   'login',
   (
     event,
@@ -241,7 +241,7 @@ async function onReady(): Promise<void> {
   }
 }
 
-app.on(
+onAppEvent(
   'accessibility-support-changed',
   (event: Event, accessibilitySupportEnabled: boolean) => {
     log.debug('app.accessibility-support-changed', {
@@ -251,21 +251,21 @@ app.on(
   },
 );
 
-app.on(
+onAppEvent(
   'activity-was-continued',
   (event: Event, type: string, userInfo: unknown) => {
     log.debug('app.activity-was-continued', { event, type, userInfo });
   },
 );
 
-app.on('browser-window-blur', () => {
+onAppEvent('browser-window-blur', () => {
   log.debug('app.browser-window-blur');
 });
 
-app.on('browser-window-created', () => {
+onAppEvent('browser-window-created', () => {
   log.debug('app.browser-window-created');
 });
 
-app.on('browser-window-focus', () => {
+onAppEvent('browser-window-focus', () => {
   log.debug('app.browser-window-focus');
 });

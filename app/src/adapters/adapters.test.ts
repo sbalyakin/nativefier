@@ -80,8 +80,22 @@ describe('runtime electron adapters', () => {
     expect(mockRequestSingleInstanceLock).toHaveBeenCalled();
   });
 
+  it('appAdapter onAppEvent forwards main-process lifecycle events', () => {
+    const readyListener = jest.fn();
+    const windowAllClosedListener = jest.fn();
+
+    onAppEvent('ready', readyListener);
+    onAppEvent('window-all-closed', windowAllClosedListener);
+
+    expect(mockOn).toHaveBeenCalledWith('ready', readyListener);
+    expect(mockOn).toHaveBeenCalledWith(
+      'window-all-closed',
+      windowAllClosedListener,
+    );
+  });
+
   it('dialogAdapter delegates to electron.dialog', () => {
-    const win = {} as import('electron').BrowserWindow;
+    const win = {} as import('./electronTypes').BrowserWindow;
     showMessageBoxSync(win, { message: 'test' });
     expect(mockShowMessageBoxSync).toHaveBeenCalledWith(win, {
       message: 'test',
