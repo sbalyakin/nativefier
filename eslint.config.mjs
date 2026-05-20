@@ -60,6 +60,38 @@ export default tseslint.config(
       'no-restricted-imports': [
         'error',
         {
+          paths: [
+            {
+              name: 'electron',
+              message:
+                'Import electron only in app/src/adapters/ (value imports) or app/src/preload/ (preload context). Else use adapters or import type from app/src/adapters/electronTypes.ts.',
+            },
+          ],
+          patterns: [
+            {
+              group: [
+                '../../src/**',
+                '../../../src/**',
+                '../../../../src/**',
+              ],
+              message:
+                'Runtime code must not import build-time modules from src/. Use app/src/runtimeContract.ts or shared/src instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      'app/src/adapters/**/*.ts',
+      'app/src/preload.ts',
+      'app/src/preload/**/*.ts',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
           patterns: [
             {
               group: [

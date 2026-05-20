@@ -21,8 +21,15 @@ jest.mock('./helpers');
 jest.mock('./windowEvents');
 jest.mock('./windowHelpers');
 
-import type { BrowserWindow, HandlerDetails, WebContents } from '../adapters/electronTypes';
-import { BrowserWindow as BrowserWindowCtor } from 'electron';
+import type {
+  BrowserWindow,
+  HandlerDetails,
+  WebContents,
+} from '../adapters/electronTypes';
+
+const { BrowserWindow: BrowserWindowCtor } =
+  jest.requireActual<typeof import('electron')>('electron');
+
 import { WindowOptions } from '../runtimeContract';
 import { linkIsInternal, openExternal, nativeTabsSupported } from './helpers';
 

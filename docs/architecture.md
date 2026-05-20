@@ -23,6 +23,38 @@ Compiled output mirrors sources: `lib/` (CLI), `app/lib/` + `app/dist/` (runtime
 
 ESLint enforces (1) and (2) with `no-restricted-imports` on all of `app/src/**/*.ts` and `src/**/*.ts` (including the contract entry files).
 
+### Electron adapters (main process)
+
+Main-process runtime must not value-import `electron` outside adapters. ESLint blocks `import … from 'electron'` in `app/src/**/*.ts` except:
+
+- `app/src/adapters/**` (only place for value imports and Electron API calls)
+- `app/src/preload.ts` and `app/src/preload/**` (separate preload context; optional strict mode in a follow-up PR)
+
+Everywhere else (`main.ts`, `components/`, `helpers/`, `services/`, `config/`):
+
+- Use adapter functions for Electron behavior.
+- Use `import type` from `app/src/adapters/electronTypes.ts` when a type is needed.
+
+Adapters in `app/src/adapters/`:
+
+| Module | Role |
+| --- | --- |
+| `electronTypes.ts` | Type-only re-exports from `electron` |
+| `appAdapter.ts` | `app` lifecycle, command line, user agent |
+| `windowAdapter.ts` | `BrowserWindow`, `webContents`, zoom, navigation |
+| `sessionAdapter.ts` | Session permissions, cache, proxy, IPC bridge |
+| `contextMenuAdapter.ts` | `electron-context-menu` wrapper |
+| `trayAdapter.ts` | Tray create/update |
+| `menuAdapter.ts` | Application menu |
+| `shellAdapter.ts` | `shell.openExternal` |
+| `dialogAdapter.ts` | Message boxes |
+| `clipboardAdapter.ts` | Clipboard read/write |
+| `globalShortcutAdapter.ts` | Global shortcuts |
+| `ipcAdapter.ts` | `ipcMain`, desktop capturer |
+| `downloadAdapter.ts` | Download events |
+
+Regression check: `rg "from 'electron'" app/src` should list only `adapters/` and `preload/` (not `*.test.ts`; tests use `jest.requireActual('electron')` or adapter mocks).
+
 **Published npm package:** only `lib/` is shipped (see `.npmignore`). `buildTimeContract.ts` inlines `NATIVEFIER_JSON_FILENAME` and re-exports types only (erased at compile); it must not `require` `shared/lib` at runtime. Keep that constant in sync with `shared/src/contract.ts`.
 
 ## Configuration transport: `nativefier.json`
@@ -42,7 +74,7 @@ Do not pass new settings across the boundary by importing builder modules into `
 | New CLI flag / default / validation | `src/options/optionSchema.ts` (metadata + mapping), `src/cli.ts` (positionals only), `shared/src/options/model.ts` (types) |
 | New field in packaged app config | `shared/src/options/model.ts`, `OUTPUT_FIELD_MAPPINGS` in `outputOptionsMapper.ts`, runtime consumer in `app/src/` |
 | Packaging / icons / Electron download | `src/build/` |
-| Window, tray, menus, preload behavior | `app/src/` (Electron API via `app/src/adapters/`: `appAdapter`, `windowAdapter`, `trayAdapter`, `menuAdapter`, `shellAdapter`, `downloadAdapter`, `ipcAdapter`, `dialogAdapter`, `clipboardAdapter`, `globalShortcutAdapter`) |
+| Window, tray, menus, preload behavior | `app/src/` via `app/src/adapters/` (see Electron adapters above); preload stays under `app/src/preload/` |
 | Runtime config load/validate/persist | `app/src/config/` |
 | Cross-layer constant (e.g. config filename) | `shared/src/contract.ts` |
 

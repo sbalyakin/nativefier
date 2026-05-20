@@ -6,7 +6,7 @@ Nativefier uses a layered test pyramid so most regressions are caught before Ele
 
 | Layer | Location | Purpose |
 | --- | --- | --- |
-| **Unit** | `src/**/*.test.ts`, `app/src/**/*.test.ts`, `shared/src/**/*.test.ts` | Fast tests for pure helpers, option schema, build pipeline steps, preload modules, adapters. |
+| **Unit** | `src/**/*.test.ts`, `app/src/**/*.test.ts`, `shared/src/**/*.test.ts` | Fast tests for pure helpers, option schema, build pipeline steps, preload modules, adapters. New Electron API in main process: add an adapter function in `app/src/adapters/` and cover it in `adapters.test.ts` or the adapter’s `*.test.ts` before calling it from runtime code. |
 | **Contract** | `shared/src/contract/`, `src/options/nativefierJsonContract.test.ts` | One ruleset for `nativefier.json`: builder output (`mapAppOptionsToOutputOptions`) must satisfy `validateNativefierJsonContract` and runtime parsing (`parseRuntimeConfigJson`). |
 | **Integration** | `*integration-test*` | Heavier scenarios; run with `npm run test:integration`. |
 | **Playwright** | `*playwright-test*` | Smoke/regression in a real Electron app; run with `npm run test:playwright`. |

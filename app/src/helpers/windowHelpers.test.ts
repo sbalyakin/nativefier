@@ -1,5 +1,8 @@
 import type { BrowserWindow } from '../adapters/electronTypes';
-import { BrowserWindow as BrowserWindowCtor } from 'electron';
+
+const { BrowserWindow: BrowserWindowCtor } =
+  jest.requireActual<typeof import('electron')>('electron');
+
 jest.mock('loglevel');
 import { error } from 'loglevel';
 import { WindowOptions } from '../runtimeContract';
