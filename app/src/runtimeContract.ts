@@ -13,3 +13,4 @@ export type {
   WindowOptions,
 } from '../../shared/src/options/model';
 export { outputOptionsToWindowOptions } from '../../shared/src/options/model';
+export type { RendererParams } from './config/runtimeSecrets';

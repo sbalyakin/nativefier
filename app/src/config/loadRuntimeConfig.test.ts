@@ -4,6 +4,7 @@ import {
   loadRuntimeConfigFromSource,
   parseRuntimeConfigJson,
 } from './loadRuntimeConfig';
+import { stripSensitiveOutputOptions } from './runtimeSecrets';
 
 const validJson = JSON.stringify({
   name: 'TestApp',
@@ -47,6 +48,20 @@ test('applyCommandLineTargetUrlOverride keeps config when argv url invalid', () 
 
 test('parseRuntimeConfigJson throws on invalid config', () => {
   expect(() => parseRuntimeConfigJson('{}')).toThrow(/Invalid nativefier.json/);
+});
+
+test('stripSensitiveOutputOptions keeps parsed config except secrets', () => {
+  const config = parseRuntimeConfigJson(
+    JSON.stringify({
+      ...JSON.parse(validJson),
+      basicAuthPassword: 'secret',
+      processEnvs: '{}',
+    }),
+  );
+  const stripped = stripSensitiveOutputOptions(config);
+  expect(stripped.name).toBe('TestApp');
+  expect(stripped.basicAuthPassword).toBeUndefined();
+  expect(stripped.processEnvs).toBeUndefined();
 });
 
 test('parseRuntimeConfigJson merges playwright defaults when requested', () => {

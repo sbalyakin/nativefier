@@ -38,6 +38,7 @@ import {
 } from '../adapters/windowAdapter';
 import { getCSSToInject, isOSX, nativeTabsSupported } from './helpers';
 import * as log from './loggingHelper';
+import { serializeRendererParams } from '../config/runtimeSecrets';
 import { TrayValue, WindowOptions } from '../runtimeContract';
 import { randomUUID } from 'crypto';
 
@@ -331,7 +332,7 @@ export function sendParamsOnDidFinishLoad(
       log.error('webContents.setVisualZoomLevelLimits', err),
     );
 
-    sendToWebContents(window, 'params', JSON.stringify(options));
+    sendToWebContents(window, 'params', serializeRendererParams(options));
   });
 }
 

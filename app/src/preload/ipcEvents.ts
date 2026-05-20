@@ -1,6 +1,6 @@
 import { IpcRenderer } from 'electron';
 
-import { OutputOptions } from '../runtimeContract';
+import type { RendererParams } from '../runtimeContract';
 
 export function setupIpcEvents(
   ipcRenderer: IpcRenderer,
@@ -8,8 +8,8 @@ export function setupIpcEvents(
 ): void {
   ipcRenderer.on('params', (event, message: string) => {
     log.debug('ipcRenderer.params', { event, message });
-    const appArgs: unknown = JSON.parse(message) as OutputOptions;
-    log.info('nativefier.json', appArgs);
+    const rendererParams = JSON.parse(message) as RendererParams;
+    log.info('nativefier.json', rendererParams);
   });
 
   ipcRenderer.on('debug', (event, message: string) => {

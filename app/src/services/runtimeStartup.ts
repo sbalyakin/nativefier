@@ -70,8 +70,8 @@ export function applyProcessEnvs(appArgs: OutputOptions): void {
     try {
       processEnvs = JSON.parse(appArgs.processEnvs) as Record<string, string>;
     } catch {
-      processEnvs = {};
-      process.env.processEnvs = appArgs.processEnvs;
+      log.warn('processEnvs is not valid JSON; ignoring');
+      return;
     }
   }
 
@@ -110,14 +110,6 @@ export function applyCommandLineSwitches(appArgs: OutputOptions): void {
       'disk-cache-size',
       appArgs.diskCacheSize.toString(),
     );
-  }
-
-  if (appArgs.basicAuthUsername) {
-    appendCommandLineSwitch('basic-auth-username', appArgs.basicAuthUsername);
-  }
-
-  if (appArgs.basicAuthPassword) {
-    appendCommandLineSwitch('basic-auth-password', appArgs.basicAuthPassword);
   }
 
   if (isWayland()) {
