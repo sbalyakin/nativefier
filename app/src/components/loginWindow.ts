@@ -23,9 +23,10 @@ export async function createLoginWindow(
     frame: false,
     resizable: false,
     webPreferences: {
-      nodeIntegration: true, // TODO work around this; insecure
-      contextIsolation: false, // https://github.com/electron/electron/issues/28017
-      sandbox: false, // https://www.electronjs.org/blog/electron-20-0#default-changed-renderers-without-nodeintegration-true-are-sandboxed-by-default
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      preload: path.join(__dirname, 'loginPreload.js'),
     },
   });
   await loginWindow.loadURL(

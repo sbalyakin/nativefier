@@ -86,6 +86,7 @@ export default tseslint.config(
     files: [
       'app/src/adapters/**/*.ts',
       'app/src/preload.ts',
+      'app/src/loginPreload.ts',
       'app/src/preload/**/*.ts',
     ],
     rules: {
