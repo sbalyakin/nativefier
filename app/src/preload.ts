@@ -12,7 +12,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 import { ipcRenderer } from 'electron';
-import { OutputOptions } from '../../shared/src/options/model';
+import { OutputOptions } from './runtimeContract';
 
 // Do *NOT* add 3rd-party imports here in preload (except for webpack `externals` like electron).
 // They will work during development, but break in the prod build :-/ .

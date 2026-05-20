@@ -3,7 +3,7 @@ jest.mock('./windowEvents');
 jest.mock('./windowHelpers');
 
 import { dialog, BrowserWindow, HandlerDetails, WebContents } from 'electron';
-import { WindowOptions } from '../../../shared/src/options/model';
+import { WindowOptions } from '../runtimeContract';
 import { linkIsInternal, openExternal, nativeTabsSupported } from './helpers';
 
 const {

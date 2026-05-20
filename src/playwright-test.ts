@@ -11,7 +11,7 @@ import {
 } from 'playwright';
 
 import { getTempDir, isLinux } from './helpers/helpers';
-import { NativefierOptions } from '../shared/src/options/model';
+import { NativefierOptions } from './buildTimeContract';
 
 const INJECT_DIR = path.join(__dirname, '..', 'app', 'inject');
 

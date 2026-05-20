@@ -1,7 +1,7 @@
 import { dialog, BrowserWindow } from 'electron';
 jest.mock('loglevel');
 import { error } from 'loglevel';
-import { WindowOptions } from '../../../shared/src/options/model';
+import { WindowOptions } from '../runtimeContract';
 
 jest.mock('./helpers');
 import { getCSSToInject } from './helpers';

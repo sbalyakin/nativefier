@@ -1,7 +1,7 @@
 import 'source-map-support/register';
 
 import { buildNativefierApp } from './build/buildNativefierApp';
-import { RawOptions } from '../shared/src/options/model';
+import { RawOptions } from './buildTimeContract';
 
 export { buildNativefierApp };
 

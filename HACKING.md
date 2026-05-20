@@ -3,6 +3,12 @@
 Welcome, soon-to-be contributor 🙂! This document sums up
 what you need to know to get started hacking on Nativefier.
 
+## Architecture
+
+Layer boundaries (`src/` vs `app/src/` vs `shared/`), import rules, and how
+`nativefier.json` connects the builder to the packaged app are documented in
+[docs/architecture.md](docs/architecture.md).
+
 ## Guidelines
 
 1. **Before starting work on a huge change, gauge the interest**

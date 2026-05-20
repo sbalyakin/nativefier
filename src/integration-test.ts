@@ -12,9 +12,10 @@ import { buildNativefierApp } from './main';
 import { userAgent } from './options/fields/userAgent';
 import {
   GlobalShortcut,
+  NATIVEFIER_JSON_FILENAME,
   NativefierOptions,
   RawOptions,
-} from '../shared/src/options/model';
+} from './buildTimeContract';
 import { parseJson } from './utils/parseUtils';
 
 // Stable icon path for integration builds (target sites often return 403 to scrapers).
@@ -53,7 +54,7 @@ async function checkApp(
 
   const appPath = path.join(appRoot, relativeResourcesDir, 'app');
 
-  const configPath = path.join(appPath, 'nativefier.json');
+  const configPath = path.join(appPath, NATIVEFIER_JSON_FILENAME);
   const nativefierConfig: NativefierOptions | undefined =
     parseJson<NativefierOptions>(fs.readFileSync(configPath).toString());
   expect(nativefierConfig).not.toBeUndefined();

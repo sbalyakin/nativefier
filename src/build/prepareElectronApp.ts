@@ -7,9 +7,10 @@ import * as log from 'loglevel';
 import { generateRandomSuffix } from '../helpers/helpers';
 import {
   AppOptions,
+  NATIVEFIER_JSON_FILENAME,
   OutputOptions,
   PackageJSON,
-} from '../../shared/src/options/model';
+} from '../buildTimeContract';
 import { parseJson } from '../utils/parseUtils';
 import { DEFAULT_APP_NAME } from '../constants';
 
@@ -191,7 +192,7 @@ export async function prepareElectronApp(
     }`;
   }
 
-  const appJsonPath = path.join(dest, '/nativefier.json');
+  const appJsonPath = path.join(dest, NATIVEFIER_JSON_FILENAME);
   const pickedOptions = pickElectronAppArgs(options);
   log.debug(`Writing app config to ${appJsonPath}`, pickedOptions);
   await fs.writeFile(appJsonPath, JSON.stringify(pickedOptions));

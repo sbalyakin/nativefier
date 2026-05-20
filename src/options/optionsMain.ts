@@ -19,11 +19,7 @@ import {
 import type { SupportedArch, SupportedPlatform } from '@electron/packager';
 import { inferPlatform, inferArch } from '../infer/inferOs';
 import { asyncConfig } from './asyncConfig';
-import {
-  AppOptions,
-  GlobalShortcut,
-  RawOptions,
-} from '../../shared/src/options/model';
+import { AppOptions, GlobalShortcut, RawOptions } from '../buildTimeContract';
 import { normalizeUrl } from './normalizeUrl';
 import { parseJson } from '../utils/parseUtils';
 

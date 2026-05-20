@@ -2,7 +2,7 @@ import { app, Tray, Menu, ipcMain, nativeImage, BrowserWindow } from 'electron';
 
 import { getAppIcon, getCounterValue, isOSX } from '../helpers/helpers';
 import * as log from '../helpers/loggingHelper';
-import { OutputOptions } from '../../../shared/src/options/model';
+import { OutputOptions } from '../runtimeContract';
 
 export function createTrayIcon(
   nativefierOptions: OutputOptions,

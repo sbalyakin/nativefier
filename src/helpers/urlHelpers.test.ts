@@ -1,12 +1,11 @@
-import {
-  getAppNameFromHostname,
-  getHostnameFromUrl,
-} from './urlHelpers';
+import { getAppNameFromHostname, getHostnameFromUrl } from './urlHelpers';
 
 describe('getHostnameFromUrl', () => {
   test('returns hostname for valid URLs', () => {
     expect(getHostnameFromUrl('https://chatgpt.com/path')).toBe('chatgpt.com');
-    expect(getHostnameFromUrl('http://www.example.org')).toBe('www.example.org');
+    expect(getHostnameFromUrl('http://www.example.org')).toBe(
+      'www.example.org',
+    );
   });
 
   test('returns undefined for invalid URLs', () => {

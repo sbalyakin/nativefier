@@ -14,7 +14,7 @@ import {
 } from './helpers/helpers';
 import { supportedArchs, supportedPlatforms } from './infer/inferOs';
 import { buildNativefierApp } from './main';
-import { RawOptions } from '../shared/src/options/model';
+import { RawOptions } from './buildTimeContract';
 import { parseJson } from './utils/parseUtils';
 
 // @types/yargs@17.x started pretending yargs.argv can be a promise:

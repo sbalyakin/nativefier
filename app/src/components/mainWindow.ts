@@ -28,11 +28,16 @@ import {
   hideWindow,
 } from '../helpers/windowHelpers';
 import {
+  NATIVEFIER_JSON_FILENAME,
   OutputOptions,
   outputOptionsToWindowOptions,
-} from '../../../shared/src/options/model';
+} from '../runtimeContract';
 
-export const APP_ARGS_FILE_PATH = path.join(__dirname, '..', 'nativefier.json');
+export const APP_ARGS_FILE_PATH = path.join(
+  __dirname,
+  '..',
+  NATIVEFIER_JSON_FILENAME,
+);
 
 type SessionInteractionRequest = {
   id?: string;

@@ -12,7 +12,7 @@ import { createNewWindow } from '../helpers/windowHelpers';
 import {
   OutputOptions,
   outputOptionsToWindowOptions,
-} from '../../../shared/src/options/model';
+} from '../runtimeContract';
 
 export function initContextMenu(
   options: OutputOptions,

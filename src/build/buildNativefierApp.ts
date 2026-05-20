@@ -12,7 +12,7 @@ import {
   isWindowsAdmin,
 } from '../helpers/helpers';
 import { useOldAppOptions, findUpgradeApp } from '../helpers/upgrade/upgrade';
-import { AppOptions, RawOptions } from '../../shared/src/options/model';
+import { AppOptions, RawOptions } from '../buildTimeContract';
 import { getOptions } from '../options/optionsMain';
 import { prepareElectronApp } from './prepareElectronApp';
 

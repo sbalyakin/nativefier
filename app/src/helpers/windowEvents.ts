@@ -16,7 +16,7 @@ import {
   setProxyRules,
   showNavigationBlockedMessage,
 } from './windowHelpers';
-import { WindowOptions } from '../../../shared/src/options/model';
+import { WindowOptions } from '../runtimeContract';
 
 type NewWindowHandlerResult = ReturnType<
   Parameters<WebContents['setWindowOpenHandler']>[0]

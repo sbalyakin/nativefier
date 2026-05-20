@@ -4,9 +4,10 @@ import * as path from 'path';
 import * as log from 'loglevel';
 
 import {
+  NATIVEFIER_JSON_FILENAME,
   NativefierOptions,
   RawOptions,
-} from '../../../shared/src/options/model';
+} from '../../buildTimeContract';
 import { dirExists, fileExists } from '../fsHelpers';
 import { extractBoolean, extractString } from './plistInfoXMLHelpers';
 import { getOptionsFromExecutable } from './executableHelpers';
@@ -22,15 +23,15 @@ function findUpgradeAppResourcesDir(searchDir: string): string | null {
   searchDir = dirExists(searchDir) ? searchDir : path.dirname(searchDir);
   log.debug(`Searching for nativfier.json in ${searchDir}`);
   const children = fs.readdirSync(searchDir, { withFileTypes: true });
-  if (fileExists(path.join(searchDir, 'nativefier.json'))) {
-    // Found 'nativefier.json', so this must be it!
+  if (fileExists(path.join(searchDir, NATIVEFIER_JSON_FILENAME))) {
+    // Found nativefier config, so this must be it!
     return path.resolve(searchDir);
   }
   const childDirectories = children.filter((c) => c.isDirectory());
   for (const childDir of childDirectories) {
     // We must go deeper!
     const result = findUpgradeAppResourcesDir(
-      path.join(searchDir, childDir.name, 'nativefier.json'),
+      path.join(searchDir, childDir.name, NATIVEFIER_JSON_FILENAME),
     );
     if (result !== null) {
       return path.resolve(result);
@@ -176,11 +177,14 @@ export function findUpgradeApp(upgradeFrom: string): UpgradeAppInfo | null {
   log.debug(`Looking for old options file in ${searchDir}`);
   const appResourcesDir = findUpgradeAppResourcesDir(searchDir);
   if (appResourcesDir === null) {
-    log.debug(`No nativefier.json file found in ${searchDir}`);
+    log.debug(`No ${NATIVEFIER_JSON_FILENAME} file found in ${searchDir}`);
     return null;
   }
 
-  const nativefierJSONPath = path.join(appResourcesDir, 'nativefier.json');
+  const nativefierJSONPath = path.join(
+    appResourcesDir,
+    NATIVEFIER_JSON_FILENAME,
+  );
 
   log.debug(`Loading ${nativefierJSONPath}`);
   let options = parseJson<NativefierOptions>(

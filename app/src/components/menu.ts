@@ -22,7 +22,7 @@ import {
   zoomOut,
   zoomReset,
 } from '../helpers/windowHelpers';
-import { OutputOptions } from '../../../shared/src/options/model';
+import { OutputOptions } from '../runtimeContract';
 
 type BookmarksLink = {
   type: 'link';

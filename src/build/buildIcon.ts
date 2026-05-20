@@ -9,7 +9,7 @@ import {
   convertToIcns,
   convertToTrayIcon,
 } from '../helpers/iconShellHelpers';
-import { AppOptions } from '../../shared/src/options/model';
+import { AppOptions } from '../buildTimeContract';
 
 function iconIsIco(iconPath: string): boolean {
   return path.extname(iconPath) === '.ico';

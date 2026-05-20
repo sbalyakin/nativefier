@@ -33,7 +33,7 @@ import {
   PLAYWRIGHT_CONFIG,
   safeGetEnv,
 } from './helpers/playwrightHelpers';
-import { OutputOptions } from '../../shared/src/options/model';
+import { OutputOptions } from './runtimeContract';
 
 // Entrypoint for Squirrel, a windows update framework. See https://github.com/nativefier/nativefier/pull/744
 if (require('electron-squirrel-startup')) {

@@ -1,5 +1,5 @@
 import type { SupportedArch, SupportedPlatform } from '@electron/packager';
-import { AppOptions } from '../../../shared/src/options/model';
+import { AppOptions } from '../../buildTimeContract';
 import { processOptions } from './fields';
 describe('fields', () => {
   let options: AppOptions;

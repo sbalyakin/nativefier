@@ -2,7 +2,7 @@ import type { SupportedArch, SupportedPlatform } from '@electron/packager';
 import { getOptions, normalizePlatform } from './optionsMain';
 import * as asyncConfig from './asyncConfig';
 import { inferPlatform } from '../infer/inferOs';
-import { AppOptions, RawOptions } from '../../shared/src/options/model';
+import { AppOptions, RawOptions } from '../buildTimeContract';
 
 let asyncConfigMock: jest.SpyInstance;
 const mockedAsyncConfig: AppOptions = {

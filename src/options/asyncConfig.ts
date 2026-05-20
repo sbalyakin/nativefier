@@ -1,7 +1,7 @@
 import * as log from 'loglevel';
 
 import { processOptions } from './fields/fields';
-import { AppOptions } from '../../shared/src/options/model';
+import { AppOptions } from '../buildTimeContract';
 
 /**
  * Takes the options object and infers new values needing async work

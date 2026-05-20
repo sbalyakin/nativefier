@@ -12,7 +12,7 @@ import {
 
 import { getCSSToInject, isOSX, nativeTabsSupported } from './helpers';
 import * as log from './loggingHelper';
-import { TrayValue, WindowOptions } from '../../../shared/src/options/model';
+import { TrayValue, WindowOptions } from '../runtimeContract';
 import { randomUUID } from 'crypto';
 
 const ZOOM_INTERVAL = 0.1;

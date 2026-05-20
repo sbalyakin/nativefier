@@ -54,4 +54,47 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ['app/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '../../src/**',
+                '../../../src/**',
+                '../../../../src/**',
+              ],
+              message:
+                'Runtime code must not import build-time modules from src/. Use app/src/runtimeContract.ts or shared/src instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '../app/src/**',
+                '../../app/src/**',
+                '../../../app/src/**',
+                '../../../../app/src/**',
+              ],
+              message:
+                'Build-time code must not import runtime modules from app/src/. Copy the app template at build time instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 );

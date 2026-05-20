@@ -5,7 +5,7 @@ import * as log from 'loglevel';
 
 import type { SupportedArch } from '@electron/packager';
 
-import { NativefierOptions } from '../../../shared/src/options/model';
+import { NativefierOptions } from '../../buildTimeContract';
 import { getVersionString } from './rceditGet';
 import { fileExists } from '../fsHelpers';
 type ExecutableInfo = {
