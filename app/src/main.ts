@@ -81,7 +81,7 @@ onAppEvent('will-finish-launching', () => {
   log.debug('app.will-finish-launching');
 });
 
-onAppEvent('open-url', (event, url) => {
+onAppEvent<[Event, string]>('open-url', (event, url) => {
   log.debug('app.open-url', { event, url });
 
   event.preventDefault();
@@ -91,16 +91,14 @@ onAppEvent('open-url', (event, url) => {
 });
 
 if (appArgs.widevine) {
-  // @ts-expect-error This event only appears on the widevine version of electron, which we'd see at runtime
-  onAppEvent('widevine-ready', (version: string, lastVersion: string) => {
+  onAppEvent<[string, string]>('widevine-ready', (version, lastVersion) => {
     log.debug('app.widevine-ready', { version, lastVersion });
     onReady().catch((err) => log.error('onReady ERROR', err));
   });
 
-  onAppEvent(
-    // @ts-expect-error This event only appears on the widevine version of electron, which we'd see at runtime
+  onAppEvent<[string, string]>(
     'widevine-update-pending',
-    (currentVersion: string, pendingVersion: string) => {
+    (currentVersion, pendingVersion) => {
       log.debug('app.widevine-update-pending', {
         currentVersion,
         pendingVersion,
@@ -108,8 +106,7 @@ if (appArgs.widevine) {
     },
   );
 
-  // @ts-expect-error This event only appears on the widevine version of electron, which we'd see at runtime
-  onAppEvent('widevine-error', (error: Error) => {
+  onAppEvent<[Error]>('widevine-error', (error) => {
     log.error('app.widevine-error', error);
   });
 } else {
@@ -138,15 +135,17 @@ onAppEvent('new-window-for-tab', (event: Event) => {
   }
 });
 
-onAppEvent(
+onAppEvent<
+  [
+    Event,
+    import('./adapters/electronTypes').WebContents,
+    unknown,
+    unknown,
+    (username?: string, password?: string) => void,
+  ]
+>(
   'login',
-  (
-    event,
-    webContents,
-    request,
-    authInfo,
-    callback: (username?: string, password?: string) => void,
-  ) => {
+  (event, webContents, request, authInfo, callback) => {
     log.debug('app.login', { event, request });
     // for http authentication
     event.preventDefault();

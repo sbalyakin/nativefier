@@ -11,11 +11,11 @@ export function quitApp(): void {
 }
 
 /** Forwards to `app.on` without Electron's per-overload `Parameters<typeof app.on>` trap. */
-export function onAppEvent(
+export function onAppEvent<T extends unknown[]>(
   event: string,
-  listener: (...args: unknown[]) => void,
+  listener: (...args: T) => void,
 ): void {
-  (app as EventEmitter).on(event, listener);
+  (app as EventEmitter).on(event, listener as (...args: unknown[]) => void);
 }
 
 export function requestSingleInstanceLock(): boolean {

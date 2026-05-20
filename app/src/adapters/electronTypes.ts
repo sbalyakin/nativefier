@@ -14,6 +14,7 @@ export type {
   Menu,
   MenuItemConstructorOptions,
   OpenExternalOptions,
+  Session,
   Tray,
   WebContents,
 } from 'electron';
