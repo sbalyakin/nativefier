@@ -1,91 +1,98 @@
-import { setNotificationCallback, setupNotifications } from './notifications';
+jest.mock('electron', () => ({
+  contextBridge: {
+    exposeInMainWorld: jest.fn(),
+  },
+}));
 
-class MockNotification {
-  static permission: NotificationPermission = 'default';
-  static requestPermission = jest
-    .fn()
-    .mockResolvedValue('granted' as NotificationPermission);
+import { contextBridge } from 'electron';
 
-  title: string;
-  options: NotificationOptions;
-  private readonly listeners = new Map<string, EventListener>();
+import {
+  createNativefierNotifyBridge,
+  exposeNativefierNotifyBridge,
+  setupNotifications,
+} from './notifications';
 
-  constructor(title: string, options?: NotificationOptions) {
-    this.title = title;
-    this.options = options ?? {};
-  }
+const mockExposeInMainWorld = contextBridge.exposeInMainWorld as jest.Mock;
 
-  addEventListener(type: string, listener: EventListener): void {
-    this.listeners.set(type, listener);
-  }
-
-  dispatchEvent(type: string): void {
-    const listener = this.listeners.get(type);
-    if (listener) {
-      listener.call(this, new Event(type));
-    }
-  }
-}
-
-const originalNotification = globalThis.Notification;
+const originalContextIsolated = process.contextIsolated;
 const originalWindow = globalThis.window;
 
-function installNotificationMock(): void {
-  MockNotification.permission = 'default';
-  MockNotification.requestPermission.mockClear();
-  const NotificationCtor = MockNotification as unknown as typeof Notification;
-  globalThis.Notification = NotificationCtor;
-  globalThis.window = { Notification: NotificationCtor } as Window &
-    typeof globalThis;
-}
-
 beforeEach(() => {
-  installNotificationMock();
+  jest.clearAllMocks();
+  globalThis.window = {} as Window & typeof globalThis;
+  delete (
+    globalThis.window as { __nativefierNotify?: unknown }
+  ).__nativefierNotify;
 });
 
 afterAll(() => {
-  globalThis.Notification = originalNotification;
+  Object.defineProperty(process, 'contextIsolated', {
+    value: originalContextIsolated,
+    configurable: true,
+  });
   globalThis.window = originalWindow;
 });
 
-test('setNotificationCallback invokes createCallback and wires click handler', () => {
-  const onCreate = jest.fn();
-  const onClick = jest.fn();
-
-  setNotificationCallback(onCreate, onClick);
-
-  const notification = new window.Notification('Hello', {
-    body: 'World',
-  }) as unknown as MockNotification;
-  expect(onCreate).toHaveBeenCalledWith('Hello', { body: 'World' });
-  expect(notification).toBeInstanceOf(MockNotification);
-
-  notification.dispatchEvent('click');
-  expect(onClick).toHaveBeenCalled();
-});
-
-test('setNotificationCallback preserves requestPermission and permission', async () => {
-  setNotificationCallback(jest.fn(), jest.fn());
-
-  await expect(window.Notification.requestPermission()).resolves.toBe(
-    'granted',
-  );
-  MockNotification.permission = 'granted';
-  expect(window.Notification.permission).toBe('granted');
-});
-
-test('setupNotifications sends IPC on create and click', () => {
+test('createNativefierNotifyBridge sends IPC on create and click', () => {
   const ipcRenderer = { send: jest.fn() };
+  const bridge = createNativefierNotifyBridge(ipcRenderer as never);
 
-  setupNotifications(ipcRenderer as never);
-
-  const notification = new window.Notification('Title', {
-    body: 'Body',
-  }) as unknown as MockNotification;
+  bridge.create('Title', { body: 'Body' });
   expect(ipcRenderer.send).toHaveBeenCalledWith('notification', 'Title', {
     body: 'Body',
   });
 
-  notification.dispatchEvent('click');
+  bridge.click();
   expect(ipcRenderer.send).toHaveBeenCalledWith('notification-click');
+});
+
+test('exposeNativefierNotifyBridge uses contextBridge when isolated', () => {
+  Object.defineProperty(process, 'contextIsolated', {
+    value: true,
+    configurable: true,
+  });
+
+  const bridge = { create: jest.fn(), click: jest.fn() };
+  exposeNativefierNotifyBridge(bridge);
+
+  expect(mockExposeInMainWorld).toHaveBeenCalledWith(
+    '__nativefierNotify',
+    bridge,
+  );
+});
+
+test('exposeNativefierNotifyBridge assigns window when not isolated', () => {
+  Object.defineProperty(process, 'contextIsolated', {
+    value: false,
+    configurable: true,
+  });
+
+  const bridge = { create: jest.fn(), click: jest.fn() };
+  exposeNativefierNotifyBridge(bridge);
+
+  expect(mockExposeInMainWorld).not.toHaveBeenCalled();
+  expect(
+    (globalThis.window as { __nativefierNotify?: typeof bridge })
+      .__nativefierNotify,
+  ).toBe(bridge);
+});
+
+test('setupNotifications exposes bridge for IPC', () => {
+  Object.defineProperty(process, 'contextIsolated', {
+    value: false,
+    configurable: true,
+  });
+
+  const ipcRenderer = { send: jest.fn() };
+  setupNotifications(ipcRenderer as never);
+
+  const bridge = (
+    globalThis.window as {
+      __nativefierNotify?: ReturnType<typeof createNativefierNotifyBridge>;
+    }
+  ).__nativefierNotify;
+  expect(bridge).toBeDefined();
+
+  bridge?.create('X', {});
+  expect(ipcRenderer.send).toHaveBeenCalledWith('notification', 'X', {});
 });

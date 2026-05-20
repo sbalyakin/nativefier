@@ -11,6 +11,7 @@ import {
   onWebContentsEvent,
 } from '../adapters/windowAdapter';
 import { registerDisplayMediaRequestHandler } from '../services/displayMediaService';
+import { registerNotificationShimInjection } from '../services/notificationInjectService';
 import { getBrowserWindowSession } from '../adapters/sessionAdapter';
 import { linkIsInternal, nativeTabsSupported, openExternal } from './helpers';
 import * as log from './loggingHelper';
@@ -176,6 +177,7 @@ export function setupNativefierWindow(
   window: BrowserWindow,
 ): void {
   registerDisplayMediaRequestHandler(getBrowserWindowSession(window));
+  registerNotificationShimInjection(window);
 
   if (options.proxyRules) {
     setProxyRules(window, options.proxyRules);
