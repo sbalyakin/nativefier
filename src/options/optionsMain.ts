@@ -11,115 +11,30 @@ const packageJson: {
   name: string;
   version: string;
 } = require('../../package.json');
-import {
-  DEFAULT_ELECTRON_VERSION,
-  PLACEHOLDER_APP_DIR,
-  ELECTRON_MAJOR_VERSION,
-} from '../constants';
-import type { SupportedArch, SupportedPlatform } from '@electron/packager';
-import { inferPlatform, inferArch } from '../infer/inferOs';
+import { DEFAULT_ELECTRON_VERSION } from '../constants';
+import type { SupportedPlatform } from '@electron/packager';
+import { inferPlatform } from '../infer/inferOs';
 import { asyncConfig } from './asyncConfig';
 import { AppOptions, GlobalShortcut, RawOptions } from '../buildTimeContract';
-import { normalizeUrl } from './normalizeUrl';
+import {
+  assertValidMappedOptions,
+  buildAppOptionsFromSchema,
+  isElectronMajorBefore16,
+  warnOnMappedOptions,
+} from './optionSchema';
 import { parseJson } from '../utils/parseUtils';
-
-const SEMVER_VERSION_NUMBER_REGEX = /\d+\.\d+\.\d+[-_\w\d.]*/;
 
 /**
  * Process and validate raw user arguments
  */
 
 export async function getOptions(rawOptions: RawOptions): Promise<AppOptions> {
-  const options: AppOptions = {
-    packager: {
-      appCopyright: rawOptions.appCopyright,
-      appVersion: rawOptions.appVersion,
-      arch: (rawOptions.arch ?? inferArch()) as SupportedArch,
-      asar: rawOptions.asar ?? rawOptions.conceal ?? false,
-      buildVersion: rawOptions.buildVersion,
-      darwinDarkModeSupport: rawOptions.darwinDarkModeSupport ?? false,
-      dir: PLACEHOLDER_APP_DIR,
-      electronVersion: rawOptions.electronVersion ?? DEFAULT_ELECTRON_VERSION,
-      icon: rawOptions.icon,
-      name: typeof rawOptions.name === 'string' ? rawOptions.name : '',
-      out: rawOptions.out ?? process.cwd(),
-      overwrite: rawOptions.overwrite,
-      quiet: rawOptions.quiet ?? false,
-      platform: rawOptions.platform as SupportedPlatform | undefined,
-      portable: rawOptions.portable ?? false,
-      targetUrl:
-        rawOptions.targetUrl === undefined
-          ? '' // We'll plug this in later via upgrade
-          : normalizeUrl(rawOptions.targetUrl),
-      tmpdir: false, // workaround for packager issue #375
-      upgrade: rawOptions.upgrade !== undefined ? true : false,
-      upgradeFrom:
-        (rawOptions.upgradeFrom as string) ??
-        ((rawOptions.upgrade as string) || undefined),
-      win32metadata: rawOptions.win32metadata ?? {
-        ProductName: rawOptions.name,
-        InternalName: rawOptions.name,
-        FileDescription: rawOptions.name,
-      },
-    },
-    nativefier: {
-      accessibilityPrompt: true,
-      alwaysOnTop: rawOptions.alwaysOnTop ?? false,
-      backgroundColor: rawOptions.backgroundColor,
-      basicAuthPassword: rawOptions.basicAuthPassword,
-      basicAuthUsername: rawOptions.basicAuthUsername,
-      blockExternalUrls: rawOptions.blockExternalUrls ?? false,
-      bookmarksMenu: rawOptions.bookmarksMenu,
-      bounce: rawOptions.bounce ?? false,
-      browserwindowOptions: rawOptions.browserwindowOptions,
-      clearCache: rawOptions.clearCache ?? false,
-      counter: rawOptions.counter ?? false,
-      crashReporter: rawOptions.crashReporter,
-      disableContextMenu: rawOptions.disableContextMenu ?? false,
-      disableDevTools: rawOptions.disableDevTools ?? false,
-      disableGpu: rawOptions.disableGpu ?? false,
-      diskCacheSize: rawOptions.diskCacheSize,
-      disableOldBuildWarning:
-        rawOptions.disableOldBuildWarningYesiknowitisinsecure ?? false,
-      enableEs3Apis: rawOptions.enableEs3Apis ?? false,
-      fastQuit: rawOptions.fastQuit ?? false,
-      fileDownloadOptions: rawOptions.fileDownloadOptions,
-      flashPluginDir: rawOptions.flashPath,
-      fullScreen: rawOptions.fullScreen ?? false,
-      globalShortcuts: undefined,
-      hideWindowFrame: rawOptions.hideWindowFrame ?? false,
-      ignoreCertificate: rawOptions.ignoreCertificate ?? false,
-      ignoreGpuBlacklist: rawOptions.ignoreGpuBlacklist ?? false,
-      inject: rawOptions.inject ?? [],
-      insecure: rawOptions.insecure ?? false,
-      internalUrls: rawOptions.internalUrls,
-      lang: rawOptions.lang,
-      maximize: rawOptions.maximize ?? false,
-      nativefierVersion: packageJson.version,
-      quiet: rawOptions.quiet ?? false,
-      processEnvs: rawOptions.processEnvs,
-      proxyRules: rawOptions.proxyRules,
-      showMenuBar: rawOptions.showMenuBar ?? false,
-      singleInstance: rawOptions.singleInstance ?? false,
-      strictInternalUrls: rawOptions.strictInternalUrls ?? false,
-      titleBarStyle: rawOptions.titleBarStyle,
-      tray: rawOptions.tray ?? 'false',
-      userAgent: rawOptions.userAgent,
-      userAgentHonest: rawOptions.userAgentHonest ?? false,
-      verbose: rawOptions.verbose ?? false,
-      versionString: rawOptions.versionString,
-      width: rawOptions.width ?? 1280,
-      height: rawOptions.height ?? 800,
-      minWidth: rawOptions.minWidth,
-      minHeight: rawOptions.minHeight,
-      maxWidth: rawOptions.maxWidth,
-      maxHeight: rawOptions.maxHeight,
-      widevine: rawOptions.widevine ?? false,
-      x: rawOptions.x,
-      y: rawOptions.y,
-      zoom: rawOptions.zoom ?? 1.0,
-    },
-  };
+  const options: AppOptions = buildAppOptionsFromSchema(
+    rawOptions,
+    packageJson.version,
+  );
+  assertValidMappedOptions(options);
+  warnOnMappedOptions(options);
 
   if (options.nativefier.verbose) {
     log.setLevel('trace');
@@ -143,27 +58,10 @@ export async function getOptions(rawOptions: RawOptions): Promise<AppOptions> {
     log.setLevel('info');
   }
 
-  let requestedElectronBefore16 = false;
-  if (options.packager.electronVersion) {
-    const requestedVersion: string = options.packager.electronVersion;
-    if (!SEMVER_VERSION_NUMBER_REGEX.exec(requestedVersion)) {
-      throw `Invalid Electron version number "${requestedVersion}". Aborting.`;
-    }
-    const requestedMajorVersion = parseInt(requestedVersion.split('.')[0], 10);
-    if (requestedMajorVersion < ELECTRON_MAJOR_VERSION) {
-      log.warn(
-        `\nATTENTION: Using **old** Electron version ${requestedVersion} as requested.`,
-        "\nIt's untested, bugs and horror will happen, you're on your own.",
-        `\nSimply abort & re-run without passing the version flag to default to ${DEFAULT_ELECTRON_VERSION}`,
-      );
-    }
-    if (requestedMajorVersion < 16) {
-      requestedElectronBefore16 = true;
-    }
-  }
-
   if (options.nativefier.widevine) {
-    const widevineSuffix = requestedElectronBefore16 ? '-wvvmp' : '+wvcus';
+    const widevineSuffix = isElectronMajorBefore16(options)
+      ? '-wvvmp'
+      : '+wvcus';
     log.debug(`Using widevine release suffix "${widevineSuffix}"`);
     const widevineElectronVersion = `${
       options.packager.electronVersion as string

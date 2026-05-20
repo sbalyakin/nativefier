@@ -8,101 +8,10 @@ import { generateRandomSuffix } from '../helpers/helpers';
 import {
   AppOptions,
   NATIVEFIER_JSON_FILENAME,
-  OutputOptions,
   PackageJSON,
 } from '../buildTimeContract';
 import { parseJson } from '../utils/parseUtils';
-import { DEFAULT_APP_NAME } from '../constants';
-
-/**
- * Only picks certain app args to pass to nativefier.json
- */
-function pickElectronAppArgs(options: AppOptions): OutputOptions {
-  return {
-    accessibilityPrompt: options.nativefier.accessibilityPrompt,
-    alwaysOnTop: options.nativefier.alwaysOnTop,
-    appBundleId: options.packager.appBundleId,
-    appCategoryType: options.packager.appCategoryType,
-    appCopyright: options.packager.appCopyright,
-    appVersion: options.packager.appVersion,
-    arch: options.packager.arch,
-    asar: options.packager.asar,
-    backgroundColor: options.nativefier.backgroundColor,
-    basicAuthPassword: options.nativefier.basicAuthPassword,
-    basicAuthUsername: options.nativefier.basicAuthUsername,
-    blockExternalUrls: options.nativefier.blockExternalUrls,
-    bounce: options.nativefier.bounce,
-    browserwindowOptions: options.nativefier.browserwindowOptions,
-    buildDate: new Date().getTime(),
-    buildVersion: options.packager.buildVersion,
-    clearCache: options.nativefier.clearCache,
-    counter: options.nativefier.counter,
-    crashReporter: options.nativefier.crashReporter,
-    darwinDarkModeSupport: options.packager.darwinDarkModeSupport,
-    derefSymlinks: options.packager.derefSymlinks,
-    disableContextMenu: options.nativefier.disableContextMenu,
-    disableDevTools: options.nativefier.disableDevTools,
-    disableGpu: options.nativefier.disableGpu,
-    disableOldBuildWarning: options.nativefier.disableOldBuildWarning,
-    diskCacheSize: options.nativefier.diskCacheSize,
-    download: options.packager.download,
-    electronVersionUsed: options.packager.electronVersion,
-    enableEs3Apis: options.nativefier.enableEs3Apis,
-    executableName: options.packager.executableName,
-    fastQuit: options.nativefier.fastQuit,
-    fileDownloadOptions: options.nativefier.fileDownloadOptions,
-    flashPluginDir: options.nativefier.flashPluginDir,
-    fullScreen: options.nativefier.fullScreen,
-    globalShortcuts: options.nativefier.globalShortcuts,
-    height: options.nativefier.height,
-    helperBundleId: options.packager.helperBundleId,
-    hideWindowFrame: options.nativefier.hideWindowFrame,
-    ignoreCertificate: options.nativefier.ignoreCertificate,
-    ignoreGpuBlacklist: options.nativefier.ignoreGpuBlacklist,
-    insecure: options.nativefier.insecure,
-    internalUrls: options.nativefier.internalUrls,
-    isUpgrade: options.packager.upgrade,
-    junk: options.packager.junk,
-    lang: options.nativefier.lang,
-    maximize: options.nativefier.maximize,
-    maxHeight: options.nativefier.maxHeight,
-    maxWidth: options.nativefier.maxWidth,
-    minHeight: options.nativefier.minHeight,
-    minWidth: options.nativefier.minWidth,
-    name: options.packager.name ?? DEFAULT_APP_NAME,
-    nativefierVersion: options.nativefier.nativefierVersion,
-    osxNotarize: options.packager.osxNotarize,
-    osxSign: options.packager.osxSign,
-    portable: options.packager.portable,
-    processEnvs: options.nativefier.processEnvs,
-    protocols: options.packager.protocols,
-    proxyRules: options.nativefier.proxyRules,
-    prune: options.packager.prune,
-    quiet: options.packager.quiet,
-    showMenuBar: options.nativefier.showMenuBar,
-    singleInstance: options.nativefier.singleInstance,
-    strictInternalUrls: options.nativefier.strictInternalUrls,
-    targetUrl: options.packager.targetUrl,
-    titleBarStyle: options.nativefier.titleBarStyle,
-    tray: options.nativefier.tray,
-    usageDescription: options.packager.usageDescription,
-    userAgent: options.nativefier.userAgent,
-    userAgentHonest: options.nativefier.userAgentHonest,
-    versionString: options.nativefier.versionString,
-    width: options.nativefier.width,
-    widevine: options.nativefier.widevine,
-    win32metadata: options.packager.win32metadata,
-    x: options.nativefier.x,
-    y: options.nativefier.y,
-    zoom: options.nativefier.zoom,
-    // OLD_BUILD_WARNING_TEXT is an undocumented env. var to let *packagers*
-    // tweak the message shown on warning about an old build, to something
-    // more tailored to their audience (who might not even know Nativefier).
-    // See https://github.com/kelyvin/Google-Messages-For-Desktop/issues/34#issuecomment-812731144
-    // and https://github.com/nativefier/nativefier/issues/1131#issuecomment-812646988
-    oldBuildWarningText: process.env.OLD_BUILD_WARNING_TEXT || '',
-  };
-}
+import { mapAppOptionsToOutputOptions } from '../options/outputOptionsMapper';
 
 async function maybeCopyScripts(
   srcs: string[] | undefined,
@@ -193,7 +102,7 @@ export async function prepareElectronApp(
   }
 
   const appJsonPath = path.join(dest, NATIVEFIER_JSON_FILENAME);
-  const pickedOptions = pickElectronAppArgs(options);
+  const pickedOptions = mapAppOptionsToOutputOptions(options);
   log.debug(`Writing app config to ${appJsonPath}`, pickedOptions);
   await fs.writeFile(appJsonPath, JSON.stringify(pickedOptions));
 
