@@ -175,14 +175,14 @@ describe('Application launch', () => {
     const alertMsg = 'hello world from inject';
     createInject(
       'inject.js',
-      `setTimeout(() => {alert("${alertMsg}"); }, 5000);`, // Buy ourselves 5 seconds to get the dialog handler setup
+      `setTimeout(() => { alert(${JSON.stringify(alertMsg)}); }, 500);`,
     );
     const mainWindow = (await spawnApp(
       { ...DEFAULT_CONFIG },
       true,
-      true,
+      false,
     )) as Page;
-    const dialogPromise = mainWindow.waitForEvent('dialog');
+    const dialogPromise = mainWindow.waitForEvent('dialog', { timeout: 15000 });
     const dialog: Dialog = await dialogPromise;
     await dialog.dismiss();
     expect(dialog.message()).toBe(alertMsg);

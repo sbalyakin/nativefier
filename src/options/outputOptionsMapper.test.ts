@@ -65,6 +65,9 @@ test('mapAppOptionsToOutputOptions applies renames and defaults', () => {
   expect(output.electronVersionUsed).toBe('42.1.0');
   expect(output.isUpgrade).toBe(true);
   expect(output.name).toBe(DEFAULT_APP_NAME);
+
+  options.packager.name = '';
+  expect(mapAppOptionsToOutputOptions(options).name).toBe(DEFAULT_APP_NAME);
   expect(output.quiet).toBe(true);
   expect(typeof output.buildDate).toBe('number');
   expect(output.oldBuildWarningText).toBe('');

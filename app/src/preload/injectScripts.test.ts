@@ -1,6 +1,8 @@
 import {
+  injectJsAbsolutePath,
   injectJsRelativePath,
   isInjectJsFile,
+  listInjectJsFileNames,
   listInjectJsRelativePaths,
 } from './injectScripts';
 
@@ -22,4 +24,17 @@ test('listInjectJsRelativePaths filters and maps inject entries', () => {
     { name: 'd.js', isFile: (): boolean => true },
   ]);
   expect(paths).toEqual(['../inject/a.js', '../inject/d.js']);
+});
+
+test('listInjectJsFileNames returns only .js file names', () => {
+  const names = listInjectJsFileNames([
+    { name: 'a.js', isFile: (): boolean => true },
+    { name: 'b.css', isFile: (): boolean => true },
+    { name: 'd.js', isFile: (): boolean => true },
+  ]);
+  expect(names).toEqual(['a.js', 'd.js']);
+});
+
+test('injectJsAbsolutePath joins INJECT_DIR and file name', () => {
+  expect(injectJsAbsolutePath('custom.js')).toMatch(/inject[\\/]custom\.js$/);
 });

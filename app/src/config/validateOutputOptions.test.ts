@@ -1,3 +1,4 @@
+import { STABLE_CONTRACT_TEST_BUILD_DATE } from '../../../shared/lib/src/contract/testFixtures';
 import {
   assertValidOutputOptions,
   validateOutputOptions,
@@ -7,7 +8,7 @@ const validConfig = {
   name: 'TestApp',
   targetUrl: 'https://example.com/',
   nativefierVersion: '53.0.0',
-  buildDate: 1_700_000_000_000,
+  buildDate: STABLE_CONTRACT_TEST_BUILD_DATE,
   blockExternalUrls: false,
   disableDevTools: false,
   isUpgrade: false,

@@ -61,4 +61,5 @@ flowchart LR
 ## Related docs
 
 - [HACKING.md](../HACKING.md): setup, tests, contribution guidelines
+- [docs/testing.md](testing.md): unit, contract, integration, and Playwright layers
 - [API.md](../API.md): user-facing CLI options

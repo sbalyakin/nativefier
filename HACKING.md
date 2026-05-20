@@ -111,6 +111,8 @@ but is painful to do manually. Do yourself a favor and install a
 
 ## Tests
 
+Test layers (unit, `nativefier.json` contract, integration, Playwright) are described in [docs/testing.md](docs/testing.md).
+
 - To run all tests, `npm t`
 - To run only unit tests, `npm run test:unit`
 - To run only integration tests, `npm run test:integration`

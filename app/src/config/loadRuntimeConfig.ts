@@ -3,6 +3,7 @@ import fs from 'fs';
 import * as log from '../helpers/loggingHelper';
 import { IS_PLAYWRIGHT, PLAYWRIGHT_CONFIG } from '../helpers/playwrightHelpers';
 import type { OutputOptions } from '../../../shared/src/options/model';
+import { recentTestBuildDate } from '../../../shared/lib/src/contract/testFixtures';
 import { getRuntimeConfigPath } from './runtimeConfigPath';
 import { assertValidOutputOptions } from './validateOutputOptions';
 
@@ -11,9 +12,10 @@ export const PLAYWRIGHT_RUNTIME_CONFIG_DEFAULTS = {
   name: 'PlaywrightTest',
   targetUrl: 'about:blank',
   nativefierVersion: '0.0.0-test',
-  buildDate: 1_700_000_000_000,
+  buildDate: recentTestBuildDate(),
   blockExternalUrls: false,
   disableDevTools: false,
+  disableOldBuildWarning: true,
   isUpgrade: false,
   strictInternalUrls: false,
   oldBuildWarningText: '',

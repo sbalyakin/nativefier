@@ -119,7 +119,7 @@ export function mapAppOptionsToOutputOptions(
   }
 
   output.buildDate = new Date().getTime();
-  output.name = options.packager.name ?? DEFAULT_APP_NAME;
+  output.name = options.packager.name || DEFAULT_APP_NAME;
   output.oldBuildWarningText = process.env.OLD_BUILD_WARNING_TEXT || '';
 
   return output;

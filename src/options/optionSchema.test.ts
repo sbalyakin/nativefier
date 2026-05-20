@@ -102,6 +102,37 @@ test('definitions with mapTo document rawKey → AppOptions field', () => {
   );
 });
 
+test('packager scope maps argv into packager bucket', () => {
+  const options = buildAppOptionsFromSchema(
+    { targetUrl: 'https://a.test', arch: 'arm64', portable: true },
+    '1.0.0',
+  );
+  expect(options.packager.arch).toBe('arm64');
+  expect(options.packager.portable).toBe(true);
+});
+
+test('runtime scope maps argv into nativefier bucket', () => {
+  const options = buildAppOptionsFromSchema(
+    { targetUrl: 'https://a.test', width: 640, blockExternalUrls: true },
+    '1.0.0',
+  );
+  expect(options.nativefier.width).toBe(640);
+  expect(options.nativefier.blockExternalUrls).toBe(true);
+});
+
+test('cliOnly conceal does not set packager asar until mapped in buildAppOptionsFromSchema', () => {
+  const without = buildAppOptionsFromSchema(
+    { targetUrl: 'https://a.test' },
+    '1.0.0',
+  );
+  const withConceal = buildAppOptionsFromSchema(
+    { targetUrl: 'https://a.test', conceal: true },
+    '1.0.0',
+  );
+  expect(without.packager.asar).toBe(false);
+  expect(withConceal.packager.asar).toBe(true);
+});
+
 test('schema covers all mapped packager and runtime CLI fields', () => {
   const mappedCliFlags = new Set(
     OPTION_DEFINITIONS.filter(

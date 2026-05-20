@@ -1,3 +1,4 @@
+import { STABLE_CONTRACT_TEST_BUILD_DATE } from '../../../shared/lib/src/contract/testFixtures';
 import {
   applyCommandLineTargetUrlOverride,
   loadRuntimeConfigFromSource,
@@ -8,7 +9,7 @@ const validJson = JSON.stringify({
   name: 'TestApp',
   targetUrl: 'https://example.com/',
   nativefierVersion: '53.0.0',
-  buildDate: 1_700_000_000_000,
+  buildDate: STABLE_CONTRACT_TEST_BUILD_DATE,
   blockExternalUrls: false,
   disableDevTools: false,
   isUpgrade: false,
@@ -56,4 +57,7 @@ test('parseRuntimeConfigJson merges playwright defaults when requested', () => {
   expect(config.name).toBe('PlaywrightTest');
   expect(config.targetUrl).toBe('https://example.com/');
   expect(config.nativefierVersion).toBe('0.0.0-test');
+  expect(config.disableOldBuildWarning).toBe(true);
+  const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+  expect(Date.now() - config.buildDate).toBeLessThan(ninetyDaysMs);
 });
