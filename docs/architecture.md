@@ -31,7 +31,7 @@ The only supported channel from builder to packaged app is a JSON file next to t
 
 - **Constant:** `NATIVEFIER_JSON_FILENAME` in `shared/src/contract.ts` and `src/buildTimeContract.ts` (must match; CLI uses the latter in published builds)
 - **Writer:** `mapAppOptionsToOutputOptions()` in `src/options/outputOptionsMapper.ts` (driven by `OUTPUT_FIELD_MAPPINGS`) writes `OutputOptions` during `prepareElectronApp()`.
-- **Reader:** `app/src/components/mainWindow.ts` loads `APP_ARGS_FILE_PATH` at startup and passes `OutputOptions` through the runtime.
+- **Reader:** `app/src/config/loadRuntimeConfig.ts` loads and validates `nativefier.json` at startup; components receive `OutputOptions` from `main.ts`.
 
 Do not pass new settings across the boundary by importing builder modules into `app/src/`. Add fields to the shared option types, extend `OUTPUT_FIELD_MAPPINGS` (and `optionSchema.ts` for CLI), and read them from `nativefier.json` in runtime.
 
@@ -42,7 +42,8 @@ Do not pass new settings across the boundary by importing builder modules into `
 | New CLI flag / default / validation | `src/options/optionSchema.ts` (metadata + mapping), `src/cli.ts` (positionals only), `shared/src/options/model.ts` (types) |
 | New field in packaged app config | `shared/src/options/model.ts`, `OUTPUT_FIELD_MAPPINGS` in `outputOptionsMapper.ts`, runtime consumer in `app/src/` |
 | Packaging / icons / Electron download | `src/build/` |
-| Window, tray, menus, preload behavior | `app/src/` |
+| Window, tray, menus, preload behavior | `app/src/` (Electron API via `app/src/adapters/`) |
+| Runtime config load/validate/persist | `app/src/config/` |
 | Cross-layer constant (e.g. config filename) | `shared/src/contract.ts` |
 
 ## Data flow (high level)

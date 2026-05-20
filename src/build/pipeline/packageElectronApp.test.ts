@@ -1,5 +1,8 @@
 import type { AppOptions } from '../../buildTimeContract';
-import { packageElectronApp, trimUnprocessableOptions } from './packageElectronApp';
+import {
+  packageElectronApp,
+  trimUnprocessableOptions,
+} from './packageElectronApp';
 
 jest.mock('../../helpers/helpers', () => ({
   hasWine: jest.fn(() => false),

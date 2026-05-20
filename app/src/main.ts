@@ -1,8 +1,5 @@
 import 'source-map-support/register';
 
-import fs from 'fs';
-import * as path from 'path';
-
 import electron, {
   app,
   dialog,
@@ -11,29 +8,18 @@ import electron, {
   BrowserWindow,
   Event,
 } from 'electron';
-import electronDownload from 'electron-dl';
 
 import { createLoginWindow } from './components/loginWindow';
-import {
-  createMainWindow,
-  saveAppArgs,
-  APP_ARGS_FILE_PATH,
-} from './components/mainWindow';
+import { createMainWindow } from './components/mainWindow';
 import { createTrayIcon } from './components/trayIcon';
-import {
-  isOSX,
-  isWayland,
-  isWindows,
-  removeUserAgentSpecifics,
-} from './helpers/helpers';
-import { inferFlashPath } from './helpers/inferFlash';
+import { persistRuntimeConfig } from './config/persistRuntimeConfig';
+import { loadRuntimeConfig } from './config/loadRuntimeConfig';
+import { isOSX } from './helpers/helpers';
 import * as log from './helpers/loggingHelper';
-import {
-  IS_PLAYWRIGHT,
-  PLAYWRIGHT_CONFIG,
-  safeGetEnv,
-} from './helpers/playwrightHelpers';
-import { OutputOptions } from './runtimeContract';
+import { IS_PLAYWRIGHT, safeGetEnv } from './helpers/playwrightHelpers';
+import { createDockBadgeSetter } from './services/dockBadgeService';
+import { applyRuntimeStartup } from './services/runtimeStartup';
+import { registerSingleInstance } from './services/singleInstanceService';
 
 // Entrypoint for Squirrel, a windows update framework. See https://github.com/nativefier/nativefier/pull/744
 if (require('electron-squirrel-startup')) {
@@ -49,60 +35,9 @@ if (process.argv.indexOf('--verbose') > -1 || safeGetEnv('VERBOSE') === '1') {
 
 let mainWindow: BrowserWindow;
 
-const appArgs =
-  IS_PLAYWRIGHT && PLAYWRIGHT_CONFIG
-    ? (JSON.parse(PLAYWRIGHT_CONFIG) as OutputOptions)
-    : (JSON.parse(
-        fs.readFileSync(APP_ARGS_FILE_PATH, 'utf8'),
-      ) as OutputOptions);
-
-log.debug('appArgs', appArgs);
-// Do this relatively early so that we can start storing appData with the app
-if (appArgs.portable) {
-  log.debug(
-    'App was built as portable; setting appData and userData to the app folder: ',
-    path.resolve(path.join(__dirname, '..', 'appData')),
-  );
-  app.setPath('appData', path.join(__dirname, '..', 'appData'));
-  app.setPath('userData', path.join(__dirname, '..', 'appData'));
-}
-
-if (!appArgs.userAgentHonest) {
-  if (appArgs.userAgent) {
-    app.userAgentFallback = appArgs.userAgent;
-  } else {
-    app.userAgentFallback = removeUserAgentSpecifics(
-      app.userAgentFallback,
-      app.getName(),
-      app.getVersion(),
-    );
-  }
-}
-
-// this step is required to allow app names to be displayed correctly in notifications on windows
-// https://www.electronjs.org/docs/latest/api/app#appsetappusermodelidid-windows
-// https://www.electronjs.org/docs/latest/tutorial/notifications#windows
-if (isWindows()) {
-  app.setAppUserModelId(app.getName());
-}
-
-const urlArgv = process.argv.filter((a) => a.startsWith('http'));
-
-// Take in a URL on the command line as an override
-if (urlArgv.length > 0) {
-  const maybeUrl = urlArgv[0];
-  try {
-    new URL(maybeUrl);
-    appArgs.targetUrl = maybeUrl;
-    log.info('Loading override URL passed as argument:', maybeUrl);
-  } catch (err: unknown) {
-    log.error(
-      'Not loading override URL passed as argument, because failed to parse:',
-      maybeUrl,
-      err,
-    );
-  }
-}
+const appArgs = loadRuntimeConfig();
+applyRuntimeStartup(appArgs);
+const setDockBadge = createDockBadgeSetter();
 
 // Nativefier is a browser, and an old browser is an insecure / badly-performant one.
 // Given our builder/app design, we currently don't have an easy way to offer
@@ -113,101 +48,6 @@ if (urlArgv.length > 0) {
 const OLD_BUILD_WARNING_THRESHOLD_DAYS = 90;
 const OLD_BUILD_WARNING_THRESHOLD_MS =
   OLD_BUILD_WARNING_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
-
-const fileDownloadOptions = { ...appArgs.fileDownloadOptions };
-electronDownload(fileDownloadOptions);
-
-if (appArgs.processEnvs) {
-  let processEnvs: Record<string, string> =
-    appArgs.processEnvs as unknown as Record<string, string>;
-  // This is compatibility if just a string was passed.
-  if (typeof appArgs.processEnvs === 'string') {
-    try {
-      processEnvs = JSON.parse(appArgs.processEnvs) as Record<string, string>;
-    } catch {
-      // This wasn't JSON. Fall back to the old code
-      processEnvs = {};
-      process.env.processEnvs = appArgs.processEnvs;
-    }
-  }
-  Object.keys(processEnvs)
-    .filter((key) => key !== undefined)
-    .forEach((key) => {
-      process.env[key] = processEnvs[key];
-    });
-}
-
-if (typeof appArgs.flashPluginDir === 'string') {
-  app.commandLine.appendSwitch('ppapi-flash-path', appArgs.flashPluginDir);
-} else if (appArgs.flashPluginDir) {
-  const flashPath = inferFlashPath();
-  app.commandLine.appendSwitch('ppapi-flash-path', flashPath);
-}
-
-if (appArgs.ignoreCertificate) {
-  app.commandLine.appendSwitch('ignore-certificate-errors');
-}
-
-if (appArgs.disableGpu) {
-  app.disableHardwareAcceleration();
-}
-
-if (appArgs.ignoreGpuBlacklist) {
-  app.commandLine.appendSwitch('ignore-gpu-blacklist');
-}
-
-if (appArgs.enableEs3Apis) {
-  app.commandLine.appendSwitch('enable-es3-apis');
-}
-
-if (appArgs.diskCacheSize) {
-  app.commandLine.appendSwitch(
-    'disk-cache-size',
-    appArgs.diskCacheSize.toString(),
-  );
-}
-
-if (appArgs.basicAuthUsername) {
-  app.commandLine.appendSwitch(
-    'basic-auth-username',
-    appArgs.basicAuthUsername,
-  );
-}
-
-if (appArgs.basicAuthPassword) {
-  app.commandLine.appendSwitch(
-    'basic-auth-password',
-    appArgs.basicAuthPassword,
-  );
-}
-
-if (isWayland()) {
-  app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
-}
-
-if (appArgs.lang) {
-  const langParts = appArgs.lang.split(',');
-  // Convert locales to languages, because for some reason locales don't work. Stupid Chromium
-  const langPartsParsed = Array.from(
-    // Convert to set to dedupe in case something like "en-GB,en-US" was passed
-    new Set(langParts.map((l) => l.split('-')[0])),
-  );
-  const langFlag = langPartsParsed.join(',');
-  log.debug('Setting --lang flag to', langFlag);
-  app.commandLine.appendSwitch('--lang', langFlag);
-}
-
-let currentBadgeCount = 0;
-const setDockBadge = isOSX()
-  ? (count?: number | string, bounce = false): void => {
-      if (count !== undefined && app.dock) {
-        app.dock.setBadge(count.toString());
-        if (bounce && typeof count === 'number' && count > currentBadgeCount)
-          app.dock.bounce();
-        currentBadgeCount = typeof count === 'number' ? count : 0;
-      }
-    }
-  : (): void => undefined;
 
 app.on('window-all-closed', () => {
   log.debug('app.window-all-closed');
@@ -289,26 +129,7 @@ app.on('activate', (event: electron.Event, hasVisibleWindows: boolean) => {
   }
 });
 
-// quit if singleInstance mode and there's already another instance running
-const shouldQuit = appArgs.singleInstance && !app.requestSingleInstanceLock();
-if (shouldQuit) {
-  app.quit();
-} else {
-  app.on('second-instance', () => {
-    log.debug('app.second-instance');
-    if (mainWindow) {
-      if (!mainWindow.isVisible()) {
-        // try
-        mainWindow.show();
-      }
-      if (mainWindow.isMinimized()) {
-        // minimized
-        mainWindow.restore();
-      }
-      mainWindow.focus();
-    }
-  });
-}
+registerSingleInstance(appArgs, () => mainWindow);
 
 app.on('new-window-for-tab', (event: Event) => {
   log.debug('app.new-window-for-tab', { event });
@@ -398,7 +219,7 @@ async function onReady(): Promise<void> {
           // User cliecked Never Ask Me Again, save that info
           case 2:
             appArgs.accessibilityPrompt = false;
-            saveAppArgs(appArgs);
+            persistRuntimeConfig(appArgs);
             break;
           // User clicked No
           default:

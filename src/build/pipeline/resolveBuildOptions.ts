@@ -2,7 +2,10 @@ import * as log from 'loglevel';
 
 import type { RawOptions } from '../../buildTimeContract';
 import { getTempDir, isWindows, isWindowsAdmin } from '../../helpers/helpers';
-import { findUpgradeApp, useOldAppOptions } from '../../helpers/upgrade/upgrade';
+import {
+  findUpgradeApp,
+  useOldAppOptions,
+} from '../../helpers/upgrade/upgrade';
 import { getOptions } from '../../options/optionsMain';
 import type { ResolvedBuildOptions } from './types';
 

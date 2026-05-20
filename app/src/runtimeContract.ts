@@ -3,7 +3,7 @@
  *
  * Import option types and cross-layer constants from here (or from `shared/src`),
  * never from `src/` (builder/CLI). The builder writes {@link NATIVEFIER_JSON_FILENAME};
- * runtime reads it at startup (see `components/mainWindow.ts`).
+ * runtime reads it at startup (see `config/loadRuntimeConfig.ts`).
  */
 export { NATIVEFIER_JSON_FILENAME } from '../../shared/src/contract';
 export type {

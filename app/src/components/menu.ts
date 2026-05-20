@@ -5,10 +5,14 @@ import {
   BaseWindow,
   BrowserWindow,
   clipboard,
-  Menu,
   MenuItem,
   MenuItemConstructorOptions,
 } from 'electron';
+
+import {
+  buildApplicationMenu,
+  setApplicationMenu,
+} from '../adapters/menuAdapter';
 
 import { cleanupPlainText, isOSX, openExternal } from '../helpers/helpers';
 import * as log from '../helpers/loggingHelper';
@@ -58,8 +62,8 @@ export function createMenu(
 
   injectBookmarks(menuTemplate);
 
-  const menu = Menu.buildFromTemplate(menuTemplate);
-  Menu.setApplicationMenu(menu);
+  const menu = buildApplicationMenu(menuTemplate);
+  setApplicationMenu(menu);
 }
 
 export function generateMenu(

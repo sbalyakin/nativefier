@@ -1,15 +1,16 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import { BrowserWindow, Event, HandlerDetails } from 'electron';
 
 import {
-  desktopCapturer,
-  ipcMain,
-  BrowserWindow,
-  Event,
-  HandlerDetails,
-} from 'electron';
-import windowStateKeeper from 'electron-window-state';
-
+  createBrowserWindow,
+  createWindowState,
+  setWindowOpenHandler,
+} from '../adapters/windowAdapter';
+import {
+  getDesktopCapturerSources,
+  handleIpcMainInvoke,
+  onIpcMainEvent,
+} from '../adapters/ipcAdapter';
+import { persistRuntimeConfig } from '../config/persistRuntimeConfig';
 import { initContextMenu } from './contextMenu';
 import { createMenu } from './menu';
 import {
@@ -28,16 +29,11 @@ import {
   hideWindow,
 } from '../helpers/windowHelpers';
 import {
-  NATIVEFIER_JSON_FILENAME,
   OutputOptions,
   outputOptionsToWindowOptions,
 } from '../runtimeContract';
 
-export const APP_ARGS_FILE_PATH = path.join(
-  __dirname,
-  '..',
-  NATIVEFIER_JSON_FILENAME,
-);
+export { APP_ARGS_FILE_PATH } from '../config/runtimeConfigPath';
 
 type SessionInteractionRequest = {
   id?: string;
@@ -63,12 +59,12 @@ export async function createMainWindow(
 ): Promise<BrowserWindow> {
   const options = { ...nativefierOptions };
 
-  const mainWindowState = windowStateKeeper({
+  const mainWindowState = createWindowState({
     defaultWidth: options.width || 1280,
     defaultHeight: options.height || 800,
   });
 
-  const mainWindow = new BrowserWindow({
+  const mainWindow = createBrowserWindow({
     frame: !options.hideWindowFrame,
     width: mainWindowState.width,
     height: mainWindowState.height,
@@ -105,7 +101,7 @@ export async function createMainWindow(
   if (options.maximize) {
     mainWindow.maximize();
     options.maximize = undefined;
-    saveAppArgs(options);
+    persistRuntimeConfig(options);
   }
 
   if (options.tray === 'start-in-tray') {
@@ -125,7 +121,7 @@ export async function createMainWindow(
 
   // Note it is important to add these handlers only to the *main* window,
   // else we run into weird behavior like opening tabs twice
-  mainWindow.webContents.setWindowOpenHandler((details: HandlerDetails) => {
+  setWindowOpenHandler(mainWindow, (details: HandlerDetails) => {
     return onNewWindow(
       windowOptions,
       setupNativefierWindow,
@@ -150,7 +146,7 @@ export async function createMainWindow(
     setupNotificationBadge(options, mainWindow, setDockBadge);
   }
 
-  ipcMain.on('notification-click', () => {
+  onIpcMainEvent('notification-click', () => {
     log.debug('ipcMain.notification-click');
     mainWindow.show();
   });
@@ -176,14 +172,9 @@ function createContextMenu(
   }
 }
 
+/** @deprecated Use {@link persistRuntimeConfig} from `config/persistRuntimeConfig`. */
 export function saveAppArgs(newAppArgs: OutputOptions): void {
-  try {
-    fs.writeFileSync(APP_ARGS_FILE_PATH, JSON.stringify(newAppArgs, null, 2));
-  } catch (err: unknown) {
-    log.warn(
-      `WARNING: Ignored nativefier.json rewrital (${(err as Error).message})`,
-    );
-  }
+  persistRuntimeConfig(newAppArgs);
 }
 
 function setupCloseEvent(options: OutputOptions, window: BrowserWindow): void {
@@ -242,8 +233,8 @@ function setupSessionPermissionHandler(window: BrowserWindow): void {
       callback(true);
     },
   );
-  ipcMain.handle('desktop-capturer-get-sources', () => {
-    return desktopCapturer.getSources({
+  handleIpcMainInvoke('desktop-capturer-get-sources', () => {
+    return getDesktopCapturerSources({
       types: ['screen', 'window'],
     });
   });
@@ -254,7 +245,7 @@ function setupNotificationBadge(
   window: BrowserWindow,
   setDockBadge: (value: number | string, bounce?: boolean) => void,
 ): void {
-  ipcMain.on('notification', () => {
+  onIpcMainEvent('notification', () => {
     log.debug('ipcMain.notification');
     if (!isOSX() || window.isFocused()) {
       return;
@@ -269,7 +260,7 @@ function setupNotificationBadge(
 
 function setupSessionInteraction(window: BrowserWindow): void {
   // See API.md / "Accessing The Electron Session"
-  ipcMain.on(
+  onIpcMainEvent(
     'session-interaction',
     (event, request: SessionInteractionRequest) => {
       log.debug('ipcMain.session-interaction', { event, request });

@@ -20,7 +20,10 @@ jest.mock('../../helpers/helpers', () => ({
 }));
 
 import { getOptions } from '../../options/optionsMain';
-import { findUpgradeApp, useOldAppOptions } from '../../helpers/upgrade/upgrade';
+import {
+  findUpgradeApp,
+  useOldAppOptions,
+} from '../../helpers/upgrade/upgrade';
 import { getTempDir, isWindows, isWindowsAdmin } from '../../helpers/helpers';
 
 const getOptionsMock = getOptions as jest.MockedFunction<typeof getOptions>;

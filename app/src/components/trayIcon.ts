@@ -1,5 +1,11 @@
-import { app, Tray, Menu, ipcMain, nativeImage, BrowserWindow } from 'electron';
+import { app, Tray, BrowserWindow } from 'electron';
 
+import { onIpcMainEvent } from '../adapters/ipcAdapter';
+import {
+  buildTrayContextMenu,
+  createEmptyTray,
+  loadNativeImageFromPath,
+} from '../adapters/trayAdapter';
 import { getAppIcon, getCounterValue, isOSX } from '../helpers/helpers';
 import * as log from '../helpers/loggingHelper';
 import { OutputOptions } from '../runtimeContract';
@@ -15,8 +21,8 @@ export function createTrayIcon(
     if (!iconPath) {
       throw new Error('Icon path not found found to use with tray option.');
     }
-    const nimage = nativeImage.createFromPath(iconPath);
-    const appIcon = new Tray(nativeImage.createEmpty());
+    const nimage = loadNativeImageFromPath(iconPath);
+    const appIcon = createEmptyTray();
 
     if (isOSX()) {
       //sets the icon to the height of the tray.
@@ -36,7 +42,7 @@ export function createTrayIcon(
       }
     };
 
-    const contextMenu = Menu.buildFromTemplate([
+    const contextMenu = buildTrayContextMenu([
       {
         label: options.name,
         click: onClick,
@@ -62,7 +68,7 @@ export function createTrayIcon(
         }
       });
     } else {
-      ipcMain.on('notification', () => {
+      onIpcMainEvent('notification', () => {
         log.debug('ipcMain.notification');
         if (mainWindow.isFocused()) {
           return;

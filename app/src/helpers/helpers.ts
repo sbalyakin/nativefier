@@ -2,7 +2,9 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-import { BrowserWindow, OpenExternalOptions, shell } from 'electron';
+import { BrowserWindow, OpenExternalOptions } from 'electron';
+
+import { openExternalUrl } from '../adapters/shellAdapter';
 
 import * as log from '../helpers/loggingHelper';
 import { showNavigationBlockedMessage } from './windowHelpers';
@@ -281,7 +283,7 @@ export function openExternal(
     });
   }
 
-  return shell.openExternal(url, options);
+  return openExternalUrl(url, options);
 }
 
 // Copy-pastaed as unable to get imports to work in preload.

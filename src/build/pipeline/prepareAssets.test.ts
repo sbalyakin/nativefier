@@ -13,9 +13,8 @@ jest.mock('../buildIcon', () => ({
 
 import { convertIconIfNecessary } from '../buildIcon';
 
-const convertIconIfNecessaryMock = convertIconIfNecessary as jest.MockedFunction<
-  typeof convertIconIfNecessary
->;
+const convertIconIfNecessaryMock =
+  convertIconIfNecessary as jest.MockedFunction<typeof convertIconIfNecessary>;
 
 describe('copyIconsIfNecessary', () => {
   beforeEach(() => {
