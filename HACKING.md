@@ -9,6 +9,10 @@ Layer boundaries (`src/` vs `app/src/` vs `shared/`), import rules, and how
 `nativefier.json` connects the builder to the packaged app are documented in
 [docs/architecture.md](docs/architecture.md).
 
+Post-stabilization infrastructure (ESM path, dependency policy, packager alternatives) is in
+[docs/technical-roadmap.md](docs/technical-roadmap.md). Audit outdated packages with
+`npm run audit:deps` (alias for `list-outdated-deps`).
+
 ## Guidelines
 
 1. **Before starting work on a huge change, gauge the interest**

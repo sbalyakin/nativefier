@@ -62,4 +62,5 @@ flowchart LR
 
 - [HACKING.md](../HACKING.md): setup, tests, contribution guidelines
 - [docs/testing.md](testing.md): unit, contract, integration, and Playwright layers
+- [docs/technical-roadmap.md](technical-roadmap.md): ESM, dependency, packager, and native-tooling decisions after stabilization
 - [API.md](../API.md): user-facing CLI options
