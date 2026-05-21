@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 
-import axios from 'axios';
 import * as debug from 'debug';
 import * as log from 'loglevel';
 
@@ -22,6 +21,7 @@ import {
   isElectronMajorBefore16,
   warnOnMappedOptions,
 } from './optionSchema';
+import { resolveWidevineElectronVersion } from './widevineElectronVersion';
 import { parseJson } from '../utils/parseUtils';
 
 /**
@@ -63,19 +63,11 @@ export async function getOptions(rawOptions: RawOptions): Promise<AppOptions> {
       ? '-wvvmp'
       : '+wvcus';
     log.debug(`Using widevine release suffix "${widevineSuffix}"`);
-    const widevineElectronVersion = `${
-      options.packager.electronVersion as string
-    }${widevineSuffix}`;
-
-    try {
-      await axios.get(
-        `https://github.com/castlabs/electron-releases/releases/tag/v${widevineElectronVersion}`,
-      );
-    } catch {
-      throw new Error(
-        `\nERROR: castLabs Electron version "${widevineElectronVersion}" does not exist. \nVerify versions at https://github.com/castlabs/electron-releases/releases. \nAborting.`,
-      );
-    }
+    const requestedBaseVersion = options.packager.electronVersion as string;
+    const widevineElectronVersion = await resolveWidevineElectronVersion(
+      requestedBaseVersion,
+      widevineSuffix,
+    );
 
     options.packager.electronVersion = widevineElectronVersion;
     process.env.ELECTRON_MIRROR =

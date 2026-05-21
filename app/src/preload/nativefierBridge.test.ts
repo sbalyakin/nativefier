@@ -9,13 +9,10 @@ jest.mock('electron', () => ({
 import {
   assignPreloadNativefierGlobal,
   createNativefierBridge,
-  createNativefierNotifyBridge,
   createNativefierSessionBridge,
   exposeNativefierBridge,
-  exposeNativefierNotifyBridge,
   sendSessionInteraction,
   setupNativefierBridge,
-  setupNativefierNotifyBridge,
 } from './nativefierBridge';
 
 const originalContextIsolated = process.contextIsolated;
@@ -168,6 +165,10 @@ test('exposeNativefierBridge uses contextBridge when isolated', () => {
   exposeNativefierBridge(bridge);
 
   expect(mockExposeInMainWorld).toHaveBeenCalledWith('nativefier', bridge);
+  expect(mockExposeInMainWorld).not.toHaveBeenCalledWith(
+    '__nativefierNotify',
+    expect.anything(),
+  );
 });
 
 test('exposeNativefierBridge assigns window when not isolated', () => {
@@ -185,7 +186,7 @@ test('exposeNativefierBridge assigns window when not isolated', () => {
   );
 });
 
-test('setupNativefierBridge exposes session bridge and notify channel', () => {
+test('setupNativefierBridge exposes session bridge only', () => {
   Object.defineProperty(process, 'contextIsolated', {
     value: false,
     configurable: true,
@@ -200,83 +201,10 @@ test('setupNativefierBridge exposes session bridge and notify channel', () => {
   expect((globalThis.window as { nativefier?: typeof bridge }).nativefier).toBe(
     bridge,
   );
-
-  const notifyBridge = (
-    globalThis.window as {
-      __nativefierNotify?: ReturnType<typeof createNativefierNotifyBridge>;
-    }
-  ).__nativefierNotify;
-  expect(notifyBridge).toBeDefined();
-  notifyBridge?.create('Title', { body: 'Body' });
-  expect(ipcRenderer.send).toHaveBeenCalledWith('notification', 'Title', {
-    body: 'Body',
-  });
-  notifyBridge?.click();
-  expect(ipcRenderer.send).toHaveBeenCalledWith('notification-click');
-});
-
-test('createNativefierNotifyBridge sends IPC on create and click', () => {
-  const ipcRenderer = { send: jest.fn() };
-  const bridge = createNativefierNotifyBridge(ipcRenderer as never);
-
-  bridge.create('Title', { body: 'Body' });
-  expect(ipcRenderer.send).toHaveBeenCalledWith('notification', 'Title', {
-    body: 'Body',
-  });
-
-  bridge.click();
-  expect(ipcRenderer.send).toHaveBeenCalledWith('notification-click');
-});
-
-test('exposeNativefierNotifyBridge uses contextBridge when isolated', () => {
-  Object.defineProperty(process, 'contextIsolated', {
-    value: true,
-    configurable: true,
-  });
-
-  const bridge = { create: jest.fn(), click: jest.fn() };
-  exposeNativefierNotifyBridge(bridge);
-
-  expect(mockExposeInMainWorld).toHaveBeenCalledWith(
-    '__nativefierNotify',
-    bridge,
-  );
-});
-
-test('exposeNativefierNotifyBridge assigns window when not isolated', () => {
-  Object.defineProperty(process, 'contextIsolated', {
-    value: false,
-    configurable: true,
-  });
-
-  const bridge = { create: jest.fn(), click: jest.fn() };
-  exposeNativefierNotifyBridge(bridge);
-
-  expect(mockExposeInMainWorld).not.toHaveBeenCalled();
   expect(
-    (globalThis.window as { __nativefierNotify?: typeof bridge })
-      .__nativefierNotify,
-  ).toBe(bridge);
-});
-
-test('setupNativefierNotifyBridge exposes bridge for IPC', () => {
-  Object.defineProperty(process, 'contextIsolated', {
-    value: false,
-    configurable: true,
-  });
-
-  const ipcRenderer = { send: jest.fn() };
-  setupNativefierNotifyBridge(ipcRenderer as never);
-
-  const bridge = (
-    globalThis.window as {
-      __nativefierNotify?: ReturnType<typeof createNativefierNotifyBridge>;
-    }
-  ).__nativefierNotify;
-  expect(bridge).toBeDefined();
-
-  bridge?.create('X', {});
-  expect(ipcRenderer.send).toHaveBeenCalledWith('notification', 'X', {});
+    (globalThis.window as { __nativefierNotify?: unknown }).__nativefierNotify,
+  ).toBeUndefined();
+  expect(ipcRenderer.send).not.toHaveBeenCalled();
 });
 
 test('assignPreloadNativefierGlobal sets global nativefier', () => {

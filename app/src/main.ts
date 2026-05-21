@@ -40,7 +40,9 @@ if (process.argv.indexOf('--verbose') > -1 || safeGetEnv('VERBOSE') === '1') {
   process.argv.slice(1);
 }
 
-let mainWindow: BrowserWindow;
+let mainWindow: BrowserWindow | undefined;
+let pendingDockShowOnReady = false;
+let onReadyDidRun = false;
 
 const appArgs = loadRuntimeConfig();
 applyRuntimeStartup(appArgs);
@@ -97,10 +99,26 @@ onAppEvent<[Event, string]>('open-url', (event, url) => {
   }
 });
 
+function runOnReadyOnce(trigger: string): void {
+  if (onReadyDidRun) {
+    log.debug('runOnReadyOnce skipped (already ran)', { trigger });
+    return;
+  }
+  onReadyDidRun = true;
+  log.debug('runOnReadyOnce', { trigger });
+  onReady().catch((err) => log.error('onReady ERROR', err));
+}
+
 if (appArgs.widevine) {
+  // castLabs builds may not emit widevine-ready on all versions; app ready is fallback.
+  onAppEvent('ready', () => {
+    log.debug('app.ready (widevine)');
+    runOnReadyOnce('ready');
+  });
+
   onAppEvent<[string, string]>('widevine-ready', (version, lastVersion) => {
     log.debug('app.widevine-ready', { version, lastVersion });
-    onReady().catch((err) => log.error('onReady ERROR', err));
+    runOnReadyOnce('widevine-ready');
   });
 
   onAppEvent<[string, string]>(
@@ -115,20 +133,23 @@ if (appArgs.widevine) {
 
   onAppEvent<[Error]>('widevine-error', (error) => {
     log.error('app.widevine-error', error);
+    runOnReadyOnce('widevine-error');
   });
 } else {
   onAppEvent('ready', () => {
-    log.debug('ready');
-    onReady().catch((err) => log.error('onReady ERROR', err));
+    log.debug('app.ready');
+    runOnReadyOnce('ready');
   });
 }
 
 onAppEvent('activate', (event: Event, hasVisibleWindows: boolean) => {
   log.debug('app.activate', { event, hasVisibleWindows });
-  if (isOSX() && !IS_PLAYWRIGHT) {
-    // this is called when the dock is clicked
-    if (!hasVisibleWindows) {
+  if (isOSX() && !IS_PLAYWRIGHT && !hasVisibleWindows) {
+    // mainWindow is created in onReady (after app ready or widevine-ready)
+    if (mainWindow) {
       showBrowserWindow(mainWindow);
+    } else {
+      pendingDockShowOnReady = true;
     }
   }
 });
@@ -167,9 +188,10 @@ onAppEvent<
 
 async function onReady(): Promise<void> {
   // Warning: `mainWindow` below is the *global* unique `mainWindow`, created at init time
-  mainWindow = await createMainWindow(appArgs, setDockBadge);
+  const window = await createMainWindow(appArgs, setDockBadge);
+  mainWindow = window;
 
-  createTrayIcon(appArgs, mainWindow);
+  createTrayIcon(appArgs, window);
 
   // Register global shortcuts
   if (appArgs.globalShortcuts) {
@@ -177,7 +199,7 @@ async function onReady(): Promise<void> {
       registerGlobalShortcut(shortcut.key, () => {
         shortcut.inputEvents.forEach((inputEvent) => {
           sendInputEventToWebContents(
-            mainWindow,
+            window,
             inputEvent as Parameters<
               BrowserWindow['webContents']['sendInputEvent']
             >[0],
@@ -202,7 +224,7 @@ async function onReady(): Promise<void> {
         // the user for permission on Mac.
         // For reference:
         // https://www.electronjs.org/docs/api/global-shortcut?q=MediaPlayPause#globalshortcutregisteraccelerator-callback
-        const accessibilityPromptResult = showMessageBoxSync(mainWindow, {
+        const accessibilityPromptResult = showMessageBoxSync(window, {
           type: 'question',
           message: 'Accessibility Permissions Needed',
           buttons: ['Yes', 'No', 'No and never ask again'],
@@ -236,7 +258,7 @@ async function onReady(): Promise<void> {
     const oldBuildWarningText =
       appArgs.oldBuildWarningText ||
       'This app was built a long time ago. Nativefier uses the Chrome browser (through Electron), and it is insecure to keep using an old version of it. Please upgrade Nativefier and rebuild this app.';
-    showMessageBox(mainWindow, {
+    showMessageBox(window, {
       type: 'warning',
       message: 'Old build detected',
       detail: oldBuildWarningText,
@@ -244,7 +266,16 @@ async function onReady(): Promise<void> {
   }
 
   if (appArgs.targetUrl) {
-    await loadUrl(mainWindow, appArgs.targetUrl);
+    await loadUrl(window, appArgs.targetUrl);
+  }
+
+  if (appArgs.tray !== 'start-in-tray') {
+    showBrowserWindow(window);
+  }
+
+  if (pendingDockShowOnReady) {
+    pendingDockShowOnReady = false;
+    showBrowserWindow(window);
   }
 }
 

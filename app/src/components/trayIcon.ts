@@ -1,6 +1,9 @@
 import type { BrowserWindow, Tray } from '../adapters/electronTypes';
 import { exitApp } from '../adapters/appAdapter';
-import { onIpcMainEvent } from '../adapters/ipcAdapter';
+import {
+  clearNotificationBadgeState,
+  registerNotificationIpcHandlers,
+} from '../services/notificationIpcService';
 import {
   buildTrayContextMenu,
   createEmptyTray,
@@ -88,18 +91,21 @@ export function createTrayIcon(
         },
       );
     } else {
-      onIpcMainEvent('notification', () => {
-        log.debug('ipcMain.notification');
-        if (isBrowserWindowFocused(mainWindow)) {
-          return;
-        }
-        if (options.name) {
-          setTrayToolTip(appIcon, `•  ${options.name}`);
-        }
+      registerNotificationIpcHandlers({
+        onCreate: () => {
+          log.debug('ipcMain.nativefier-notify create (tray)');
+          if (isBrowserWindowFocused(mainWindow)) {
+            return;
+          }
+          if (options.name) {
+            setTrayToolTip(appIcon, `•  ${options.name}`);
+          }
+        },
       });
 
       onBrowserWindowEvent(mainWindow, 'focus', () => {
         log.debug('mainWindow.focus');
+        clearNotificationBadgeState(mainWindow.webContents.id);
         setTrayToolTip(appIcon, options.name ?? '');
       });
     }

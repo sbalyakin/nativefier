@@ -1,9 +1,10 @@
+import { NOTIFY_POST_MESSAGE_CHANNEL } from './notificationChannel';
 import {
   NOTIFICATION_SHIM_INSTALLED_KEY,
   buildNotificationShimInstallScript,
   installNotificationShimInPage,
   wrapNotificationConstructor,
-  type NativefierNotifyBridge,
+  type NativefierNotifySend,
 } from './notificationShimSource';
 
 class MockNotification {
@@ -35,14 +36,17 @@ class MockNotification {
 
 const originalNotification = globalThis.Notification;
 const originalWindow = globalThis.window;
+const originalPostMessage = globalThis.window?.postMessage;
 
 function installNotificationMock(): void {
   MockNotification.permission = 'default';
   MockNotification.requestPermission.mockClear();
   const NotificationCtor = MockNotification as unknown as typeof Notification;
   globalThis.Notification = NotificationCtor;
-  globalThis.window = { Notification: NotificationCtor } as Window &
-    typeof globalThis;
+  globalThis.window = {
+    Notification: NotificationCtor,
+    postMessage: jest.fn(),
+  } as unknown as Window & typeof globalThis;
 }
 
 beforeEach(() => {
@@ -50,44 +54,40 @@ beforeEach(() => {
   delete (globalThis.window as { [NOTIFICATION_SHIM_INSTALLED_KEY]?: boolean })[
     NOTIFICATION_SHIM_INSTALLED_KEY
   ];
-  delete (globalThis.window as { __nativefierNotify?: NativefierNotifyBridge })
-    .__nativefierNotify;
 });
 
 afterAll(() => {
   globalThis.Notification = originalNotification;
   globalThis.window = originalWindow;
+  if (originalPostMessage) {
+    globalThis.window.postMessage = originalPostMessage;
+  }
 });
 
-test('wrapNotificationConstructor invokes bridge and wires click handler', () => {
-  const create = jest.fn();
-  const click = jest.fn();
-  const bridge: NativefierNotifyBridge = { create, click };
+test('wrapNotificationConstructor invokes sendNotify and wires click handler', () => {
+  const sendNotify = jest.fn() as jest.MockedFunction<NativefierNotifySend>;
 
   const Wrapped = wrapNotificationConstructor(
     window.Notification,
-    bridge,
+    sendNotify,
   ) as unknown as typeof MockNotification;
   window.Notification = Wrapped as unknown as typeof Notification;
 
   const notification = new window.Notification('Hello', {
     body: 'World',
   }) as unknown as MockNotification;
-  expect(create).toHaveBeenCalledWith('Hello', { body: 'World' });
+  expect(sendNotify).toHaveBeenCalledWith('create', 'Hello', { body: 'World' });
   expect(notification).toBeInstanceOf(MockNotification);
 
   notification.dispatchEvent('click');
-  expect(click).toHaveBeenCalled();
+  expect(sendNotify).toHaveBeenCalledWith('click');
 });
 
 test('wrapNotificationConstructor preserves requestPermission and permission', async () => {
-  const bridge: NativefierNotifyBridge = {
-    create: jest.fn(),
-    click: jest.fn(),
-  };
+  const sendNotify = jest.fn() as NativefierNotifySend;
   window.Notification = wrapNotificationConstructor(
     window.Notification,
-    bridge,
+    sendNotify,
   ) as typeof Notification;
 
   await expect(window.Notification.requestPermission()).resolves.toBe(
@@ -97,39 +97,60 @@ test('wrapNotificationConstructor preserves requestPermission and permission', a
   expect(window.Notification.permission).toBe('granted');
 });
 
-test('installNotificationShimInPage is idempotent and requires bridge', () => {
-  const create = jest.fn();
-  const click = jest.fn();
-  const bridge: NativefierNotifyBridge = { create, click };
-  (
-    globalThis.window as Window & {
-      __nativefierNotify?: NativefierNotifyBridge;
-    }
-  ).__nativefierNotify = bridge;
-
-  installNotificationShimInPage();
-  const firstReplacement = window.Notification;
-
-  installNotificationShimInPage();
-  expect(window.Notification).toBe(firstReplacement);
+test('installNotificationShimInPage posts create and click via postMessage', () => {
+  installNotificationShimInPage('tok-a');
 
   const notification = new window.Notification('Title', {
     body: 'Body',
   }) as unknown as MockNotification;
-  expect(create).toHaveBeenCalledWith('Title', { body: 'Body' });
+
+  expect(window.postMessage).toHaveBeenCalledWith(
+    {
+      channel: NOTIFY_POST_MESSAGE_CHANNEL,
+      token: 'tok-a',
+      op: 'create',
+      title: 'Title',
+      opt: { body: 'Body' },
+    },
+    '*',
+  );
 
   notification.dispatchEvent('click');
-  expect(click).toHaveBeenCalled();
+  expect(window.postMessage).toHaveBeenCalledWith(
+    {
+      channel: NOTIFY_POST_MESSAGE_CHANNEL,
+      token: 'tok-a',
+      op: 'click',
+    },
+    '*',
+  );
 });
 
-test('installNotificationShimInPage skips when bridge missing', () => {
-  const before = window.Notification;
-  installNotificationShimInPage();
-  expect(window.Notification).toBe(before);
+test('installNotificationShimInPage re-wraps when token changes', () => {
+  installNotificationShimInPage('tok-a');
+  const firstWrapped = window.Notification;
+
+  installNotificationShimInPage('tok-b');
+  expect(window.Notification).not.toBe(firstWrapped);
+
+  (window.postMessage as jest.Mock).mockClear();
+  new window.Notification('After', {});
+  expect(window.postMessage).toHaveBeenCalledWith(
+    expect.objectContaining({ token: 'tok-b', op: 'create' }),
+    '*',
+  );
 });
 
-test('buildNotificationShimInstallScript wraps installer IIFE', () => {
-  expect(buildNotificationShimInstallScript()).toBe(
-    `(${installNotificationShimInPage.toString()})()`,
+test('installNotificationShimInPage is idempotent for same token', () => {
+  installNotificationShimInPage('tok-a');
+  const firstWrapped = window.Notification;
+
+  installNotificationShimInPage('tok-a');
+  expect(window.Notification).toBe(firstWrapped);
+});
+
+test('buildNotificationShimInstallScript embeds token in IIFE', () => {
+  expect(buildNotificationShimInstallScript('my-token')).toBe(
+    `(${installNotificationShimInPage.toString()})("my-token")`,
   );
 });

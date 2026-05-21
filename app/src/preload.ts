@@ -12,6 +12,7 @@ import { ipcRenderer } from 'electron';
 import { injectScripts } from './preload/injectScripts';
 import { setupIpcEvents } from './preload/ipcEvents';
 import { setupNativefierBridge } from './preload/nativefierBridge';
+import { setupNotificationPostMessageBridge } from './preload/notificationPostMessageBridge';
 
 // Built as a single webpack bundle (target electron-preload) so sandbox preload can load it.
 // Do *NOT* add 3rd-party imports here in preload (except for webpack `externals` like electron).
@@ -28,4 +29,5 @@ import { setupNativefierBridge } from './preload/nativefierBridge';
 const log = console; // since we can't have `loglevel` here in preload
 
 setupNativefierBridge(ipcRenderer);
+setupNotificationPostMessageBridge(ipcRenderer);
 setupIpcEvents(ipcRenderer, log);

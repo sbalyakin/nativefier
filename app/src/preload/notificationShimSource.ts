@@ -3,26 +3,32 @@
  * Must not close over module scope in {@link installNotificationShimInPage}.
  */
 
+import { NOTIFY_POST_MESSAGE_CHANNEL } from './notificationChannel';
+
 export const NOTIFICATION_SHIM_INSTALLED_KEY =
   '__nativefierNotificationShimInstalled';
 
-export type NativefierNotifyBridge = {
-  create(title: string, opt: NotificationOptions): void;
-  click(): void;
-};
+const NOTIFICATION_SHIM_TOKEN_KEY = '__nativefierShimToken';
+const ORIGINAL_NOTIFICATION_KEY = '__nativefierOriginalNotification';
+
+export type NativefierNotifySend = (
+  op: 'create' | 'click',
+  title?: string,
+  opt?: NotificationOptions,
+) => void;
 
 export function wrapNotificationConstructor(
   OldNotify: typeof Notification,
-  bridge: NativefierNotifyBridge,
+  sendNotify: NativefierNotifySend,
 ): typeof Notification {
   const newNotify = function (
     title: string,
     opt: NotificationOptions,
   ): Notification {
-    bridge.create(title, opt);
+    sendNotify('create', title, opt);
     const instance = new OldNotify(title, opt);
     instance.addEventListener('click', () => {
-      bridge.click();
+      sendNotify('click');
     });
     return instance;
   };
@@ -35,32 +41,47 @@ export function wrapNotificationConstructor(
 }
 
 /**
- * Runs in the page main world. Requires {@link NativefierNotifyBridge} on `window`.
+ * Runs in the page main world. Token is passed only via IIFE argument, not on `window`.
  */
-export function installNotificationShimInPage(): void {
+export function installNotificationShimInPage(token: string): void {
   const w = window as Window &
     typeof globalThis & {
-      __nativefierNotify?: NativefierNotifyBridge;
       [NOTIFICATION_SHIM_INSTALLED_KEY]?: boolean;
+      [NOTIFICATION_SHIM_TOKEN_KEY]?: string;
+      [ORIGINAL_NOTIFICATION_KEY]?: typeof Notification;
     };
 
-  if (w[NOTIFICATION_SHIM_INSTALLED_KEY]) {
+  if (w[NOTIFICATION_SHIM_INSTALLED_KEY] && w[NOTIFICATION_SHIM_TOKEN_KEY] === token) {
     return;
   }
 
-  const bridge = w.__nativefierNotify;
-  if (!bridge) {
-    return;
+  const OldNotify = (w[ORIGINAL_NOTIFICATION_KEY] ??
+    window.Notification) as typeof Notification;
+  if (!w[ORIGINAL_NOTIFICATION_KEY]) {
+    w[ORIGINAL_NOTIFICATION_KEY] = OldNotify;
   }
 
-  const OldNotify = window.Notification;
+  const sendNotify: NativefierNotifySend = (op, title?, opt?) => {
+    window.postMessage(
+      {
+        channel: NOTIFY_POST_MESSAGE_CHANNEL,
+        token,
+        op,
+        title,
+        opt,
+      },
+      '*',
+    );
+  };
+
   window.Notification = wrapNotificationConstructor(
     OldNotify,
-    bridge,
+    sendNotify,
   ) as typeof Notification;
   w[NOTIFICATION_SHIM_INSTALLED_KEY] = true;
+  w[NOTIFICATION_SHIM_TOKEN_KEY] = token;
 }
 
-export function buildNotificationShimInstallScript(): string {
-  return `(${installNotificationShimInPage.toString()})()`;
+export function buildNotificationShimInstallScript(token: string): string {
+  return `(${installNotificationShimInPage.toString()})(${JSON.stringify(token)})`;
 }

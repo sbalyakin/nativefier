@@ -23,6 +23,7 @@ class MockBrowserWindow {
   emit = mockWindowEmit;
   isVisible = mockIsVisible;
   isFocused = mockIsFocused;
+  isDestroyed = jest.fn(() => false);
   isFullScreen = mockIsFullScreen;
   setFullScreen = mockSetFullScreen;
   moveTabToNewWindow = mockMoveTabToNewWindow;
@@ -83,6 +84,16 @@ describe('windowAdapter', () => {
     const payload = { url: 'https://example.com' };
     emitBrowserWindowEvent(window, 'new-window-for-tab', payload);
     expect(mockWindowEmit).toHaveBeenCalledWith('new-window-for-tab', payload);
+  });
+
+  it('showBrowserWindow no-ops for undefined or destroyed windows', () => {
+    showBrowserWindow(undefined);
+    expect(mockWindowShow).not.toHaveBeenCalled();
+
+    const window = createBrowserWindow({});
+    (window.isDestroyed as jest.Mock).mockReturnValue(true);
+    showBrowserWindow(window);
+    expect(mockWindowShow).not.toHaveBeenCalled();
   });
 
   it('loadUrl, sendToWebContents, goBack, and insertCSS delegate to window/webContents', async () => {

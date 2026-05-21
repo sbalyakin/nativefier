@@ -35,7 +35,10 @@ export function setWindowOpenHandler(
   window.webContents.setWindowOpenHandler(handler);
 }
 
-export function focusMainWindow(window: BrowserWindow): void {
+export function focusMainWindow(window: BrowserWindow | undefined | null): void {
+  if (!isLiveBrowserWindow(window)) {
+    return;
+  }
   if (!window.isVisible()) {
     window.show();
   }
@@ -78,6 +81,12 @@ export function isBrowserWindow(value: unknown): value is BrowserWindow {
   return value instanceof BrowserWindow;
 }
 
+export function isLiveBrowserWindow(
+  window: BrowserWindow | undefined | null,
+): window is BrowserWindow {
+  return isBrowserWindow(window) && !window.isDestroyed();
+}
+
 export function isBrowserWindowVisible(window: BrowserWindow): boolean {
   return window.isVisible();
 }
@@ -86,7 +95,10 @@ export function isBrowserWindowFocused(window: BrowserWindow): boolean {
   return window.isFocused();
 }
 
-export function showBrowserWindow(window: BrowserWindow): void {
+export function showBrowserWindow(window: BrowserWindow | undefined | null): void {
+  if (!isLiveBrowserWindow(window)) {
+    return;
+  }
   window.show();
 }
 

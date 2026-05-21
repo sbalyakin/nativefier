@@ -10,7 +10,7 @@
   * Injected JS runs in the **preload** isolated world; it cannot expose globals to the loaded site's page scripts. Page-world changes require main-process `webContents.executeJavaScript` (advanced).
   * HTTP basic-auth login popup: dedicated `loginPreload` bridge (`nativefierLogin.submit`); no `require('electron')` in `login.js`.
   * Screen capture: `session.setDisplayMediaRequestHandler` in the main process (preload no longer patches `getDisplayMedia`).
-  * Web notifications: main-world shim + `contextBridge` notify channel (dock badge / tray hints unchanged).
+  * Web notifications: main-world shim with per-navigation nonce, `postMessage` → `nativefier-notify` IPC (no `__nativefierNotify`); main validates token, rate-limits badge, and guards click (dock badge / tray hints unchanged).
   * Renderer `params` IPC and persisted `nativefier.json` omit secrets (`basicAuthPassword`, `basicAuthUsername`, `processEnvs`). Basic auth uses in-memory main-process handling only.
   * `--insecure` still disables `webSecurity` only; it does **not** disable context isolation or sandbox.
 

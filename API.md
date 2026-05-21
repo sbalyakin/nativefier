@@ -909,7 +909,7 @@ The small login popup uses its own preload (`loginPreload.js`) and `contextBridg
 #### Screen share and notifications
 
 * **Display capture:** handled in the main process with `session.setDisplayMediaRequestHandler` (picker UI injected in the requesting page when needed). Preload no longer patches `navigator.mediaDevices.getDisplayMedia`.
-* **Notifications:** a main-world shim wraps the site `Notification` API and forwards events through the preload bridge for dock badge and tray hints. OS notifications still fire as before.
+* **Notifications:** a main-world shim wraps the site `Notification` API. Each navigation gets a fresh nonce token (injected only inside the shim closure, not on `window`). The shim sends `postMessage` to the isolated preload, which forwards `nativefier-notify` IPC. Main validates the token, rate-limits badge updates, and requires a prior valid `create` before honoring `click`. There is no `__nativefierNotify` global. Untrusted sites and XSS can still abuse badge hints within those limits; see [architecture.md](docs/architecture.md#notification-channel-known-limitation). OS notifications still fire as before.
 
 #### Inject scripts and secrets
 

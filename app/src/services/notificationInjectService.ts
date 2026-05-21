@@ -3,29 +3,56 @@ import type { BrowserWindow, WebContents } from '../adapters/electronTypes';
 import { onWebContentsEvent } from '../adapters/windowAdapter';
 import { buildNotificationShimInstallScript } from '../preload/notificationShimSource';
 import * as log from '../helpers/loggingHelper';
+import {
+  clearToken,
+  getToken,
+  rotateToken,
+} from './notificationTokenStore';
 
-function injectNotificationShim(webContents: WebContents): void {
+function injectNotificationShim(
+  webContents: WebContents,
+  token: string,
+): void {
   if (webContents.isDestroyed()) {
     return;
   }
 
-  const script = buildNotificationShimInstallScript();
+  const script = buildNotificationShimInstallScript(token);
   webContents.executeJavaScript(script, true).catch((err: unknown) => {
     log.debug('notificationInjectService: shim inject failed', err);
   });
 }
 
+function injectWithToken(webContents: WebContents, rotate: boolean): void {
+  if (webContents.isDestroyed()) {
+    return;
+  }
+
+  const token = rotate
+    ? rotateToken(webContents.id)
+    : (getToken(webContents.id) ?? rotateToken(webContents.id));
+  injectNotificationShim(webContents, token);
+}
+
 export function registerNotificationShimInjection(window: BrowserWindow): void {
-  const runInject = (): void => {
-    injectNotificationShim(window.webContents);
+  const webContents = window.webContents;
+
+  onWebContentsEvent(window, 'did-start-navigation', () => {
+    injectWithToken(webContents, true);
+  });
+
+  const runRetryInject = (): void => {
+    injectWithToken(webContents, false);
   };
 
-  // Shim is idempotent; dom-ready + did-finish-load retry if inject failed early.
-  // Site Notification before dom-ready still skips badge IPC until stage 5 (earlier inject).
-  onWebContentsEvent(window, 'dom-ready', runInject);
-  onWebContentsEvent(window, 'did-finish-load', runInject);
+  onWebContentsEvent(window, 'dom-ready', runRetryInject);
+  onWebContentsEvent(window, 'did-finish-load', runRetryInject);
 
-  if (!window.webContents.isLoading()) {
-    runInject();
+  onWebContentsEvent(window, 'destroyed', () => {
+    clearToken(webContents.id);
+  });
+
+  if (!webContents.isLoading()) {
+    runRetryInject();
   }
 }

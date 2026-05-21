@@ -1,8 +1,13 @@
+import { execFile } from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { promisify } from 'util';
 
+import type { HookFunction } from '@electron/packager';
 import * as log from 'loglevel';
+
+const execFileAsync = promisify(execFile);
 
 import { generateRandomSuffix } from '../helpers/helpers';
 import {
@@ -60,6 +65,122 @@ export function normalizeAppName(appName: string, url: string): string {
     .replace(/[,:.]/g, '')
     .replace(/[\s_]/g, '-');
   return `${normalized}-nativefier-${postFixHash}`;
+}
+
+const DARWIN_ENTITLEMENTS_IN_APP =
+  'Contents/Resources/app/entitlements.mac.plist';
+
+/** With tmpdir:false, afterComplete buildPath is the output folder, not the .app. */
+export function resolveDarwinAppBundlePath(
+  buildPath: string,
+  appName: string,
+): string | undefined {
+  if (buildPath.endsWith('.app')) {
+    return buildPath;
+  }
+  const direct = path.join(buildPath, `${appName}.app`);
+  if (fs.existsSync(direct)) {
+    return direct;
+  }
+  try {
+    const entry = fs
+      .readdirSync(buildPath)
+      .find((name) => name.endsWith('.app'));
+    if (entry) {
+      return path.join(buildPath, entry);
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+/** Adhoc-sign darwin bundles so macOS registers the app under Notifications. */
+export function applyDarwinPackagerDefaults(
+  src: string,
+  dest: string,
+  options: AppOptions,
+): void {
+  const platform = options.packager.platform;
+  if (platform !== 'darwin' && platform !== 'mas') {
+    return;
+  }
+
+  const appDisplayName = String(options.packager.name ?? 'Nativefier');
+  const usageDescription = `Allow ${appDisplayName} to show desktop notifications.`;
+  const existingExtend =
+    options.packager.extendInfo &&
+    typeof options.packager.extendInfo === 'object' &&
+    !Array.isArray(options.packager.extendInfo)
+      ? (options.packager.extendInfo as Record<string, unknown>)
+      : {};
+
+  options.packager.extendInfo = {
+    ...existingExtend,
+    NSUserNotificationUsageDescription:
+      (existingExtend.NSUserNotificationUsageDescription as string | undefined) ??
+      usageDescription,
+  };
+
+  const entitlementsSrc = path.join(src, 'entitlements.mac.plist');
+  const entitlementsDest = path.join(dest, 'entitlements.mac.plist');
+  if (fs.existsSync(entitlementsSrc)) {
+    fs.copySync(entitlementsSrc, entitlementsDest);
+  }
+
+  if (options.packager.osxSign) {
+    return;
+  }
+
+  appendDarwinAdhocCodesignHook(options);
+}
+
+export function appendDarwinAdhocCodesignHook(options: AppOptions): void {
+  const bundleId = options.packager.appBundleId;
+  if (!bundleId) {
+    log.warn(
+      'Skipping darwin adhoc codesign: appBundleId is missing on packager options.',
+    );
+    return;
+  }
+
+  const existingHooks = options.packager.afterComplete;
+  const hooks: HookFunction[] = Array.isArray(existingHooks)
+    ? [...existingHooks]
+    : existingHooks
+      ? [existingHooks]
+      : [];
+
+  const appName = String(options.packager.name ?? 'Nativefier');
+
+  const adhocSignHook: HookFunction = async ({ buildPath }) => {
+    const appPath = resolveDarwinAppBundlePath(buildPath, appName);
+    if (!appPath) {
+      log.warn(
+        `darwin adhoc codesign: no .app under buildPath ${buildPath} (app name ${appName})`,
+      );
+      return;
+    }
+
+    const entitlementsPath = path.join(appPath, DARWIN_ENTITLEMENTS_IN_APP);
+    const args = [
+      '--force',
+      '--deep',
+      '--sign',
+      '-',
+      '--identifier',
+      bundleId,
+    ];
+    if (fs.existsSync(entitlementsPath)) {
+      args.push('--entitlements', entitlementsPath);
+    }
+    args.push(appPath);
+
+    log.debug(`darwin adhoc codesign: codesign ${args.join(' ')}`);
+    await execFileAsync('codesign', args);
+  };
+
+  options.packager.afterComplete = [...hooks, adhocSignHook];
 }
 
 function changeAppPackageJsonName(
@@ -126,4 +247,5 @@ export async function prepareElectronApp(
     options.packager.targetUrl,
   );
   options.packager.appBundleId = `com.electron.nativefier.${normalizedAppName}`;
+  applyDarwinPackagerDefaults(src, dest, options);
 }

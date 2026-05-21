@@ -24,6 +24,10 @@ import {
   showBrowserWindow,
 } from '../adapters/windowAdapter';
 import { onIpcMainEvent } from '../adapters/ipcAdapter';
+import {
+  clearNotificationBadgeState,
+  registerNotificationIpcHandlers,
+} from '../services/notificationIpcService';
 import { persistRuntimeConfig } from '../config/persistRuntimeConfig';
 import { initContextMenu } from './contextMenu';
 import { createMenu } from './menu';
@@ -162,9 +166,11 @@ export async function createMainWindow(
     setupNotificationBadge(options, mainWindow, setDockBadge);
   }
 
-  onIpcMainEvent('notification-click', () => {
-    log.debug('ipcMain.notification-click');
-    showBrowserWindow(mainWindow);
+  registerNotificationIpcHandlers({
+    onClick: () => {
+      log.debug('ipcMain.nativefier-notify click');
+      showBrowserWindow(mainWindow);
+    },
   });
 
   setupSessionInteraction(mainWindow);
@@ -244,15 +250,18 @@ function setupNotificationBadge(
   window: BrowserWindow,
   setDockBadge: (value: number | string, bounce?: boolean) => void,
 ): void {
-  onIpcMainEvent('notification', () => {
-    log.debug('ipcMain.notification');
-    if (!isOSX() || window.isFocused()) {
-      return;
-    }
-    setDockBadge('•', options.bounce);
+  registerNotificationIpcHandlers({
+    onCreate: () => {
+      log.debug('ipcMain.nativefier-notify create');
+      if (!isOSX() || window.isFocused()) {
+        return;
+      }
+      setDockBadge('•', options.bounce);
+    },
   });
   onBrowserWindowEvent(window, 'focus', () => {
     log.debug('mainWindow.focus');
+    clearNotificationBadgeState(window.webContents.id);
     setDockBadge('');
   });
 }

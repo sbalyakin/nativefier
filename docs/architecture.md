@@ -103,27 +103,28 @@ flowchart TB
     DockBadge["dock badge / counter"]
     InjectCSS["insertCSS + webRequest"]
     LoginIPC["login-message IPC"]
-    NotifIPC["notification IPC"]
+    NotifIPC["nativefier-notify IPC"]
     SessionIPC["session-interaction IPC"]
   end
   subgraph preload [Preload isolated world]
-    Bridge["contextBridge: nativefier.session + notify"]
+    Bridge["contextBridge: nativefier.session"]
+    NotifBridge["postMessage listener"]
     InjectRequire["require user inject.js"]
     PreloadSetup["ipcEvents"]
   end
   subgraph page [Page main world]
-    NotifShim["Notification shim injected"]
+    NotifShim["Notification shim + nonce token"]
     SiteJS["Site getUserMedia / Notification"]
   end
   SiteJS --> NotifShim
-  NotifShim --> Bridge
-  Bridge --> NotifIPC
+  NotifShim -->|"postMessage"| NotifBridge
+  NotifBridge --> NotifIPC
+  Bridge --> SessionIPC
   SiteJS --> SessionHandler
   SessionHandler --> main
   InjectRequire --> InjectCSS
   InjectCSS --> main
   PreloadSetup --> InjectRequire
-  Bridge --> SessionIPC
   SessionIPC --> main
 ```
 
@@ -134,11 +135,15 @@ flowchart TB
 | Session bridge | `app/src/preload/nativefierBridge.ts` | `contextBridge.exposeInMainWorld('nativefier', …)` |
 | HTTP login popup | `app/src/loginPreload.ts`, `app/src/static/login.js` | Separate window; `nativefierLogin.submit` |
 | Display capture | `app/src/services/displayMediaService.ts` | Main-process handler; picker HTML from `screenSharePicker.ts` |
-| Notifications | `app/src/preload/notificationShimSource.ts` + bridge notify APIs | Shim injected into page world on navigation |
+| Notifications | `notificationShimSource.ts`, `notificationPostMessageBridge.ts`, `notificationTokenStore.ts`, `notificationIpcService.ts` | Nonce in inject closure; `postMessage` → preload → `nativefier-notify`; main validates token and rate-limits badge |
 | Renderer params / secrets | `app/src/config/runtimeSecrets.ts`, `persistRuntimeConfig.ts` | Whitelist IPC; strip sensitive keys on disk |
 | Override escape hatch | CLI `browserwindow-options` → `OutputOptions.browserwindowOptions` | Merged last; see [API.md](../API.md#browserwindow-options) |
 
 User-facing migration: [API.md](../API.md#secure-renderer-540). Breaking summary: [CHANGELOG.md](../CHANGELOG.md).
+
+### Notification channel: known limitation
+
+The per-navigation nonce limits spoofing from arbitrary page scripts, but it is **not** a cryptographic boundary. If the loaded site is fully compromised (XSS), attacker code in the page world can observe the token (closure / `postMessage`) and drive dock or tray badge updates within main-process rate limits. OS notifications still behave as before.
 
 ## Related docs
 
