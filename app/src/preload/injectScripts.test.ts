@@ -1,6 +1,12 @@
+import type { IpcRenderer } from 'electron';
+
+import * as path from 'path';
+
+import { INJECT_DIR } from '../helpers/helpers';
+
 import {
-  injectJsAbsolutePath,
   injectJsRelativePath,
+  injectScripts,
   isInjectJsFile,
   listInjectJsFileNames,
   listInjectJsRelativePaths,
@@ -13,7 +19,7 @@ test('isInjectJsFile accepts only .js files', () => {
 });
 
 test('injectJsRelativePath builds require path under inject dir', () => {
-  expect(injectJsRelativePath('custom.js')).toBe('../inject/custom.js');
+  expect(injectJsRelativePath('custom.js')).toBe('inject/custom.js');
 });
 
 test('listInjectJsRelativePaths filters and maps inject entries', () => {
@@ -23,7 +29,7 @@ test('listInjectJsRelativePaths filters and maps inject entries', () => {
     { name: 'c.js', isFile: (): boolean => false },
     { name: 'd.js', isFile: (): boolean => true },
   ]);
-  expect(paths).toEqual(['../inject/a.js', '../inject/d.js']);
+  expect(paths).toEqual(['inject/a.js', 'inject/d.js']);
 });
 
 test('listInjectJsFileNames returns only .js file names', () => {
@@ -35,6 +41,17 @@ test('listInjectJsFileNames returns only .js file names', () => {
   expect(names).toEqual(['a.js', 'd.js']);
 });
 
-test('injectJsAbsolutePath joins INJECT_DIR and file name', () => {
-  expect(injectJsAbsolutePath('custom.js')).toMatch(/inject[\\/]custom\.js$/);
+test('inject dir paths join INJECT_DIR and file name', () => {
+  expect(path.join(INJECT_DIR, 'custom.js')).toMatch(/inject[\\/]custom\.js$/);
+});
+
+test('injectScripts runs sources from main via ipc sendSync', () => {
+  const ipcRenderer = {
+    sendSync: jest.fn(() => ['globalThis.__injected = true;']),
+  } as unknown as IpcRenderer;
+
+  injectScripts(ipcRenderer);
+  expect(
+    (globalThis as typeof globalThis & { __injected?: boolean }).__injected,
+  ).toBe(true);
 });

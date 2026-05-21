@@ -1,8 +1,4 @@
-import * as fs from 'fs';
-import * as path from 'path';
-
-// Preload compiles under `lib/preload/`; inject files live next to `lib/` (same as helpers).
-export const INJECT_DIR = path.join(__dirname, '..', '..', 'inject');
+import type { IpcRenderer } from 'electron';
 
 export type InjectDirEntry = {
   name: string;
@@ -14,11 +10,7 @@ export function isInjectJsFile(name: string, isFile: boolean): boolean {
 }
 
 export function injectJsRelativePath(fileName: string): string {
-  return path.join('..', 'inject', fileName);
-}
-
-export function injectJsAbsolutePath(fileName: string): string {
-  return path.join(INJECT_DIR, fileName);
+  return `inject/${fileName}`;
 }
 
 export function listInjectJsRelativePaths(entries: InjectDirEntry[]): string[] {
@@ -33,19 +25,23 @@ export function listInjectJsFileNames(entries: InjectDirEntry[]): string[] {
     .map((entry) => entry.name);
 }
 
-export function injectScripts(log: Console = console): void {
-  const needToInject = fs.existsSync(INJECT_DIR);
-  if (!needToInject) {
-    return;
-  }
+export function injectScripts(
+  ipcRenderer: IpcRenderer,
+  log: Console = console,
+): void {
   try {
-    const jsFileNames = listInjectJsFileNames(
-      fs.readdirSync(INJECT_DIR, { withFileTypes: true }),
-    );
-    for (const fileName of jsFileNames) {
-      const absolutePath = injectJsAbsolutePath(fileName);
-      log.debug('Injecting JS file', absolutePath);
-      require(absolutePath);
+    const sources = ipcRenderer.sendSync('get-inject-script-sources');
+    if (!Array.isArray(sources) || sources.length === 0) {
+      return;
+    }
+    for (const source of sources) {
+      if (typeof source !== 'string') {
+        continue;
+      }
+      log.debug('Injecting user script from main');
+      // User --inject JS runs in preload world (same as legacy require()).
+      const run = new Function(source);
+      run();
     }
   } catch (err: unknown) {
     log.error('Error encoutered injecting JS files', err);

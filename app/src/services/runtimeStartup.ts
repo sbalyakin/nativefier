@@ -20,6 +20,8 @@ import {
 import * as log from '../helpers/loggingHelper';
 import type { OutputOptions } from '../../../shared/src/options/model';
 
+import { registerInjectScriptIpc } from './injectScriptService';
+
 export function applyPortablePaths(appArgs: OutputOptions): void {
   if (!appArgs.portable) {
     return;
@@ -132,6 +134,7 @@ export function applyFileDownloadOptions(appArgs: OutputOptions): void {
 }
 
 export function applyRuntimeStartup(appArgs: OutputOptions): void {
+  registerInjectScriptIpc();
   applyPortablePaths(appArgs);
   applyUserAgent(appArgs);
   applyWindowsNotificationIdentity();

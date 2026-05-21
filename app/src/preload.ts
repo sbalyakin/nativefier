@@ -4,7 +4,7 @@
  * would delay the attachment till after the event has been raised.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  injectScripts();
+  injectScripts(ipcRenderer);
 });
 
 import { ipcRenderer } from 'electron';
@@ -13,6 +13,7 @@ import { injectScripts } from './preload/injectScripts';
 import { setupIpcEvents } from './preload/ipcEvents';
 import { setupNativefierBridge } from './preload/nativefierBridge';
 
+// Built as a single webpack bundle (target electron-preload) so sandbox preload can load it.
 // Do *NOT* add 3rd-party imports here in preload (except for webpack `externals` like electron).
 // They will work during development, but break in the prod build :-/ .
 // Electron doc isn't explicit about that, so maybe *we*'re doing something wrong.
