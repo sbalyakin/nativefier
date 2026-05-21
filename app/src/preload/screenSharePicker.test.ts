@@ -38,6 +38,14 @@ test('escapeHtmlAttribute escapes quotes in source names', () => {
   expect(html).toContain('title="Window &quot;A&quot;"');
 });
 
+test('buildScreenShareSourceItemHtml escapes quotes in source ids', () => {
+  const html = buildScreenShareSourceItemHtml({
+    ...mockSource,
+    id: 'window:"1"',
+  });
+  expect(html).toContain('data-id="window:&quot;1&quot;"');
+});
+
 test('buildScreenSharePickerInnerHtml renders close button and source list', () => {
   const html = buildScreenSharePickerInnerHtml(SCREEN_SHARE_PICKER_BASE_ID, [
     mockSource,

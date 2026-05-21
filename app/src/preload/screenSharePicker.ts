@@ -26,10 +26,11 @@ export function buildScreenShareSourceItemHtml(
   source: ScreenShareSource,
 ): string {
   const { id, name, thumbnail } = source;
+  const safeId = escapeHtmlAttribute(id);
   const safeName = escapeHtmlAttribute(name);
   return `
           <li class="desktop-capturer-selection__item">
-            <button class="desktop-capturer-selection__btn" data-id="${id}" title="${safeName}">
+            <button class="desktop-capturer-selection__btn" data-id="${safeId}" title="${safeName}">
               <img class="desktop-capturer-selection__thumbnail" src="${thumbnail.toDataURL()}" />
               <span class="desktop-capturer-selection__name">${safeName}</span>
             </button>
