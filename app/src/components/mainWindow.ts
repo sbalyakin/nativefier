@@ -281,9 +281,12 @@ function setupSessionInteraction(window: BrowserWindow): void {
                 log.debug('ipcMain.session-interaction:result', result);
                 event.reply('session-interaction-reply', result);
               })
-              .catch((err) =>
-                log.error('session-interaction ERROR', request, err),
-              );
+              .catch((err) => {
+                log.error('session-interaction:error', err, event, request);
+                result.error = err as Error;
+                result.value = undefined;
+                event.reply('session-interaction-reply', result);
+              });
             awaitingPromise = true;
           }
         } else if (request.property !== undefined) {
