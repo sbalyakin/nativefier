@@ -1,4 +1,27 @@
 
+54.0.0 / 2026-05-20
+===================
+  **[BREAKING] Secure Electron renderer**
+
+  Packaged apps now use hardened `webPreferences` on the main window and child windows:
+
+  * `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true` (unless Flash; see below).
+  * `--inject` scripts must **not** use `require('electron')` or `ipcRenderer`. Use the global `nativefier` bridge, especially `nativefier.session` (see [API.md](API.md#accessing-the-electron-session)).
+  * Injected JS runs in the **preload** isolated world; it cannot expose globals to the loaded site's page scripts. Page-world changes require main-process `webContents.executeJavaScript` (advanced).
+  * HTTP basic-auth login popup: dedicated `loginPreload` bridge (`nativefierLogin.submit`); no `require('electron')` in `login.js`.
+  * Screen capture: `session.setDisplayMediaRequestHandler` in the main process (preload no longer patches `getDisplayMedia`).
+  * Web notifications: main-world shim + `contextBridge` notify channel (dock badge / tray hints unchanged).
+  * Renderer `params` IPC and persisted `nativefier.json` omit secrets (`basicAuthPassword`, `basicAuthUsername`, `processEnvs`). Basic auth uses in-memory main-process handling only.
+  * `--insecure` still disables `webSecurity` only; it does **not** disable context isolation or sandbox.
+
+  **Escape hatch:** `--browserwindow-options` JSON is merged **after** secure defaults. `webPreferences` from that flag can override `contextIsolation`, `sandbox`, or `nodeIntegration` (see [API.md](API.md#browserwindow-options) and [CATALOG.md](CATALOG.md)).
+
+  **Flash (deprecated):** `sandbox: false` only when `flashPluginDir` is present in runtime config (e.g. `--flash-path`). `inferFlashPath()` without writing Flash into `nativefier.json` leaves `sandbox: true`.
+
+  Migration guide: [API.md](API.md#secure-renderer-540).
+
+  * Rebuild existing apps with Nativefier 54+ (`nativefier --upgrade` or a fresh build). Options from 53.x apps are upgraded; inject scripts may need edits.
+
 53.0.0 / 2026-05-15
 ===================
   **[BREAKING]**

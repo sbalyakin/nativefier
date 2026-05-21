@@ -5,7 +5,7 @@ import { parseRuntimeConfigJson } from './loadRuntimeConfig';
 const minimalValidJson = JSON.stringify({
   name: 'APP',
   targetUrl: 'https://example.com/',
-  nativefierVersion: '53.0.0',
+  nativefierVersion: '54.0.0',
   buildDate: STABLE_CONTRACT_TEST_BUILD_DATE,
   blockExternalUrls: false,
   disableDevTools: false,

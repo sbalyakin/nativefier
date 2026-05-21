@@ -66,6 +66,7 @@
     - [[disable-gpu]](#disable-gpu)
     - [[enable-es3-apis]](#enable-es3-apis)
     - [[ignore-gpu-blacklist]](#ignore-gpu-blacklist)
+  - [Secure renderer (54.0.0+)](#secure-renderer-540)
   - [(In)Security Options](#insecurity-options)
     - [[disable-old-build-warning-yesiknowitisinsecure]](#disable-old-build-warning-yesiknowitisinsecure)
     - [[ignore-certificate]](#ignore-certificate)
@@ -361,6 +362,17 @@ Example:
 ```bash
 nativefier <your-website> --browserwindow-options '{ "webPreferences": { "defaultFontFamily": { "standard": "Comic Sans MS", "serif": "Comic Sans MS" } } }'
 ```
+
+**Merge order (54.0.0+):** Nativefier applies secure `webPreferences` first, then merges your `webPreferences` object, then spreads the rest of your BrowserWindow options. Keys you set in `--browserwindow-options` → `webPreferences` **override** the defaults. That is intentional for advanced cases (custom fonts, `webviewTag`, legacy integrations) but can weaken security if you set `contextIsolation: false`, `nodeIntegration: true`, or `sandbox: false`.
+
+| Default (main window) | Value |
+| --- | --- |
+| `contextIsolation` | `true` |
+| `nodeIntegration` | `false` |
+| `sandbox` | `true`, except `false` when `flashPluginDir` is in runtime config |
+| `webSecurity` | `true`, unless `--insecure` |
+
+See [Secure renderer](#secure-renderer-540) and site-specific examples in [CATALOG.md](CATALOG.md) (e.g. Gmail pop-outs).
 
 #### [disable-context-menu]
 
@@ -872,6 +884,43 @@ _[New in 7.4.1]_ Passes the enable-es3-apis flag to the Chrome engine, to force 
 
 _[New in 7.4.1]_ Passes the ignore-gpu-blacklist flag to the Chrome engine, to allow for WebGl apps to work on non supported graphics cards.
 
+<a id="secure-renderer-540"></a>
+
+### Secure renderer (54.0.0+)
+
+From Nativefier **54.0.0**, packaged apps use Electron's recommended renderer isolation by default. This section summarizes behavior that changed from 53.x and earlier; see [CHANGELOG.md](CHANGELOG.md) for the full list.
+
+#### Main window `webPreferences`
+
+| Setting | Default | Notes |
+| --- | --- | --- |
+| `contextIsolation` | `true` | Preload runs in an isolated world; page scripts do not see preload globals except via `contextBridge`. |
+| `nodeIntegration` | `false` | No Node.js in the page or preload beyond what preload explicitly loads. |
+| `sandbox` | `true` | Set to `false` only when `flashPluginDir` is present in runtime config (legacy Flash / PPAPI). If Flash is inferred at runtime but not stored in `nativefier.json`, sandbox stays `true`. |
+| `webSecurity` | `true` | `--insecure` sets this to `false` only; isolation flags are unchanged. |
+| `preload` | `preload.js` | Sets up `nativefier` bridge, inject scripts, and IPC helpers. |
+
+Child windows created for internal navigation inherit the same defaults via `getDefaultWindowOptions`.
+
+#### Login window (HTTP basic auth)
+
+The small login popup uses its own preload (`loginPreload.js`) and `contextBridge` API `nativefierLogin.submit(...)`. It does not use `require('electron')` in page scripts. This is internal to Nativefier; you only need to know it if you fork the runtime template.
+
+#### Screen share and notifications
+
+* **Display capture:** handled in the main process with `session.setDisplayMediaRequestHandler` (picker UI injected in the requesting page when needed). Preload no longer patches `navigator.mediaDevices.getDisplayMedia`.
+* **Notifications:** a main-world shim wraps the site `Notification` API and forwards events through the preload bridge for dock badge and tray hints. OS notifications still fire as before.
+
+#### Inject scripts and secrets
+
+* **`--inject`:** see [inject](#inject) and [Accessing The Electron Session](#accessing-the-electron-session). Do not use `require('electron')`.
+* **Renderer config:** the `params` IPC channel sends a whitelist of UI/URL fields only (no passwords or `processEnvs`).
+* **Disk config:** when runtime settings are rewritten, `basicAuthPassword`, `basicAuthUsername`, and `processEnvs` are stripped from `nativefier.json`.
+
+#### Override defaults (`--browserwindow-options`)
+
+If you must relax isolation (e.g. a site that needs `webviewTag` and `nodeIntegration`), pass overrides via [`--browserwindow-options`](#browserwindow-options). You accept the security tradeoff. Prefer tightening again once the site works without overrides.
+
 ### (In)Security Options
 
 #### [disable-old-build-warning-yesiknowitisinsecure]
@@ -1023,6 +1072,8 @@ You _might_ still be able to use Nativefier's existing Flash flags while they wo
 by adding a `--electron-version 11.3.0` to your flags, but it's only downhill
 from here and our Flash flags will be removed at some point in the future,
 when maintaining compatibility with old Electrons becomes impossible.
+
+**Sandbox (54.0.0+):** When `flashPluginDir` is written into runtime config (for example via `--flash-path`), Nativefier sets `sandbox: false` on the main window so PPAPI Flash can load. `contextIsolation` remains `true`. If only `--flash` is used and the path is inferred at startup without persisting `flashPluginDir`, the main window keeps `sandbox: true` (Flash may not work in that narrow case).
 
 ```
 --flash

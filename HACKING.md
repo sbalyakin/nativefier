@@ -7,7 +7,9 @@ what you need to know to get started hacking on Nativefier.
 
 Layer boundaries (`src/` vs `app/src/` vs `shared/`), import rules, and how
 `nativefier.json` connects the builder to the packaged app are documented in
-[docs/architecture.md](docs/architecture.md).
+[docs/architecture.md](docs/architecture.md). Secure renderer layout (preload bridge,
+display media, notifications, login window) is in
+[docs/architecture.md#secure-renderer-540](docs/architecture.md#secure-renderer-540).
 
 Post-stabilization infrastructure (ESM path, dependency policy, packager alternatives) is in
 [docs/technical-roadmap.md](docs/technical-roadmap.md). Audit outdated packages with

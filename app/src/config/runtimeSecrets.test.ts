@@ -8,7 +8,7 @@ import {
 const baseOutput = {
   name: 'TestApp',
   targetUrl: 'https://example.com/',
-  nativefierVersion: '53.0.0',
+  nativefierVersion: '54.0.0',
   buildDate: 1,
   blockExternalUrls: false,
   disableDevTools: false,
@@ -48,7 +48,7 @@ test('pickRendererParams omits secrets from spread window options', () => {
     name: 'TestApp',
     targetUrl: 'https://example.com/',
     zoom: 1.5,
-    nativefierVersion: '53.0.0',
+    nativefierVersion: '54.0.0',
     buildDate: 1,
     autoHideMenuBar: true,
   });

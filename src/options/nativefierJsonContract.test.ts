@@ -9,7 +9,7 @@ import {
 const minimalAppOptions = (): AppOptions =>
   buildAppOptionsFromSchema(
     { targetUrl: 'https://example.com/' },
-    '53.0.0',
+    '54.0.0',
   ) as AppOptions;
 
 test('OUTPUT_FIELD_MAPPINGS has unique output keys', () => {

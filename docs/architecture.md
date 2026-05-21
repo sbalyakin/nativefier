@@ -90,6 +90,56 @@ flowchart LR
   Main --> Components["app/src/components/"]
 ```
 
+<a id="secure-renderer-540"></a>
+
+## Secure renderer (54.0.0+)
+
+Main and child `BrowserWindow` instances default to `contextIsolation: true`, `nodeIntegration: false`, and `sandbox: true` (`sandbox: false` only when `flashPluginDir` is in runtime config). Secure defaults are applied in `getDefaultWindowOptions()` (`app/src/helpers/windowHelpers.ts`); `--browserwindow-options` → `webPreferences` merges **after** those defaults and can override them.
+
+```mermaid
+flowchart TB
+  subgraph main [Main process]
+    SessionHandler["session.setDisplayMediaRequestHandler"]
+    DockBadge["dock badge / counter"]
+    InjectCSS["insertCSS + webRequest"]
+    LoginIPC["login-message IPC"]
+    NotifIPC["notification IPC"]
+    SessionIPC["session-interaction IPC"]
+  end
+  subgraph preload [Preload isolated world]
+    Bridge["contextBridge: nativefier.session + notify"]
+    InjectRequire["require user inject.js"]
+    PreloadSetup["ipcEvents"]
+  end
+  subgraph page [Page main world]
+    NotifShim["Notification shim injected"]
+    SiteJS["Site getUserMedia / Notification"]
+  end
+  SiteJS --> NotifShim
+  NotifShim --> Bridge
+  Bridge --> NotifIPC
+  SiteJS --> SessionHandler
+  SessionHandler --> main
+  InjectRequire --> InjectCSS
+  InjectCSS --> main
+  PreloadSetup --> InjectRequire
+  Bridge --> SessionIPC
+  SessionIPC --> main
+```
+
+| Concern | Location | Notes |
+| --- | --- | --- |
+| Default `webPreferences` | `app/src/helpers/windowHelpers.ts` | `preload.js`, secure flags, Flash sandbox exception |
+| User `--inject` | `app/src/preload/injectScripts.ts` | Preload world; use `nativefier.session`, not `require('electron')` |
+| Session bridge | `app/src/preload/nativefierBridge.ts` | `contextBridge.exposeInMainWorld('nativefier', …)` |
+| HTTP login popup | `app/src/loginPreload.ts`, `app/src/static/login.js` | Separate window; `nativefierLogin.submit` |
+| Display capture | `app/src/services/displayMediaService.ts` | Main-process handler; picker HTML from `screenSharePicker.ts` |
+| Notifications | `app/src/preload/notificationShimSource.ts` + bridge notify APIs | Shim injected into page world on navigation |
+| Renderer params / secrets | `app/src/config/runtimeSecrets.ts`, `persistRuntimeConfig.ts` | Whitelist IPC; strip sensitive keys on disk |
+| Override escape hatch | CLI `browserwindow-options` → `OutputOptions.browserwindowOptions` | Merged last; see [API.md](../API.md#browserwindow-options) |
+
+User-facing migration: [API.md](../API.md#secure-renderer-540). Breaking summary: [CHANGELOG.md](../CHANGELOG.md).
+
 ## Related docs
 
 - [HACKING.md](../HACKING.md): setup, tests, contribution guidelines
