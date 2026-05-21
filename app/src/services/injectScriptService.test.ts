@@ -19,7 +19,9 @@ jest.mock('../helpers/loggingHelper', () => ({
 const mockOnIpcMainEvent = jest.fn();
 
 jest.mock('../adapters/ipcAdapter', () => ({
-  onIpcMainEvent: (...args: unknown[]) => mockOnIpcMainEvent(...args),
+  onIpcMainEvent: (...args: unknown[]): void => {
+    mockOnIpcMainEvent(...args);
+  },
 }));
 
 import {
@@ -50,7 +52,10 @@ describe('injectScriptService', () => {
     fs.writeFileSync(path.join(injectDir, 'b.css'), 'ignored');
     fs.writeFileSync(path.join(injectDir, 'c.js'), 'window.c = 1;');
 
-    expect(readInjectScriptSources()).toEqual(['window.a = 1;', 'window.c = 1;']);
+    expect(readInjectScriptSources()).toEqual([
+      'window.a = 1;',
+      'window.c = 1;',
+    ]);
   });
 
   test('registerInjectScriptIpc registers handler once', () => {

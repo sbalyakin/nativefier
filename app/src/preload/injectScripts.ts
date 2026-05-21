@@ -40,6 +40,7 @@ export function injectScripts(
       }
       log.debug('Injecting user script from main');
       // User --inject JS runs in preload world (same as legacy require()).
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval -- dynamic user inject source
       const run = new Function(source);
       run();
     }

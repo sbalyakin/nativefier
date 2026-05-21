@@ -5,14 +5,16 @@ const mockGetWebContentsFromFrame = jest.fn();
 const mockIsWayland = jest.fn(() => false);
 
 jest.mock('../adapters/desktopCapturerAdapter', () => ({
-  getWebContentsFromFrame: (...args: unknown[]) =>
+  getWebContentsFromFrame: (...args: unknown[]): unknown =>
     mockGetWebContentsFromFrame(...args),
-  getDesktopCapturerSources: (...args: unknown[]) =>
+  getDesktopCapturerSources: (
+    ...args: unknown[]
+  ): ReturnType<typeof mockGetDesktopCapturerSources> =>
     mockGetDesktopCapturerSources(...args),
 }));
 
 jest.mock('../helpers/helpers', () => ({
-  isWayland: () => mockIsWayland(),
+  isWayland: (): boolean => mockIsWayland(),
 }));
 
 jest.mock('../helpers/loggingHelper', () => ({
@@ -20,6 +22,7 @@ jest.mock('../helpers/loggingHelper', () => ({
   error: jest.fn(),
 }));
 
+import type { Session } from '../adapters/electronTypes';
 import { registerDisplayMediaRequestHandler } from './displayMediaService';
 
 async function flushAsyncWork(): Promise<void> {
@@ -52,8 +55,16 @@ describe('displayMediaService', () => {
       (frame: { webContents: unknown }) => frame.webContents,
     );
     mockGetDesktopCapturerSources.mockResolvedValue([
-      { id: 'screen:0:0', name: 'Entire screen', thumbnail: { toDataURL: () => '' } },
-      { id: 'window:1:0', name: 'App', thumbnail: { toDataURL: () => '' } },
+      {
+        id: 'screen:0:0',
+        name: 'Entire screen',
+        thumbnail: { toDataURL: (): string => '' },
+      },
+      {
+        id: 'window:1:0',
+        name: 'App',
+        thumbnail: { toDataURL: (): string => '' },
+      },
     ]);
     mockExecuteJavaScript.mockResolvedValue('window:1:0');
   });
@@ -61,12 +72,8 @@ describe('displayMediaService', () => {
   test('registerDisplayMediaRequestHandler installs handler once per session', () => {
     const session = createMockSession();
 
-    registerDisplayMediaRequestHandler(
-      session as unknown as import('electron').Session,
-    );
-    registerDisplayMediaRequestHandler(
-      session as unknown as import('electron').Session,
-    );
+    registerDisplayMediaRequestHandler(session as unknown as Session);
+    registerDisplayMediaRequestHandler(session as unknown as Session);
 
     expect(mockSetDisplayMediaRequestHandler).toHaveBeenCalledTimes(1);
   });
@@ -76,9 +83,7 @@ describe('displayMediaService', () => {
     const session = createMockSession();
     const callback = jest.fn();
 
-    registerDisplayMediaRequestHandler(
-      session as unknown as import('electron').Session,
-    );
+    registerDisplayMediaRequestHandler(session as unknown as Session);
     const handler = mockSetDisplayMediaRequestHandler.mock.calls[0][0];
 
     await handler(
@@ -104,9 +109,7 @@ describe('displayMediaService', () => {
     const callback = jest.fn();
     const webContents = createMockWebContents();
 
-    registerDisplayMediaRequestHandler(
-      session as unknown as import('electron').Session,
-    );
+    registerDisplayMediaRequestHandler(session as unknown as Session);
     const handler = mockSetDisplayMediaRequestHandler.mock.calls[0][0];
 
     await handler(
@@ -135,9 +138,7 @@ describe('displayMediaService', () => {
     const callback = jest.fn();
     const webContents = createMockWebContents();
 
-    registerDisplayMediaRequestHandler(
-      session as unknown as import('electron').Session,
-    );
+    registerDisplayMediaRequestHandler(session as unknown as Session);
     const handler = mockSetDisplayMediaRequestHandler.mock.calls[0][0];
 
     await handler(
@@ -160,9 +161,7 @@ describe('displayMediaService', () => {
     const session = createMockSession();
     const callback = jest.fn();
 
-    registerDisplayMediaRequestHandler(
-      session as unknown as import('electron').Session,
-    );
+    registerDisplayMediaRequestHandler(session as unknown as Session);
     const handler = mockSetDisplayMediaRequestHandler.mock.calls[0][0];
 
     await handler(
@@ -187,9 +186,7 @@ describe('displayMediaService', () => {
     const webContents = createMockWebContents();
     webContents.isDestroyed.mockReturnValue(true);
 
-    registerDisplayMediaRequestHandler(
-      session as unknown as import('electron').Session,
-    );
+    registerDisplayMediaRequestHandler(session as unknown as Session);
     const handler = mockSetDisplayMediaRequestHandler.mock.calls[0][0];
 
     await handler(
@@ -213,9 +210,7 @@ describe('displayMediaService', () => {
     const session = createMockSession();
     const callback = jest.fn();
 
-    registerDisplayMediaRequestHandler(
-      session as unknown as import('electron').Session,
-    );
+    registerDisplayMediaRequestHandler(session as unknown as Session);
     const handler = mockSetDisplayMediaRequestHandler.mock.calls[0][0];
 
     await handler(
@@ -237,9 +232,7 @@ describe('displayMediaService', () => {
     const session = createMockSession();
     const callback = jest.fn();
 
-    registerDisplayMediaRequestHandler(
-      session as unknown as import('electron').Session,
-    );
+    registerDisplayMediaRequestHandler(session as unknown as Session);
     const handler = mockSetDisplayMediaRequestHandler.mock.calls[0][0];
 
     await handler(

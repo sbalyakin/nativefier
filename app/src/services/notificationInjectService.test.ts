@@ -2,7 +2,9 @@ const mockOnWebContentsEvent = jest.fn();
 const mockExecuteJavaScript = jest.fn();
 
 jest.mock('../adapters/windowAdapter', () => ({
-  onWebContentsEvent: (...args: unknown[]) => mockOnWebContentsEvent(...args),
+  onWebContentsEvent: (...args: unknown[]): void => {
+    mockOnWebContentsEvent(...args);
+  },
 }));
 
 jest.mock('../helpers/loggingHelper', () => ({

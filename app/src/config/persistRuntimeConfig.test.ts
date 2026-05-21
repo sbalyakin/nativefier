@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 jest.mock('fs');
 jest.mock('./runtimeConfigPath', () => ({
-  getRuntimeConfigPath: () => '/tmp/nativefier.json',
+  getRuntimeConfigPath: (): string => '/tmp/nativefier.json',
 }));
 
 import type { OutputOptions } from '../runtimeContract';

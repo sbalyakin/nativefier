@@ -1,4 +1,4 @@
-import type { BrowserWindow, WebContents } from 'electron';
+import type { BrowserWindow, WebContents } from '../adapters/electronTypes';
 
 import { onWebContentsEvent } from '../adapters/windowAdapter';
 import { buildNotificationShimInstallScript } from '../preload/notificationShimSource';
@@ -10,16 +10,12 @@ function injectNotificationShim(webContents: WebContents): void {
   }
 
   const script = buildNotificationShimInstallScript();
-  webContents
-    .executeJavaScript(script, true)
-    .catch((err: unknown) => {
-      log.debug('notificationInjectService: shim inject failed', err);
-    });
+  webContents.executeJavaScript(script, true).catch((err: unknown) => {
+    log.debug('notificationInjectService: shim inject failed', err);
+  });
 }
 
-export function registerNotificationShimInjection(
-  window: BrowserWindow,
-): void {
+export function registerNotificationShimInjection(window: BrowserWindow): void {
   const runInject = (): void => {
     injectNotificationShim(window.webContents);
   };

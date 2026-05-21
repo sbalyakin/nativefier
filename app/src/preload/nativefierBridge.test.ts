@@ -1,10 +1,10 @@
+const mockExposeInMainWorld = jest.fn();
+
 jest.mock('electron', () => ({
   contextBridge: {
-    exposeInMainWorld: jest.fn(),
+    exposeInMainWorld: mockExposeInMainWorld,
   },
 }));
-
-import { contextBridge } from 'electron';
 
 import {
   assignPreloadNativefierGlobal,
@@ -18,8 +18,6 @@ import {
   setupNativefierNotifyBridge,
 } from './nativefierBridge';
 
-const mockExposeInMainWorld = contextBridge.exposeInMainWorld as jest.Mock;
-
 const originalContextIsolated = process.contextIsolated;
 const originalWindow = globalThis.window;
 
@@ -28,9 +26,8 @@ beforeEach(() => {
   globalThis.window = {} as Window & typeof globalThis;
   delete (globalThis as { nativefier?: unknown }).nativefier;
   delete (globalThis.window as { nativefier?: unknown }).nativefier;
-  delete (
-    globalThis.window as { __nativefierNotify?: unknown }
-  ).__nativefierNotify;
+  delete (globalThis.window as { __nativefierNotify?: unknown })
+    .__nativefierNotify;
 });
 
 afterAll(() => {
@@ -55,11 +52,13 @@ function createMockIpcRenderer(): {
     on: jest.fn((channel: string, handler: (typeof handlers)[string]) => {
       handlers[channel] = handler;
     }),
-    removeListener: jest.fn((channel: string, handler: (typeof handlers)[string]) => {
-      if (handlers[channel] === handler) {
-        delete handlers[channel];
-      }
-    }),
+    removeListener: jest.fn(
+      (channel: string, handler: (typeof handlers)[string]) => {
+        if (handlers[channel] === handler) {
+          delete handlers[channel];
+        }
+      },
+    ),
   };
 }
 
@@ -181,9 +180,9 @@ test('exposeNativefierBridge assigns window when not isolated', () => {
   exposeNativefierBridge(bridge);
 
   expect(mockExposeInMainWorld).not.toHaveBeenCalled();
-  expect(
-    (globalThis.window as { nativefier?: typeof bridge }).nativefier,
-  ).toBe(bridge);
+  expect((globalThis.window as { nativefier?: typeof bridge }).nativefier).toBe(
+    bridge,
+  );
 });
 
 test('setupNativefierBridge exposes session bridge and notify channel', () => {
@@ -195,12 +194,12 @@ test('setupNativefierBridge exposes session bridge and notify channel', () => {
   const ipcRenderer = createMockIpcRenderer();
   const bridge = setupNativefierBridge(ipcRenderer as never);
 
-  expect(
-    (globalThis as { nativefier?: typeof bridge }).nativefier,
-  ).toBe(bridge);
-  expect(
-    (globalThis.window as { nativefier?: typeof bridge }).nativefier,
-  ).toBe(bridge);
+  expect((globalThis as { nativefier?: typeof bridge }).nativefier).toBe(
+    bridge,
+  );
+  expect((globalThis.window as { nativefier?: typeof bridge }).nativefier).toBe(
+    bridge,
+  );
 
   const notifyBridge = (
     globalThis.window as {

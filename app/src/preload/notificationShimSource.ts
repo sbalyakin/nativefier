@@ -62,5 +62,5 @@ export function installNotificationShimInPage(): void {
 }
 
 export function buildNotificationShimInstallScript(): string {
-  return `(${installNotificationShimInPage})()`;
+  return `(${installNotificationShimInPage.toString()})()`;
 }

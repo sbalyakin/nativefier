@@ -6,7 +6,9 @@ jest.mock('../adapters/downloadAdapter', () => ({
 
 jest.mock('../adapters/appAdapter', () => ({
   ...jest.requireActual('../adapters/appAdapter'),
-  appendCommandLineSwitch: (...args: unknown[]) => mockAppendSwitch(...args),
+  appendCommandLineSwitch: (...args: unknown[]): void => {
+    mockAppendSwitch(...args);
+  },
 }));
 
 jest.mock('../helpers/inferFlash', () => ({
@@ -20,10 +22,7 @@ jest.mock('../helpers/helpers', () => ({
 }));
 
 import type { OutputOptions } from '../runtimeContract';
-import {
-  applyCommandLineSwitches,
-  applyProcessEnvs,
-} from './runtimeStartup';
+import { applyCommandLineSwitches, applyProcessEnvs } from './runtimeStartup';
 
 const baseArgs = {
   name: 'Test',

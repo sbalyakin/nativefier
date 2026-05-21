@@ -47,7 +47,7 @@ function rejectSessionError(
     result.error !== null &&
     'message' in result.error
       ? String((result.error as { message?: string }).message)
-      : String(result.error);
+      : JSON.stringify(result.error);
   return new Error(message);
 }
 
@@ -59,7 +59,10 @@ export function sendSessionInteraction(
   const payload: SessionInteractionRequest = { ...request, id };
 
   return new Promise((resolve, reject) => {
-    const onReply = (_event: unknown, result: SessionInteractionResult): void => {
+    const onReply = (
+      _event: unknown,
+      result: SessionInteractionResult,
+    ): void => {
       if (result.id !== undefined && result.id !== id) {
         return;
       }

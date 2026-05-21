@@ -4,7 +4,7 @@ import type {
   Session,
   Streams,
   WebContents,
-} from 'electron';
+} from '../adapters/electronTypes';
 
 import {
   getDesktopCapturerSources,
@@ -45,7 +45,7 @@ async function pickScreenShareSourceIdInWebContents(
     innerHtml,
     styleCss: SCREEN_SHARE_PICKER_STYLES,
   };
-  const script = `(${pickScreenShareSourceInPage})(${JSON.stringify(pickerArgs)})`;
+  const script = `(${pickScreenShareSourceInPage.toString()})(${JSON.stringify(pickerArgs)})`;
 
   try {
     const sourceId = await webContents.executeJavaScript(script, true);
