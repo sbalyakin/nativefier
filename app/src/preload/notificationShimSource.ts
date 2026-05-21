@@ -30,7 +30,7 @@ export function wrapNotificationConstructor(
   Object.defineProperty(newNotify, 'permission', {
     get: () => OldNotify.permission,
   });
-  // @ts-expect-error Constructor vs callable shim; runtime matches prior preload patch.
+  // @ts-expect-error Constructor vs callable shim; runtime matches wrapped Notification API.
   return newNotify;
 }
 

@@ -6,6 +6,3 @@ export const NATIVEFIER_JSON_FILENAME = 'nativefier.json';
 export function getRuntimeConfigPath(): string {
   return path.join(__dirname, '..', NATIVEFIER_JSON_FILENAME);
 }
-
-/** @deprecated Use {@link getRuntimeConfigPath}. */
-export const APP_ARGS_FILE_PATH = getRuntimeConfigPath();

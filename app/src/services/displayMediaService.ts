@@ -101,7 +101,7 @@ async function resolveDisplayMediaStreams(
     // Video only: Meet/Teams tab audio is usually mixed by Chromium. For explicit
     // system/tab audio, consider Streams.audio (e.g. loopback on Windows).
     // Picker runs on the requesting frame's top-level WebContents; nested iframes
-    // are not targeted (same limitation as the old preload getDisplayMedia patch).
+    // are not targeted.
     callback({
       video: {
         id: picked.id,

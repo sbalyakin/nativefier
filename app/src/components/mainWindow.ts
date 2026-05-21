@@ -47,8 +47,6 @@ import {
   outputOptionsToWindowOptions,
 } from '../runtimeContract';
 
-export { APP_ARGS_FILE_PATH } from '../config/runtimeConfigPath';
-
 type SessionInteractionRequest = {
   id?: string;
   func?: string;
@@ -188,11 +186,6 @@ function createContextMenu(
   if (!options.disableContextMenu) {
     initContextMenu(options, window);
   }
-}
-
-/** @deprecated Use {@link persistRuntimeConfig} from `config/persistRuntimeConfig`. */
-export function saveAppArgs(newAppArgs: OutputOptions): void {
-  persistRuntimeConfig(newAppArgs);
 }
 
 function setupCloseEvent(options: OutputOptions, window: BrowserWindow): void {

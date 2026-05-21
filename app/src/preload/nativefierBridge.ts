@@ -1,6 +1,7 @@
 import { contextBridge, IpcRenderer } from 'electron';
 
 import type { SessionInteractionRequest } from '../adapters/sessionAdapter';
+import type { NativefierNotifyBridge } from './notificationShimSource';
 
 export type SessionInteractionResult = {
   id?: string;
@@ -135,11 +136,42 @@ export function assignPreloadNativefierGlobal(bridge: NativefierBridge): void {
   ).nativefier = bridge;
 }
 
+export function createNativefierNotifyBridge(
+  ipcRenderer: IpcRenderer,
+): NativefierNotifyBridge {
+  return {
+    create(title: string, opt: NotificationOptions): void {
+      ipcRenderer.send('notification', title, opt);
+    },
+    click(): void {
+      ipcRenderer.send('notification-click');
+    },
+  };
+}
+
+export function exposeNativefierNotifyBridge(
+  bridge: NativefierNotifyBridge,
+): void {
+  if (process.contextIsolated) {
+    contextBridge.exposeInMainWorld('__nativefierNotify', bridge);
+    return;
+  }
+  (
+    window as Window &
+      typeof globalThis & { __nativefierNotify?: NativefierNotifyBridge }
+  ).__nativefierNotify = bridge;
+}
+
+export function setupNativefierNotifyBridge(ipcRenderer: IpcRenderer): void {
+  exposeNativefierNotifyBridge(createNativefierNotifyBridge(ipcRenderer));
+}
+
 export function setupNativefierBridge(
   ipcRenderer: IpcRenderer,
 ): NativefierBridge {
   const bridge = createNativefierBridge(ipcRenderer);
   exposeNativefierBridge(bridge);
   assignPreloadNativefierGlobal(bridge);
+  setupNativefierNotifyBridge(ipcRenderer);
   return bridge;
 }
