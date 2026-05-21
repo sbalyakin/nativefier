@@ -3,16 +3,9 @@ import type { BrowserWindow, WebContents } from '../adapters/electronTypes';
 import { onWebContentsEvent } from '../adapters/windowAdapter';
 import { buildNotificationShimInstallScript } from '../preload/notificationShimSource';
 import * as log from '../helpers/loggingHelper';
-import {
-  clearToken,
-  getToken,
-  rotateToken,
-} from './notificationTokenStore';
+import { clearToken, getToken, rotateToken } from './notificationTokenStore';
 
-function injectNotificationShim(
-  webContents: WebContents,
-  token: string,
-): void {
+function injectNotificationShim(webContents: WebContents, token: string): void {
   if (webContents.isDestroyed()) {
     return;
   }

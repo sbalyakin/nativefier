@@ -51,7 +51,10 @@ export function installNotificationShimInPage(token: string): void {
       [ORIGINAL_NOTIFICATION_KEY]?: typeof Notification;
     };
 
-  if (w[NOTIFICATION_SHIM_INSTALLED_KEY] && w[NOTIFICATION_SHIM_TOKEN_KEY] === token) {
+  if (
+    w[NOTIFICATION_SHIM_INSTALLED_KEY] &&
+    w[NOTIFICATION_SHIM_TOKEN_KEY] === token
+  ) {
     return;
   }
 

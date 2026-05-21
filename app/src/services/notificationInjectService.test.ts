@@ -19,11 +19,7 @@ jest.mock('./notificationTokenStore', () => ({
 
 import { registerNotificationShimInjection } from './notificationInjectService';
 import { buildNotificationShimInstallScript } from '../preload/notificationShimSource';
-import {
-  clearToken,
-  getToken,
-  rotateToken,
-} from './notificationTokenStore';
+import { clearToken, getToken, rotateToken } from './notificationTokenStore';
 
 function createMockWindow(isLoading: boolean): {
   webContents: {

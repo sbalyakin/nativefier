@@ -35,7 +35,9 @@ export function setWindowOpenHandler(
   window.webContents.setWindowOpenHandler(handler);
 }
 
-export function focusMainWindow(window: BrowserWindow | undefined | null): void {
+export function focusMainWindow(
+  window: BrowserWindow | undefined | null,
+): void {
   if (!isLiveBrowserWindow(window)) {
     return;
   }
@@ -95,7 +97,9 @@ export function isBrowserWindowFocused(window: BrowserWindow): boolean {
   return window.isFocused();
 }
 
-export function showBrowserWindow(window: BrowserWindow | undefined | null): void {
+export function showBrowserWindow(
+  window: BrowserWindow | undefined | null,
+): void {
   if (!isLiveBrowserWindow(window)) {
     return;
   }

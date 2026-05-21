@@ -1,4 +1,7 @@
-import { NOTIFY_IPC_CHANNEL, NOTIFY_POST_MESSAGE_CHANNEL } from './notificationChannel';
+import {
+  NOTIFY_IPC_CHANNEL,
+  NOTIFY_POST_MESSAGE_CHANNEL,
+} from './notificationChannel';
 import {
   handleNotificationPostMessage,
   setupNotificationPostMessageBridge,
@@ -24,16 +27,19 @@ afterAll(() => {
 test('handleNotificationPostMessage forwards valid create message', () => {
   const ipcRenderer = createMockIpcRenderer();
 
-  handleNotificationPostMessage(ipcRenderer as never, {
-    source: window,
-    data: {
-      channel: NOTIFY_POST_MESSAGE_CHANNEL,
-      token: 'tok',
-      op: 'create',
-      title: 'Hello',
-      opt: { body: 'World' },
-    },
-  } as unknown as MessageEvent);
+  handleNotificationPostMessage(
+    ipcRenderer as never,
+    {
+      source: window,
+      data: {
+        channel: NOTIFY_POST_MESSAGE_CHANNEL,
+        token: 'tok',
+        op: 'create',
+        title: 'Hello',
+        opt: { body: 'World' },
+      },
+    } as unknown as MessageEvent,
+  );
 
   expect(ipcRenderer.send).toHaveBeenCalledWith(NOTIFY_IPC_CHANNEL, {
     token: 'tok',
@@ -46,14 +52,17 @@ test('handleNotificationPostMessage forwards valid create message', () => {
 test('handleNotificationPostMessage forwards valid click message', () => {
   const ipcRenderer = createMockIpcRenderer();
 
-  handleNotificationPostMessage(ipcRenderer as never, {
-    source: window,
-    data: {
-      channel: NOTIFY_POST_MESSAGE_CHANNEL,
-      token: 'tok',
-      op: 'click',
-    },
-  } as unknown as MessageEvent);
+  handleNotificationPostMessage(
+    ipcRenderer as never,
+    {
+      source: window,
+      data: {
+        channel: NOTIFY_POST_MESSAGE_CHANNEL,
+        token: 'tok',
+        op: 'click',
+      },
+    } as unknown as MessageEvent,
+  );
 
   expect(ipcRenderer.send).toHaveBeenCalledWith(NOTIFY_IPC_CHANNEL, {
     token: 'tok',
@@ -64,25 +73,31 @@ test('handleNotificationPostMessage forwards valid click message', () => {
 test('handleNotificationPostMessage ignores wrong channel or source', () => {
   const ipcRenderer = createMockIpcRenderer();
 
-  handleNotificationPostMessage(ipcRenderer as never, {
-    source: {} as unknown as Window,
-    data: {
-      channel: NOTIFY_POST_MESSAGE_CHANNEL,
-      token: 'tok',
-      op: 'create',
-      title: 'X',
-    },
-  } as unknown as MessageEvent);
+  handleNotificationPostMessage(
+    ipcRenderer as never,
+    {
+      source: {} as unknown as Window,
+      data: {
+        channel: NOTIFY_POST_MESSAGE_CHANNEL,
+        token: 'tok',
+        op: 'create',
+        title: 'X',
+      },
+    } as unknown as MessageEvent,
+  );
 
-  handleNotificationPostMessage(ipcRenderer as never, {
-    source: window,
-    data: {
-      channel: 'other',
-      token: 'tok',
-      op: 'create',
-      title: 'X',
-    },
-  } as unknown as MessageEvent);
+  handleNotificationPostMessage(
+    ipcRenderer as never,
+    {
+      source: window,
+      data: {
+        channel: 'other',
+        token: 'tok',
+        op: 'create',
+        title: 'X',
+      },
+    } as unknown as MessageEvent,
+  );
 
   expect(ipcRenderer.send).not.toHaveBeenCalled();
 });
@@ -90,15 +105,18 @@ test('handleNotificationPostMessage ignores wrong channel or source', () => {
 test('handleNotificationPostMessage rejects create without string title', () => {
   const ipcRenderer = createMockIpcRenderer();
 
-  handleNotificationPostMessage(ipcRenderer as never, {
-    source: window,
-    data: {
-      channel: NOTIFY_POST_MESSAGE_CHANNEL,
-      token: 'tok',
-      op: 'create',
-      title: 1,
-    },
-  } as unknown as MessageEvent);
+  handleNotificationPostMessage(
+    ipcRenderer as never,
+    {
+      source: window,
+      data: {
+        channel: NOTIFY_POST_MESSAGE_CHANNEL,
+        token: 'tok',
+        op: 'create',
+        title: 1,
+      },
+    } as unknown as MessageEvent,
+  );
 
   expect(ipcRenderer.send).not.toHaveBeenCalled();
 });
@@ -106,16 +124,19 @@ test('handleNotificationPostMessage rejects create without string title', () => 
 test('handleNotificationPostMessage rejects non-plain opt', () => {
   const ipcRenderer = createMockIpcRenderer();
 
-  handleNotificationPostMessage(ipcRenderer as never, {
-    source: window,
-    data: {
-      channel: NOTIFY_POST_MESSAGE_CHANNEL,
-      token: 'tok',
-      op: 'create',
-      title: 'X',
-      opt: [],
-    },
-  } as unknown as MessageEvent);
+  handleNotificationPostMessage(
+    ipcRenderer as never,
+    {
+      source: window,
+      data: {
+        channel: NOTIFY_POST_MESSAGE_CHANNEL,
+        token: 'tok',
+        op: 'create',
+        title: 'X',
+        opt: [],
+      },
+    } as unknown as MessageEvent,
+  );
 
   expect(ipcRenderer.send).not.toHaveBeenCalled();
 });

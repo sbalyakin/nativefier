@@ -31,10 +31,7 @@ function getIpcListener(): (
   if (!call) {
     throw new Error('IPC listener not registered');
   }
-  return call[1] as (
-    event: { sender: { id: number } },
-    msg: unknown,
-  ) => void;
+  return call[1] as (event: { sender: { id: number } }, msg: unknown) => void;
 }
 
 describe('notificationIpcService', () => {

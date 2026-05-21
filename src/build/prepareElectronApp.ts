@@ -118,8 +118,9 @@ export function applyDarwinPackagerDefaults(
   options.packager.extendInfo = {
     ...existingExtend,
     NSUserNotificationUsageDescription:
-      (existingExtend.NSUserNotificationUsageDescription as string | undefined) ??
-      usageDescription,
+      (existingExtend.NSUserNotificationUsageDescription as
+        | string
+        | undefined) ?? usageDescription,
   };
 
   const entitlementsSrc = path.join(src, 'entitlements.mac.plist');
@@ -163,14 +164,7 @@ export function appendDarwinAdhocCodesignHook(options: AppOptions): void {
     }
 
     const entitlementsPath = path.join(appPath, DARWIN_ENTITLEMENTS_IN_APP);
-    const args = [
-      '--force',
-      '--deep',
-      '--sign',
-      '-',
-      '--identifier',
-      bundleId,
-    ];
+    const args = ['--force', '--deep', '--sign', '-', '--identifier', bundleId];
     if (fs.existsSync(entitlementsPath)) {
       args.push('--entitlements', entitlementsPath);
     }

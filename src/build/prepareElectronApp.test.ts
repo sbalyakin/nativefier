@@ -10,7 +10,9 @@ import {
   resolveDarwinAppBundlePath,
 } from './prepareElectronApp';
 
-function makeDarwinOptions(overrides?: Partial<AppOptions['packager']>): AppOptions {
+function makeDarwinOptions(
+  overrides?: Partial<AppOptions['packager']>,
+): AppOptions {
   return {
     packager: {
       platform: 'darwin',
@@ -58,7 +60,7 @@ describe('applyDarwinPackagerDefaults', () => {
     expect(fs.existsSync(path.join(dest, 'entitlements.mac.plist'))).toBe(true);
   });
 
-  test('does not add adhoc hook when user provides osxSign', async () => {
+  test('does not add adhoc hook when user provides osxSign', () => {
     const options = makeDarwinOptions({
       osxSign: { identity: 'Developer ID Application: Example' },
     });

@@ -56,55 +56,58 @@ function ensureIpcHandlerRegistered(): void {
   }
   ipcHandlerRegistered = true;
 
-  onIpcMainEvent(NOTIFY_IPC_CHANNEL, (event, msg: NativefierNotifyIpcPayload) => {
-    log.debug('ipcMain.nativefier-notify', { msg });
+  onIpcMainEvent(
+    NOTIFY_IPC_CHANNEL,
+    (event, msg: NativefierNotifyIpcPayload) => {
+      log.debug('ipcMain.nativefier-notify', { msg });
 
-    if (
-      typeof msg !== 'object' ||
-      msg === null ||
-      typeof msg.token !== 'string' ||
-      !isValidOp(msg.op)
-    ) {
-      return;
-    }
-
-    const webContentsId = event.sender.id;
-    if (!validateToken(webContentsId, msg.token)) {
-      log.debug('notificationIpcService: invalid token', { webContentsId });
-      return;
-    }
-
-    if (msg.op === 'create') {
-      if (!isValidCreatePayload(msg)) {
-        log.debug('notificationIpcService: invalid create payload', {
-          webContentsId,
-        });
+      if (
+        typeof msg !== 'object' ||
+        msg === null ||
+        typeof msg.token !== 'string' ||
+        !isValidOp(msg.op)
+      ) {
         return;
       }
 
-      const now = Date.now();
-      const lastCreate = lastCreateAtByWebContentsId.get(webContentsId) ?? 0;
-      if (now - lastCreate < CREATE_RATE_LIMIT_MS) {
+      const webContentsId = event.sender.id;
+      if (!validateToken(webContentsId, msg.token)) {
+        log.debug('notificationIpcService: invalid token', { webContentsId });
         return;
       }
-      lastCreateAtByWebContentsId.set(webContentsId, now);
-      badgePendingByWebContentsId.set(webContentsId, true);
 
-      for (const handler of onCreateHandlers) {
-        handler(webContentsId);
+      if (msg.op === 'create') {
+        if (!isValidCreatePayload(msg)) {
+          log.debug('notificationIpcService: invalid create payload', {
+            webContentsId,
+          });
+          return;
+        }
+
+        const now = Date.now();
+        const lastCreate = lastCreateAtByWebContentsId.get(webContentsId) ?? 0;
+        if (now - lastCreate < CREATE_RATE_LIMIT_MS) {
+          return;
+        }
+        lastCreateAtByWebContentsId.set(webContentsId, now);
+        badgePendingByWebContentsId.set(webContentsId, true);
+
+        for (const handler of onCreateHandlers) {
+          handler(webContentsId);
+        }
+        return;
       }
-      return;
-    }
 
-    if (!badgePendingByWebContentsId.get(webContentsId)) {
-      return;
-    }
+      if (!badgePendingByWebContentsId.get(webContentsId)) {
+        return;
+      }
 
-    badgePendingByWebContentsId.delete(webContentsId);
-    for (const handler of onClickHandlers) {
-      handler();
-    }
-  });
+      badgePendingByWebContentsId.delete(webContentsId);
+      for (const handler of onClickHandlers) {
+        handler();
+      }
+    },
+  );
 }
 
 export function registerNotificationIpcHandlers(

@@ -47,11 +47,12 @@ export async function castlabsReleaseTagExists(
 async function listCastlabsReleaseTags(suffix: string): Promise<string[]> {
   const tags: string[] = [];
   for (let page = 1; page <= 5; page += 1) {
-    const { data } = await axios.get<
-      Array<{ tag_name?: string }>
-    >(CASTLABS_RELEASES_API, {
-      params: { per_page: 100, page },
-    });
+    const { data } = await axios.get<Array<{ tag_name?: string }>>(
+      CASTLABS_RELEASES_API,
+      {
+        params: { per_page: 100, page },
+      },
+    );
     if (!Array.isArray(data) || data.length === 0) {
       break;
     }
@@ -90,7 +91,9 @@ export async function resolveWidevineElectronVersion(
   const tags = await listCastlabsReleaseTags(suffix);
   const sameMajor = tags
     .map((tag) => stripWidevineSuffix(tag, suffix))
-    .filter((base) => parseInt(base.split('.')[0] ?? '', 10) === requestedMajor);
+    .filter(
+      (base) => parseInt(base.split('.')[0] ?? '', 10) === requestedMajor,
+    );
 
   const stable = sameMajor.filter((base) => !isPrereleaseBase(base));
   const candidates = stable.length > 0 ? stable : sameMajor;

@@ -27,7 +27,7 @@ test('castlabsReleaseTagExists returns true only for HTTP 200', async () => {
 });
 
 test('resolveWidevineElectronVersion uses exact tag when published', async () => {
-  mockedAxios.get.mockImplementation(async (url: string) => {
+  mockedAxios.get.mockImplementation((url: string) => {
     if (url.includes('/releases/tag/v42.1.0+wvcus')) {
       return { status: 200 };
     }
@@ -47,7 +47,9 @@ test('resolveWidevineElectronVersion falls back to newest stable same major', as
     if (url.includes('/releases/tag/v42.0.0+wvcus')) {
       return { status: 200 };
     }
-    if (url === 'https://api.github.com/repos/castlabs/electron-releases/releases') {
+    if (
+      url === 'https://api.github.com/repos/castlabs/electron-releases/releases'
+    ) {
       return {
         data: [
           { tag_name: 'v42.0.0+wvcus' },
@@ -65,7 +67,7 @@ test('resolveWidevineElectronVersion falls back to newest stable same major', as
 });
 
 test('resolveWidevineElectronVersion throws when no same-major release exists', async () => {
-  mockedAxios.get.mockImplementation(async (url: string) => {
+  mockedAxios.get.mockImplementation((url: string) => {
     if (url.includes('/releases/tag/')) {
       throw new Error('404');
     }

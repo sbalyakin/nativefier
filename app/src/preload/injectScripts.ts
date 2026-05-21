@@ -45,6 +45,6 @@ export function injectScripts(
       run();
     }
   } catch (err: unknown) {
-    log.error('Error encoutered injecting JS files', err);
+    log.error('Error encountered injecting JS files', err);
   }
 }
