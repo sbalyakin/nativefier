@@ -2,9 +2,12 @@ import * as url from 'url';
 
 import * as log from 'loglevel';
 
+function hasProtocol(inputUrl: string): boolean {
+  return /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(inputUrl);
+}
+
 function appendProtocol(inputUrl: string): string {
-  const parsed = url.parse(inputUrl);
-  if (!parsed.protocol) {
+  if (!hasProtocol(inputUrl)) {
     const urlWithProtocol = `https://${inputUrl}`;
     log.warn(
       `URL "${inputUrl}" lacks a protocol.`,
