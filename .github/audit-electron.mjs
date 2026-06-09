@@ -82,6 +82,14 @@ async function getLatestNpmElectron() {
   return latest.version;
 }
 
+async function isElectronOnNpm(version) {
+  const response = await fetch(
+    `https://registry.npmjs.org/electron/${version}`,
+    { signal: AbortSignal.timeout(15_000) },
+  );
+  return response.ok;
+}
+
 function electronRangeFor(version) {
   const [major, minor] = version.split('.');
   return `^${major}.${minor}.0`;
@@ -136,6 +144,7 @@ async function main() {
   const latestNpm = await getLatestNpmElectron();
   const targetVersion = applyVersion ?? constants.electron;
   const targetChrome = await getChromeForElectron(targetVersion);
+  const targetOnNpm = await isElectronOnNpm(targetVersion);
 
   printSection('Electron audit');
   console.log(`Default (constants.ts):     ${constants.electron}`);
@@ -143,6 +152,7 @@ async function main() {
   console.log(`Root package.json range:    ${rootRange}`);
   console.log(`App package.json range:     ${appRange}`);
   console.log(`npm latest:                 ${latestNpm}`);
+  console.log(`Target on npm registry:     ${targetOnNpm ? 'yes' : 'no'}`);
 
   const mismatches = [];
   if (rootRange !== appRange) {
@@ -198,6 +208,22 @@ async function main() {
     console.log(`  node .github/audit-electron.mjs --apply ${latestNpm}`);
     console.log('Then run: npm run relock && npm run build && npm test');
     return;
+  }
+
+  if (!targetOnNpm) {
+    console.error(
+      `\nERROR: electron@${applyVersion} is not on npm yet (latest: ${latestNpm}).`,
+    );
+    console.error(
+      'Packaged apps can still use this version via DEFAULT_ELECTRON_VERSION,',
+    );
+    console.error(
+      'but devDependencies/shrinkwrap need an npm-published version for npm install.',
+    );
+    console.error(
+      `Set devDependencies to ^${applyVersion.split('.').slice(0, 2).join('.')}.0 after npm publish, or use --apply ${latestNpm}.`,
+    );
+    process.exit(1);
   }
 
   printSection(`Applying Electron ${applyVersion}`);
