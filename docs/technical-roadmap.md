@@ -42,18 +42,25 @@ This document records decisions and prerequisites for infrastructure work that s
 ### Recently applied (safe, same major)
 
 - `electron` ^42.2.0 (CLI devDependency + `app/` template)
-- `typescript-eslint` patch aligned with ESLint 9.x
+- `typescript-eslint` patch aligned with ESLint 10.x
 - `webpack` 5.107.x (app template build)
+- `@types/node` 24.13.x (aligned with CI Node 24; not 25 until `engines.node` bump)
+
+### Recently applied (major, phase 2)
+
+| Package | Version | Notes |
+| --- | --- | --- |
+| `eslint` / `@eslint/js` | 10.x | Flat config unchanged; ESLint 10 `preserve-caught-error`, `no-useless-assignment` fixes |
+| `yargs` | 18.x | `src/yargsFactory.ts` for ESM/CJS interop; `args.terminalWidth()` instance method |
+| `typescript` | 6.x | `ignoreDeprecations: "6.0"`, explicit `types`, `app/tsconfig.webpack.json`, clean drops `*.tsbuildinfo` |
+| `webpack-cli` | 7.x | No webpack config changes required |
 
 ### Not scheduled here
 
 | Package | Latest (approx.) | Reason to defer |
 | --- | --- | --- |
-| `eslint` / `@eslint/js` | 10.x | Config and rule churn |
-| `typescript` | 6.x | Compiler + `@types/node` alignment |
-| `yargs` | 18.x | CLI parsing behavior |
 | `cross-env` | 10.x | Low benefit vs churn |
-| `webpack-cli` | 7.x | App webpack config validation |
+| `@types/node` | 25.x | Requires bump minimum Node and CI matrix |
 
 ## Electron packager and alternatives
 

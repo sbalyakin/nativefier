@@ -13,7 +13,12 @@ const sharedConfig = {
     rules: [
       {
         test: /\.ts$/,
-        use: 'ts-loader',
+        use: {
+          loader: 'ts-loader',
+          options: {
+            configFile: path.resolve(__dirname, 'tsconfig.webpack.json'),
+          },
+        },
         exclude: /node_modules/,
       },
     ],

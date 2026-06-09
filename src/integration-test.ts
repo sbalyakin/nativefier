@@ -108,15 +108,12 @@ async function checkApp(
 
   // Test global shortcuts
   if (inputOptions.globalShortcuts) {
-    let shortcutData: GlobalShortcut[] | undefined = [];
-
-    if (typeof inputOptions.globalShortcuts === 'string') {
-      shortcutData = parseJson<GlobalShortcut[]>(
-        fs.readFileSync(inputOptions.globalShortcuts, 'utf8'),
-      );
-    } else {
-      shortcutData = inputOptions.globalShortcuts;
-    }
+    const shortcutData: GlobalShortcut[] | undefined =
+      typeof inputOptions.globalShortcuts === 'string'
+        ? parseJson<GlobalShortcut[]>(
+            fs.readFileSync(inputOptions.globalShortcuts, 'utf8'),
+          )
+        : inputOptions.globalShortcuts;
 
     expect(nativefierConfig?.globalShortcuts).toStrictEqual(shortcutData);
   }

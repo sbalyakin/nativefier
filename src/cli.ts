@@ -2,7 +2,8 @@
 import 'source-map-support/register';
 
 import * as log from 'loglevel';
-import yargs from 'yargs';
+import type * as yargs from 'yargs';
+import yargsFactory from './yargsFactory';
 
 import {
   camelCased,
@@ -30,7 +31,7 @@ type YargsArgvSync<T> = {
 
 export function initArgs(argv: string[]): yargs.Argv<RawOptions> {
   const sanitizedArgs = sanitizeArgs(argv);
-  let args = yargs(sanitizedArgs)
+  let args = yargsFactory(sanitizedArgs)
     .scriptName('nativefier')
     .usage(
       '$0 <targetUrl> [outputDirectory] [other options]\nor\n$0 --upgrade <pathToExistingApp> [other options]',
@@ -70,7 +71,7 @@ export function initArgs(argv: string[]): yargs.Argv<RawOptions> {
     .version()
     .help()
     .group(['version', 'help'], 'Other Options')
-    .wrap(yargs.terminalWidth());
+    .wrap(args.terminalWidth());
 
   // We must access argv in order to get yargs to actually process args
   // Do this now to go ahead and get any errors out of the way

@@ -36,7 +36,7 @@
     "build": "npm run clean && tsc --build shared src app && chmod +x lib/cli.js && npm run build-app && npm run build-app-static",
     "build:watch": "npm run clean && tsc --build shared src app --watch",
     "changelog": "./.github/generate-changelog",
-    "clean": "rimraf coverage/ lib/ app/lib/ app/dist/ shared/lib",
+    "clean": "rimraf coverage/ lib/ app/lib/ app/dist/ shared/lib **/*.tsbuildinfo",
     "clean:full": "npm run clean && rimraf app/node_modules/ node_modules/",
     "lint:fix": "eslint \"src/**/*.ts\" \"app/src/**/*.ts\" \"shared/src/**/*.ts\" --fix",
     "lint:format": "prettier --write 'src/**/*.ts' 'app/src/**/*.ts' 'shared/src/**/*.ts'",
@@ -71,10 +71,10 @@
     "sanitize-filename": "^1.6.3",
     "source-map-support": "^0.5.21",
     "tmp": "^0.2.1",
-    "yargs": "^17.7.2"
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
+    "@eslint/js": "^10.0.0",
     "@types/debug": "^4.1.12",
     "@types/fs-extra": "^11.0.4",
     "@types/hasbin": "^1.2.2",
@@ -86,7 +86,7 @@
     "@types/yargs": "^17.0.33",
     "cross-env": "^7.0.3",
     "electron": "^42.2.0",
-    "eslint": "^9.17.0",
+    "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.5.5",
     "jest": "^30.0.0",
@@ -94,10 +94,10 @@
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "ts-loader": "^9.5.1",
-    "typescript": "^5.7.2",
+    "typescript": "^6.0.0",
     "typescript-eslint": "^8.59.4",
     "webpack": "^5.107.0",
-    "webpack-cli": "^6.0.1"
+    "webpack-cli": "^7.0.0"
   },
   "jest_COMMENTS": {
     "testPathIgnorePatterns": "See https://jestjs.io/docs/configuration#testpathignorepatterns-arraystring . We set it to 1. ignore coverage for deps, and 2. be sure we test the compiled JS, which is in `lib`, not `src` or `dist`",
