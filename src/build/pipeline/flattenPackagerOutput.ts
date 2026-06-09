@@ -46,7 +46,9 @@ export async function flattenPackagerOutput(
   for (const entry of entries) {
     const src = path.join(packagedDir, entry);
     const dest = path.join(outputDirectory, entry);
-    await fs.move(src, dest, { overwrite: Boolean(options.packager.overwrite) });
+    await fs.move(src, dest, {
+      overwrite: Boolean(options.packager.overwrite),
+    });
   }
   await fs.remove(packagedDir);
 
