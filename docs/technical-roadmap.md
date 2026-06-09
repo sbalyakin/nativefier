@@ -54,12 +54,12 @@ This document records decisions and prerequisites for infrastructure work that s
 | `yargs` | 18.x | `src/yargsFactory.ts` for ESM/CJS interop; `args.terminalWidth()` instance method |
 | `typescript` | 6.x | `ignoreDeprecations: "6.0"`, explicit `types`, `app/tsconfig.webpack.json`, clean drops `*.tsbuildinfo` |
 | `webpack-cli` | 7.x | No webpack config changes required |
+| `cross-env` | 10.x | Test scripts unchanged; requires Node ≥20 (project `engines.node` ≥22) |
 
 ### Not scheduled here
 
 | Package | Latest (approx.) | Reason to defer |
 | --- | --- | --- |
-| `cross-env` | 10.x | Low benefit vs churn |
 | `@types/node` | 25.x | Requires bump minimum Node and CI matrix |
 
 ## Electron packager and alternatives
