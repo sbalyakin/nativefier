@@ -484,6 +484,16 @@ Specifies if the menu bar should be shown.
 
 Prevents application from being run multiple times. If such an attempt occurs the already running instance is brought to front.
 
+#### [persist-session-cookies]
+
+```
+--persist-session-cookies
+```
+
+Electron clears session cookies (cookies without `Max-Age` / `Expires`) when the app exits. Some sites, including edclub, rely on session cookies for login and offer no "remember me" checkbox.
+
+When enabled, Nativefier promotes session cookies to persistent cookies (14-day TTL) **only** for domains that match the same navigation policy as in-app links: your `targetUrl` base domain, `--internal-urls`, and [known internal login pages](#internal-login-pages). Out-of-scope tracker or third-party session cookies are not modified.
+
 #### [title-bar-style]
 
 ```
@@ -813,6 +823,7 @@ Current known internal login pages:
 - `facebook.com/login`
 - `github.com/login` , `github.com/session`
 - `accounts.google.com` , `mail.google.com/accounts/SetOSID`
+- `clever.com/oauth` (Clever SSO; edclub, TypingClub)
 - `linkedin.com/uas/login`
 - `login.live.com` , `login.microsoftonline.com`
 - `okta.com`
@@ -1136,6 +1147,7 @@ var options = {
   honest: false,
   zoom: 1.0,
   singleInstance: false,
+  persistSessionCookies: false,
   clearCache: false,
   fileDownloadOptions: {
     saveAs: true, // always show "Save As" dialog

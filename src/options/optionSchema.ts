@@ -388,6 +388,16 @@ export const OPTION_DEFINITIONS: readonly OptionDefinition[] = [
     description: 'allow only a single instance of the app',
   }),
   def({
+    cliFlag: 'persist-session-cookies',
+    scope: 'runtime',
+    targetField: 'persistSessionCookies',
+    type: 'boolean',
+    default: false,
+    yargsGroup: YARGS_GROUP_TITLES.appWindow,
+    description:
+      'keep session cookies across app restarts for in-scope domains (target URL, internal-urls, known login pages)',
+  }),
+  def({
     cliFlag: 'tray',
     scope: 'runtime',
     targetField: 'tray',

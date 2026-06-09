@@ -199,6 +199,9 @@ const testLoginPages = [
   'https://login.microsoftonline.com/common/oauth2/authorize',
   'https://login.microsoftonline.co.uk/common/oauth2/authorize',
   'https://login.microsoftonline.de/common/oauth2/authorize',
+  'https://clever.com/oauth/authorize',
+  'https://www.clever.com/oauth/authorize',
+  'https://clever.co.uk/oauth/authorize',
   'https://okta.co.uk',
   'https://okta.com',
   'https://subdomain.okta.com',
@@ -233,6 +236,8 @@ const testNonLoginPages = [
   'https://appleid.apple.com/account',
   'https://mail.google.com/',
   'https://atlassian.com',
+  'https://clever.com/',
+  'https://www.clever.com/about',
 ];
 
 test.each(testNonLoginPages)(

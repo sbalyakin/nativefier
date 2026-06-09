@@ -41,6 +41,7 @@ const minimalAppOptions = (): AppOptions =>
       nativefierVersion: '1.0.0',
       showMenuBar: false,
       singleInstance: false,
+      persistSessionCookies: false,
       strictInternalUrls: false,
       tray: 'false',
       userAgentHonest: false,

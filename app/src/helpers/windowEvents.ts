@@ -12,6 +12,7 @@ import {
 } from '../adapters/windowAdapter';
 import { registerDisplayMediaRequestHandler } from '../services/displayMediaService';
 import { registerNotificationShimInjection } from '../services/notificationInjectService';
+import { registerPersistSessionCookies } from '../services/persistSessionCookiesService';
 import { getBrowserWindowSession } from '../adapters/sessionAdapter';
 import { linkIsInternal, nativeTabsSupported, openExternal } from './helpers';
 import * as log from './loggingHelper';
@@ -176,7 +177,11 @@ export function setupNativefierWindow(
   options: WindowOptions,
   window: BrowserWindow,
 ): void {
-  registerDisplayMediaRequestHandler(getBrowserWindowSession(window));
+  const session = getBrowserWindowSession(window);
+  registerDisplayMediaRequestHandler(session);
+  if (options.persistSessionCookies) {
+    registerPersistSessionCookies(session, options);
+  }
   registerNotificationShimInjection(window);
 
   if (options.proxyRules) {

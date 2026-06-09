@@ -197,6 +197,7 @@ function isInternalLoginPage(url: string): boolean {
     'linkedin\\.[a-zA-Z\\.]*/uas/login', // LinkedIn
     'login\\.live\\.[a-zA-Z\\.]*', // Microsoft
     'login\\.microsoftonline\\.[a-zA-Z\\.]*', // Microsoft
+    'clever\\.[a-zA-Z\\.]*\\/oauth', // Clever SSO (edclub, TypingClub)
     'okta\\.[a-zA-Z\\.]*', // Okta
     'twitter\\.[a-zA-Z\\.]*/oauth/authenticate', // Twitter
     'appleid\\.apple\\.com/auth/authorize', // Apple

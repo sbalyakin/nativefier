@@ -70,6 +70,7 @@ export const OUTPUT_FIELD_MAPPINGS: readonly OutputFieldMapping[] = [
   { outputKey: 'osxNotarize', source: 'packager' },
   { outputKey: 'osxSign', source: 'packager' },
   { outputKey: 'portable', source: 'packager' },
+  { outputKey: 'persistSessionCookies', source: 'nativefier' },
   { outputKey: 'processEnvs', source: 'nativefier' },
   { outputKey: 'protocols', source: 'packager' },
   { outputKey: 'proxyRules', source: 'nativefier' },

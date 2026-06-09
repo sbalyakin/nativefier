@@ -65,6 +65,7 @@ export interface AppOptions {
     maximize: boolean;
     nativefierVersion: string;
     processEnvs?: string;
+    persistSessionCookies: boolean;
     proxyRules?: string;
     quiet?: boolean;
     showMenuBar: boolean;
@@ -193,6 +194,7 @@ export type RawOptions = {
   overwrite?: boolean;
   plain?: boolean;
   platform?: string;
+  persistSessionCookies?: boolean;
   portable?: boolean;
   processEnvs?: string;
   proxyRules?: string;
@@ -224,6 +226,7 @@ export type WindowOptions = {
   flashPluginDir?: string;
   insecure: boolean;
   internalUrls?: string | RegExp;
+  persistSessionCookies?: boolean;
   strictInternalUrls?: boolean;
   name: string;
   proxyRules?: string;
