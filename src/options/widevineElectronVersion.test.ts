@@ -29,9 +29,9 @@ test('castlabsReleaseTagExists returns true only for HTTP 200', async () => {
 test('resolveWidevineElectronVersion uses exact tag when published', async () => {
   mockedAxios.get.mockImplementation((url: string) => {
     if (url.includes('/releases/tag/v42.1.0+wvcus')) {
-      return { status: 200 };
+      return Promise.resolve({ status: 200 });
     }
-    throw new Error('not found');
+    return Promise.reject(new Error('not found'));
   });
 
   await expect(
@@ -69,11 +69,11 @@ test('resolveWidevineElectronVersion falls back to newest stable same major', as
 test('resolveWidevineElectronVersion throws when no same-major release exists', async () => {
   mockedAxios.get.mockImplementation((url: string) => {
     if (url.includes('/releases/tag/')) {
-      throw new Error('404');
+      return Promise.reject(new Error('404'));
     }
-    return {
+    return Promise.resolve({
       data: [{ tag_name: 'v41.5.0+wvcus' }],
-    };
+    });
   });
 
   await expect(

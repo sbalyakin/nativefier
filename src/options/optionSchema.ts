@@ -173,6 +173,16 @@ export const OPTION_DEFINITIONS: readonly OptionDefinition[] = [
     exposeOnCli: true,
   }),
   def({
+    cliFlag: 'plain',
+    scope: 'cliOnly',
+    rawKey: 'plain',
+    type: 'boolean',
+    default: false,
+    yargsGroup: YARGS_GROUP_TITLES.appCreation,
+    description:
+      'write the packaged app directly into the output directory instead of a {name}-{platform}-{arch} subfolder',
+  }),
+  def({
     cliFlag: 'p',
     alias: 'platform',
     scope: 'packager',

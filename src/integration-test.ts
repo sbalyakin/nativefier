@@ -38,12 +38,13 @@ async function checkApp(
   const arch = inputOptions.arch ? inputOptions.arch : inferArch();
   const appName = inputOptions.name ?? 'npm';
   if (inputOptions.out !== undefined) {
-    expect(
-      path.join(
-        inputOptions.out,
-        `${appName}-${inputOptions.platform as string}-${arch}`,
-      ),
-    ).toBe(appRoot);
+    const expectedAppRoot = inputOptions.plain
+      ? inputOptions.out
+      : path.join(
+          inputOptions.out,
+          `${appName}-${inputOptions.platform as string}-${arch}`,
+        );
+    expect(expectedAppRoot).toBe(appRoot);
   }
 
   let relativeResourcesDir = 'resources';

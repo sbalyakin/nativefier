@@ -191,6 +191,7 @@ export type RawOptions = {
   nativefierVersion?: string;
   out?: string;
   overwrite?: boolean;
+  plain?: boolean;
   platform?: string;
   portable?: boolean;
   processEnvs?: string;
