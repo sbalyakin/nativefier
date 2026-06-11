@@ -42,6 +42,7 @@ if (process.argv.indexOf('--verbose') > -1 || safeGetEnv('VERBOSE') === '1') {
 
 let mainWindow: BrowserWindow | undefined;
 let pendingDockShowOnReady = false;
+let pendingDeepLinkUrl: string | undefined;
 let onReadyDidRun = false;
 
 const appArgs = loadRuntimeConfig();
@@ -90,13 +91,22 @@ onAppEvent('will-finish-launching', () => {
   log.debug('app.will-finish-launching');
 });
 
+function navigateToDeepLinkUrl(url: string): void {
+  log.debug('navigateToDeepLinkUrl', { url });
+  if (mainWindow) {
+    loadUrl(mainWindow, url).catch((err) =>
+      log.error('navigateToDeepLinkUrl ERROR', err),
+    );
+    return;
+  }
+  pendingDeepLinkUrl = url;
+}
+
 onAppEvent<[Event, string]>('open-url', (event, url) => {
   log.debug('app.open-url', { event, url });
 
   event.preventDefault();
-  if (mainWindow) {
-    sendToWebContents(mainWindow, 'open-url', url);
-  }
+  navigateToDeepLinkUrl(url);
 });
 
 function runOnReadyOnce(trigger: string): void {
@@ -154,7 +164,7 @@ onAppEvent('activate', (event: Event, hasVisibleWindows: boolean) => {
   }
 });
 
-registerSingleInstance(appArgs, () => mainWindow);
+registerSingleInstance(appArgs, () => mainWindow, navigateToDeepLinkUrl);
 
 onAppEvent('new-window-for-tab', (event: Event) => {
   log.debug('app.new-window-for-tab', { event });
@@ -267,6 +277,11 @@ async function onReady(): Promise<void> {
 
   if (appArgs.targetUrl) {
     await loadUrl(window, appArgs.targetUrl);
+  }
+
+  if (pendingDeepLinkUrl) {
+    await loadUrl(window, pendingDeepLinkUrl);
+    pendingDeepLinkUrl = undefined;
   }
 
   if (appArgs.tray !== 'start-in-tray') {

@@ -49,28 +49,34 @@ export function loadRuntimeConfigFromSource(
   return parseRuntimeConfigJson(source, options);
 }
 
-export function applyCommandLineTargetUrlOverride(
-  config: OutputOptions,
+export function extractHttpUrlFromArgv(
   argv: string[] = process.argv,
-): OutputOptions {
+): string | undefined {
   const urlArgv = argv.filter((a) => a.startsWith('http'));
   if (urlArgv.length === 0) {
-    return config;
+    return undefined;
   }
 
   const maybeUrl = urlArgv[0];
   try {
     new URL(maybeUrl);
-    log.info('Loading override URL passed as argument:', maybeUrl);
-    return { ...config, targetUrl: maybeUrl };
-  } catch (err: unknown) {
-    log.error(
-      'Not loading override URL passed as argument, because failed to parse:',
-      maybeUrl,
-      err,
-    );
+    return maybeUrl;
+  } catch {
+    return undefined;
+  }
+}
+
+export function applyCommandLineTargetUrlOverride(
+  config: OutputOptions,
+  argv: string[] = process.argv,
+): OutputOptions {
+  const maybeUrl = extractHttpUrlFromArgv(argv);
+  if (!maybeUrl) {
     return config;
   }
+
+  log.info('Loading override URL passed as argument:', maybeUrl);
+  return { ...config, targetUrl: maybeUrl };
 }
 
 export function loadRuntimeConfig(): OutputOptions {

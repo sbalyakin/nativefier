@@ -1,6 +1,7 @@
 import { STABLE_CONTRACT_TEST_BUILD_DATE } from '../../../shared/lib/src/contract/testFixtures';
 import {
   applyCommandLineTargetUrlOverride,
+  extractHttpUrlFromArgv,
   loadRuntimeConfigFromSource,
   parseRuntimeConfigJson,
 } from './loadRuntimeConfig';
@@ -26,6 +27,19 @@ test('parseRuntimeConfigJson returns validated OutputOptions', () => {
 
 test('loadRuntimeConfigFromSource matches parseRuntimeConfigJson', () => {
   expect(loadRuntimeConfigFromSource(validJson).name).toBe('TestApp');
+});
+
+test('extractHttpUrlFromArgv returns first valid http url', () => {
+  expect(
+    extractHttpUrlFromArgv([
+      '/Applications/Google Meet.app/Contents/MacOS/Google Meet',
+      'https://meet.google.com/abc-defg-hij',
+    ]),
+  ).toBe('https://meet.google.com/abc-defg-hij');
+});
+
+test('extractHttpUrlFromArgv returns undefined for invalid url', () => {
+  expect(extractHttpUrlFromArgv(['electron', 'http://[invalid'])).toBeUndefined();
 });
 
 test('applyCommandLineTargetUrlOverride replaces targetUrl for valid http argv', () => {
