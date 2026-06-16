@@ -35,6 +35,19 @@ function ensureGoToUrlHandler(): void {
       pending.settle(url);
     },
   );
+  handleIpcMainInvoke('go-to-url-cancel', (event: IpcMainInvokeEvent) => {
+    const pending = pendingGoToUrlDialogs.get(event.sender.id);
+    if (!pending) {
+      return;
+    }
+    pending.window.close();
+  });
+}
+
+/** Test-only: reset handler registration and pending dialog state. */
+export function resetGoToUrlWindowForTests(): void {
+  goToUrlHandlerRegistered = false;
+  pendingGoToUrlDialogs.clear();
 }
 
 export function promptGoToUrl(

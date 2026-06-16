@@ -142,6 +142,44 @@ describe('Application launch', () => {
     }
   });
 
+  async function triggerGoToUrlFromMenu(): Promise<void> {
+    await app.evaluate(({ Menu, BrowserWindow }) => {
+      const menu = Menu.getApplicationMenu();
+      if (!menu) {
+        throw new Error('Application menu is not set');
+      }
+      const viewMenu = menu.items.find((item) =>
+        item.label?.replace(/&/g, '').includes('View'),
+      );
+      const goToUrlItem = viewMenu?.submenu?.items.find((item) =>
+        item.label?.includes('Go to URL'),
+      );
+      if (!goToUrlItem) {
+        throw new Error('Go to URL menu item was not found');
+      }
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      goToUrlItem.click(undefined, focusedWindow ?? undefined);
+    });
+  }
+
+  async function waitForGoToUrlWindow(mainWindow: Page): Promise<Page> {
+    const deadline = Date.now() + 10000;
+    while (Date.now() < deadline) {
+      for (const window of app.windows()) {
+        if (window === mainWindow) {
+          continue;
+        }
+        if (window.url().includes('go-to-url.html')) {
+          await window.waitForLoadState('domcontentloaded');
+          await window.waitForLoadState('load');
+          return window;
+        }
+      }
+      await sleep(100);
+    }
+    throw new Error('Go to URL dialog did not open');
+  }
+
   test('shows an initial window', async () => {
     const mainWindow = (await spawnApp()) as Page;
     await mainWindow.waitForLoadState('domcontentloaded');
@@ -393,6 +431,79 @@ describe('Application launch', () => {
     expect(documentText).toContain('Success');
 
     expect(documentText).not.toContain('Failure');
+  });
+
+  test('go to url dialog navigates on submit', async () => {
+    const mainWindow = (await spawnApp()) as Page;
+    await mainWindow.waitForLoadState('load');
+
+    await triggerGoToUrlFromMenu();
+
+    const goToUrlWindow = await waitForGoToUrlWindow(mainWindow);
+
+    expect(app.windows()).toHaveLength(2);
+
+    const urlField = await goToUrlWindow.$('#url-input');
+    expect(urlField).not.toBeNull();
+    await urlField?.fill('https://example.com');
+
+    // Submit in-page: the dialog closes immediately on success, which can
+    // interrupt Playwright's "real" click (target closed mid-action).
+    await goToUrlWindow.evaluate(() => {
+      const form = document.getElementById('go-to-url-form');
+      if (form instanceof HTMLFormElement) {
+        form.requestSubmit();
+      }
+    });
+
+    await mainWindow.waitForLoadState('load');
+
+    let waited = 0;
+    while (!mainWindow.url().startsWith('https://example.com') && waited < 10000) {
+      waited += 100;
+      await sleep(100);
+    }
+
+    expect(mainWindow.url()).toMatch(/^https:\/\/example\.com/);
+    expect(
+      app.windows().filter((window) => window.url().includes('go-to-url.html')),
+    ).toHaveLength(0);
+  });
+
+  test('go to url dialog closes on escape', async () => {
+    const mainWindow = (await spawnApp()) as Page;
+    await mainWindow.waitForLoadState('load');
+    const initialUrl = mainWindow.url();
+
+    await triggerGoToUrlFromMenu();
+
+    const goToUrlWindow = await waitForGoToUrlWindow(mainWindow);
+
+    expect(app.windows()).toHaveLength(2);
+
+    // Dispatch in-page: the dialog closes immediately on cancel, which can
+    // interrupt Playwright's "real" key press (target closed mid-action).
+    await goToUrlWindow.evaluate(() => {
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Escape',
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+
+    let waited = 0;
+    while (
+      app.windows().some((window) => window.url().includes('go-to-url.html')) &&
+      waited < 5000
+    ) {
+      waited += 100;
+      await sleep(100);
+    }
+
+    expect(app.windows()).toHaveLength(1);
+    expect(mainWindow.url()).toBe(initialUrl);
   });
 });
 

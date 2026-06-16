@@ -24,7 +24,7 @@ jest.mock('../helpers/helpers', () => ({
 }));
 
 import { createBrowserWindow } from '../adapters/windowAdapter';
-import { promptGoToUrl } from './goToUrlWindow';
+import { promptGoToUrl, resetGoToUrlWindowForTests } from './goToUrlWindow';
 
 type MockGoToUrlWindow = {
   webContents: { id: number };
@@ -38,21 +38,30 @@ describe('promptGoToUrl', () => {
     event: { sender: { id: number } },
     url: string,
   ) => void | Promise<void>;
+  let cancelHandler: (
+    event: { sender: { id: number } },
+  ) => void | Promise<void>;
   const parent = { id: 'parent' } as unknown as BrowserWindow;
   const mockCreateBrowserWindow = createBrowserWindow as jest.MockedFunction<
     typeof createBrowserWindow
   >;
 
   beforeEach(() => {
+    resetGoToUrlWindowForTests();
     mockNextWebContentsId = 1;
     mockHandle.mockReset();
     mockCreateBrowserWindow.mockClear();
-    mockHandle.mockImplementation((_channel, handler) => {
-      invokeHandler = handler;
+    mockHandle.mockImplementation((channel, handler) => {
+      if (channel === 'go-to-url-message') {
+        invokeHandler = handler;
+      }
+      if (channel === 'go-to-url-cancel') {
+        cancelHandler = handler;
+      }
     });
   });
 
-  test('registers a single ipc handler and routes by sender id', async () => {
+  test('registers ipc handlers once and routes by sender id', async () => {
     const firstPromise = promptGoToUrl(parent);
     const secondPromise = promptGoToUrl(parent);
     const firstWindow = mockCreateBrowserWindow.mock.results[0]
@@ -60,7 +69,7 @@ describe('promptGoToUrl', () => {
     const secondWindow = mockCreateBrowserWindow.mock.results[1]
       .value as MockGoToUrlWindow;
 
-    expect(mockHandle).toHaveBeenCalledTimes(1);
+    expect(mockHandle).toHaveBeenCalledTimes(2);
 
     invokeHandler(
       { sender: { id: secondWindow.webContents.id } },
@@ -75,6 +84,21 @@ describe('promptGoToUrl', () => {
     await expect(secondPromise).resolves.toBe('https://second.example/');
     expect(firstWindow.close).toHaveBeenCalledTimes(1);
     expect(secondWindow.close).toHaveBeenCalledTimes(1);
+  });
+
+  test('resolves undefined when cancel is invoked', async () => {
+    const promise = promptGoToUrl(parent);
+    const window = mockCreateBrowserWindow.mock.results[0]
+      .value as MockGoToUrlWindow;
+    const closedHandler = window.on.mock.calls.find(
+      ([event]) => event === 'closed',
+    )?.[1] as () => void;
+
+    cancelHandler({ sender: { id: window.webContents.id } });
+    closedHandler();
+
+    await expect(promise).resolves.toBeUndefined();
+    expect(window.close).toHaveBeenCalledTimes(1);
   });
 
   test('resolves undefined when dialog closes without submit', async () => {

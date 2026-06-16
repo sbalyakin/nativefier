@@ -13,3 +13,10 @@ document.getElementById('go-to-url-form').addEventListener('submit', (event) => 
     window.nativefierGoToUrl.submit(url.trim());
   }
 });
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    window.nativefierGoToUrl.cancel();
+  }
+});
