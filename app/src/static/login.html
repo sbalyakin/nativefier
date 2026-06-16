@@ -2,23 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="light dark">
   <title>Login</title>
   <link rel="stylesheet" type="text/css" href="login.css">
 </head>
 <body>
-<form class="login-form" id="login-form">
-  <div>
-    <label for="username-input">Username</label>
-    <input type="text" id="username-input" autofocus/>
+  <div class="dialog">
+    <header class="dialog-header">
+      <h1 class="dialog-title">Sign in</h1>
+      <p class="dialog-subtitle">Enter your credentials to continue</p>
+    </header>
+    <div class="dialog-body">
+      <form class="dialog-form" id="login-form">
+        <div class="field">
+          <label for="username-input">Username</label>
+          <input type="text" id="username-input" autocomplete="username" autofocus/>
+        </div>
+        <div class="field">
+          <label for="password-input">Password</label>
+          <input type="password" id="password-input" autocomplete="current-password"/>
+        </div>
+        <div class="dialog-actions">
+          <button id="submit-form-button" class="dialog-button" type="submit">Login</button>
+        </div>
+      </form>
+    </div>
   </div>
-  <div>
-    <label for="password-input">Password</label>
-    <input type="password" id="password-input"/>
-  </div>
-  <div>
-    <button id="submit-form-button" type="submit">Login</button>
-  </div>
-</form>
-<script src="login.js"></script>
+  <script src="login.js"></script>
 </body>
 </html>

@@ -1,57 +1,185 @@
-label, input {
-  display: block;
+:root {
+  color-scheme: light dark;
+
+  --bg: #eef2f6;
+  --surface: #ffffff;
+  --surface-border: rgba(15, 23, 42, 0.1);
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --label: #475569;
+  --input-bg: #f8fafc;
+  --input-border: #cbd5e1;
+  --input-border-focus: #3b82f6;
+  --input-shadow-focus: rgba(59, 130, 246, 0.16);
+  --button-bg: #2563eb;
+  --button-bg-hover: #1d4ed8;
+  --button-text: #ffffff;
+  --shadow: 0 16px 40px rgba(15, 23, 42, 0.1);
 }
 
-* {
-  font-family: Verdana, sans-serif;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1419;
+    --surface: #1a2230;
+    --surface-border: rgba(148, 163, 184, 0.16);
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --label: #cbd5e1;
+    --input-bg: #111827;
+    --input-border: #334155;
+    --input-border-focus: #60a5fa;
+    --input-shadow-focus: rgba(96, 165, 250, 0.18);
+    --button-bg: #3b82f6;
+    --button-bg-hover: #60a5fa;
+    --button-text: #ffffff;
+    --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  }
 }
 
-html, body {
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
   height: 100%;
   margin: 0;
-  -webkit-app-region: drag;
+  overflow: hidden;
 }
-.login-form {
-  height: 100%;
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  padding: 12px;
+  -webkit-app-region: drag;
 }
 
-.login-form > div {
-  margin-bottom: 30px;
+.dialog {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
-.login-form > div > label {
-  margin-bottom: 25px;
-  letter-spacing: 5px;
-  font-weight: 100;
-  text-transform: uppercase;
-  font-size: 18px;
-  text-align: center;
-  color: rgba(0, 0, 0, 0.7);
+.dialog-header {
+  padding: 24px 24px 12px;
+  flex-shrink: 0;
 }
 
-.login-form > div > input {
-  height: 30px;
-  width: 225px;
-  font-size: 16px;
+.dialog-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.dialog-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.dialog-body {
+  flex-shrink: 0;
+  padding: 8px 24px 24px;
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.field input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9375rem;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
   -webkit-app-region: no-drag;
 }
 
-.login-form > div > button {
+.field input::placeholder {
+  color: var(--text-muted);
+}
+
+.field input:hover {
+  border-color: color-mix(in srgb, var(--input-border-focus) 35%, var(--input-border));
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 4px var(--input-shadow-focus);
+  background: var(--surface);
+}
+
+.dialog-actions {
+  display: flex;
+  margin-top: 6px;
+}
+
+.dialog-button {
+  width: 100%;
+  height: 42px;
   border: 0;
-  font-size: 15px;
-  font-weight: 100;
-  text-transform: uppercase;
-  height: 35px;
-  width: 225px;
-  background-color: #2196F3;
-  color: white;
+  border-radius: 10px;
+  background: var(--button-bg);
+  color: var(--button-text);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.15s ease;
   -webkit-app-region: no-drag;
 }
 
-button:hover {
-  background-color: #0D47A1;
+.dialog-button:hover {
+  background: var(--button-bg-hover);
+}
+
+.dialog-button:active {
+  transform: translateY(1px);
+}
+
+.dialog-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--input-shadow-focus);
 }

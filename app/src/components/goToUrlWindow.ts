@@ -57,8 +57,8 @@ export function promptGoToUrl(
     const goToUrlWindow = createBrowserWindow({
       parent: nativeTabsSupported() ? undefined : parent,
       modal: !nativeTabsSupported(),
-      width: 420,
-      height: 180,
+      width: 560,
+      height: 260,
       frame: false,
       resizable: false,
       webPreferences: {

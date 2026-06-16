@@ -18,8 +18,8 @@ export async function createLoginWindow(
 
   const loginWindow = createBrowserWindow({
     parent: nativeTabsSupported() ? undefined : parent,
-    width: 300,
-    height: 400,
+    width: 360,
+    height: 352,
     frame: false,
     resizable: false,
     webPreferences: {
