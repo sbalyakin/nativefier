@@ -5,6 +5,12 @@ import type {
 
 jest.mock('../helpers/helpers');
 import { isOSX } from '../helpers/helpers';
+jest.mock('../helpers/windowHelpers', () => ({
+  ...jest.requireActual('../helpers/windowHelpers'),
+  promptAndNavigateToUrl: jest.fn(() => Promise.resolve()),
+  getCurrentURL: jest.fn(() => 'https://example.com/'),
+}));
+import { promptAndNavigateToUrl } from '../helpers/windowHelpers';
 import { generateMenu } from './menu';
 
 function createMockBrowserWindow(): {
@@ -58,6 +64,30 @@ describe('generateMenu', () => {
     mockIsFullScreen.mockReturnValue(false);
     mockIsFullScreenable.mockReturnValue(true);
     mockIsSimpleFullScreen.mockReturnValue(false);
+  });
+
+  test('has Go to URL in the View menu', () => {
+    const menu = generateMenu(
+      {
+        nativefierVersion: '1.0.0',
+        zoom: 1.0,
+        disableDevTools: false,
+      },
+      window,
+    );
+
+    const viewMenu = menu.filter((item) => item.label === '&View');
+    const goToUrl = (
+      viewMenu[0].submenu as MenuItemConstructorOptions[]
+    ).filter((item) => item.label === 'Go to URL...');
+
+    expect(goToUrl).toHaveLength(1);
+    expect(goToUrl[0].accelerator).toBe('CmdOrCtrl+L');
+
+    // @ts-expect-error click is here TypeScript...
+    goToUrl[0].click(null, window);
+
+    expect(promptAndNavigateToUrl).toHaveBeenCalledTimes(1);
   });
 
   test('does not have fullscreen if not supported', () => {

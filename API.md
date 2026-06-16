@@ -917,6 +917,17 @@ Child windows created for internal navigation inherit the same defaults via `get
 
 The small login popup uses its own preload (`loginPreload.js`) and `contextBridge` API `nativefierLogin.submit(...)`. It does not use `require('electron')` in page scripts. This is internal to Nativefier; you only need to know it if you fork the runtime template.
 
+#### Application menu (navigation)
+
+| Action | Shortcut (macOS / Windows & Linux) |
+| --- | --- |
+| **Go to URL…** (View menu) | `Cmd+L` / `Ctrl+L` |
+| **Copy Current URL** (Edit menu) | `Cmd+Shift+L` / `Ctrl+Shift+L` |
+
+**Go to URL…** opens a dialog prefilled with the current page URL. Enter any `http:` or `https:` address to load it in the **same tab** that opened the menu (not whichever window happens to be focused afterward). URLs without a scheme default to `https://`. The same shell-safety rules as [external navigation](#block-external-urls) apply before loading.
+
+For OAuth or login redirects triggered by the site (not this dialog), use [`--internal-urls`](#internal-urls) and [known internal login pages](#internal-login-pages) so auth pages stay in the app.
+
 #### Screen share and notifications
 
 * **Display capture:** handled in the main process with `session.setDisplayMediaRequestHandler` (picker UI injected in the requesting page when needed). Preload no longer patches `navigator.mediaDevices.getDisplayMedia`.

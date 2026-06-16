@@ -25,6 +25,7 @@ import {
   goBack,
   goForward,
   goToURL,
+  promptAndNavigateToUrl,
   zoomIn,
   zoomOut,
   zoomReset,
@@ -120,7 +121,7 @@ export function generateMenu(
       },
       {
         label: 'Copy Current URL',
-        accelerator: 'CmdOrCtrl+L',
+        accelerator: 'CmdOrCtrl+Shift+L',
         click: (): void => writeClipboardText(getCurrentURL()),
       },
       {
@@ -164,6 +165,22 @@ export function generateMenu(
   const viewMenu: MenuItemConstructorOptions = {
     label: '&View',
     submenu: [
+      {
+        label: 'Go to URL...',
+        accelerator: 'CmdOrCtrl+L',
+        click: (
+          _item: MenuItem,
+          focusedWindow: BaseWindow | undefined,
+        ): void => {
+          const target = focusedBrowserWindow(focusedWindow, mainWindow);
+          promptAndNavigateToUrl(target, getCurrentURL()).catch((err: unknown) =>
+            log.error('promptAndNavigateToUrl ERROR', err),
+          );
+        },
+      },
+      {
+        type: 'separator',
+      },
       {
         label: 'Back',
         accelerator: isOSX() ? 'Cmd+Left' : 'Alt+Left',

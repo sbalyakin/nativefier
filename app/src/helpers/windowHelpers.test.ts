@@ -8,20 +8,33 @@ import { error } from 'loglevel';
 import { WindowOptions } from '../runtimeContract';
 
 const mockShowMessageBox = jest.fn();
+const mockLoadUrl = jest.fn();
 jest.mock('../adapters/dialogAdapter', () => ({
   ...jest.requireActual('../adapters/dialogAdapter'),
   showMessageBox: (...args: unknown[]): ReturnType<typeof mockShowMessageBox> =>
     mockShowMessageBox(...args),
 }));
+jest.mock('../adapters/windowAdapter', () => {
+  const actual = jest.requireActual('../adapters/windowAdapter');
+  return {
+    ...actual,
+    loadUrl: (...args: unknown[]): ReturnType<typeof mockLoadUrl> =>
+      mockLoadUrl(...args),
+  };
+});
 
 jest.mock('./helpers');
 import { getCSSToInject, nativeTabsSupported } from './helpers';
 jest.mock('./windowEvents');
+jest.mock('../components/goToUrlWindow');
+import { promptGoToUrl } from '../components/goToUrlWindow';
+import { isUrlShellSafe } from './helpers';
 import {
   clearAppData,
   createNewTab,
   getDefaultWindowOptions,
   injectCSS,
+  promptAndNavigateToUrl,
 } from './windowHelpers';
 
 const baseWindowOptions: WindowOptions = {
@@ -139,6 +152,13 @@ describe('clearAppData', () => {
 });
 
 describe('createNewTab', () => {
+  const actualWindowAdapter = jest.requireActual<
+    typeof import('../adapters/windowAdapter')
+  >('../adapters/windowAdapter');
+
+  beforeEach(() => {
+    mockLoadUrl.mockImplementation(actualWindowAdapter.loadUrl);
+  });
   // const window = new BrowserWindow();
   const options: WindowOptions = {
     autoHideMenuBar: true,
@@ -376,4 +396,76 @@ describe('injectCSS', () => {
       expect(mockWebContentsInsertCSS).toHaveBeenCalledTimes(1);
     },
   );
+});
+
+describe('promptAndNavigateToUrl', () => {
+  const mockPromptGoToUrl = promptGoToUrl as jest.MockedFunction<
+    typeof promptGoToUrl
+  >;
+  const mockIsUrlShellSafe = isUrlShellSafe as jest.MockedFunction<
+    typeof isUrlShellSafe
+  >;
+  const parent = { id: 'parent-window' } as unknown as BrowserWindow;
+
+  beforeEach(() => {
+    mockPromptGoToUrl.mockReset();
+    mockLoadUrl.mockReset().mockResolvedValue(undefined);
+    mockShowMessageBox.mockReset().mockResolvedValue({ response: 0 });
+    mockIsUrlShellSafe.mockReset().mockReturnValue({ blocked: false });
+  });
+
+  test('loads normalized url on the parent window', async () => {
+    mockPromptGoToUrl.mockResolvedValue('example.com/login');
+
+    await promptAndNavigateToUrl(parent);
+
+    expect(mockLoadUrl).toHaveBeenCalledWith(
+      parent,
+      'https://example.com/login',
+    );
+    expect(mockShowMessageBox).not.toHaveBeenCalled();
+  });
+
+  test('shows error on parent for invalid url', async () => {
+    mockPromptGoToUrl.mockResolvedValue('not a url');
+
+    await promptAndNavigateToUrl(parent);
+
+    expect(mockLoadUrl).not.toHaveBeenCalled();
+    expect(mockShowMessageBox).toHaveBeenCalledWith(
+      parent,
+      expect.objectContaining({
+        title: 'Navigation blocked',
+        message: 'URL "not a url" is invalid.',
+      }),
+    );
+  });
+
+  test('shows error on parent when url shell safety blocks', async () => {
+    mockPromptGoToUrl.mockResolvedValue('barf://unsafe.example');
+    mockIsUrlShellSafe.mockReturnValue({
+      blocked: true,
+      reason: 'URL protocol is disallowed.',
+    });
+
+    await promptAndNavigateToUrl(parent);
+
+    expect(mockLoadUrl).not.toHaveBeenCalled();
+    expect(mockShowMessageBox).toHaveBeenCalledWith(
+      parent,
+      expect.objectContaining({
+        title: 'Navigation blocked',
+        message: expect.stringContaining('barf://unsafe.example'),
+      }),
+    );
+  });
+
+  test('does nothing when dialog is cancelled', async () => {
+    mockPromptGoToUrl.mockResolvedValue(undefined);
+
+    await promptAndNavigateToUrl(parent);
+
+    expect(mockLoadUrl).not.toHaveBeenCalled();
+    expect(mockShowMessageBox).not.toHaveBeenCalled();
+  });
 });

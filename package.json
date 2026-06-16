@@ -32,7 +32,7 @@
   },
   "scripts": {
     "build-app": "cd app && webpack",
-    "build-app-static": "ncp app/src/static/ app/lib/static/ && ncp app/dist/loginPreload.js app/lib/loginPreload.js && ncp app/dist/loginPreload.js.map app/lib/loginPreload.js.map",
+    "build-app-static": "ncp app/src/static/ app/lib/static/ && ncp app/dist/loginPreload.js app/lib/loginPreload.js && ncp app/dist/loginPreload.js.map app/lib/loginPreload.js.map && ncp app/dist/goToUrlPreload.js app/lib/goToUrlPreload.js && ncp app/dist/goToUrlPreload.js.map app/lib/goToUrlPreload.js.map",
     "build": "npm run clean && tsc --build shared src app && chmod +x lib/cli.js && npm run build-app && npm run build-app-static",
     "build:watch": "npm run clean && tsc --build shared src app --watch",
     "changelog": "./.github/generate-changelog",

@@ -13,6 +13,7 @@ export type {
   Event,
   HandlerDetails,
   IpcMainEvent,
+  IpcMainInvokeEvent,
   IpcRenderer,
   Menu,
   MenuItem,

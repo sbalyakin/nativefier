@@ -36,10 +36,17 @@ import {
   setZoomFactor,
   showBrowserWindow,
 } from '../adapters/windowAdapter';
-import { getCSSToInject, isOSX, nativeTabsSupported } from './helpers';
+import {
+  getCSSToInject,
+  isOSX,
+  isUrlShellSafe,
+  nativeTabsSupported,
+} from './helpers';
+import { normalizeUrl } from '../../../shared/lib/src/options/normalizeUrl';
+import { promptGoToUrl } from '../components/goToUrlWindow';
 import * as log from './loggingHelper';
 import { serializeRendererParams } from '../config/runtimeSecrets';
-import { TrayValue, WindowOptions } from '../runtimeContract';
+import type { TrayValue, WindowOptions } from '../runtimeContract';
 import { randomUUID } from 'crypto';
 
 const ZOOM_INTERVAL = 0.1;
@@ -52,10 +59,11 @@ export function adjustWindowZoom(adjustment: number): void {
 
 export function showNavigationBlockedMessage(
   message: string,
+  parent?: BrowserWindow,
 ): Promise<MessageBoxReturnValue> {
   return new Promise((resolve, reject) => {
-    withFocusedWindow((focusedWindow) => {
-      showMessageBox(focusedWindow, {
+    const showInWindow = (window: BrowserWindow): void => {
+      showMessageBox(window, {
         message,
         type: 'error',
         title: 'Navigation blocked',
@@ -64,7 +72,14 @@ export function showNavigationBlockedMessage(
         .catch((err) => {
           reject(err);
         });
-    });
+    };
+
+    if (parent) {
+      showInWindow(parent);
+      return;
+    }
+
+    withFocusedWindow(showInWindow);
   });
 }
 
@@ -218,6 +233,36 @@ export function goForward(): void {
 
 export function goToURL(url: string): Promise<void> | undefined {
   return withFocusedWindow((focusedWindow) => loadUrl(focusedWindow, url));
+}
+
+export async function promptAndNavigateToUrl(
+  parent: BrowserWindow,
+  initialUrl?: string,
+): Promise<void> {
+  const url = await promptGoToUrl(parent, initialUrl);
+  if (!url) {
+    return;
+  }
+
+  let normalizedUrl: string;
+  try {
+    normalizedUrl = normalizeUrl(url);
+  } catch (err: unknown) {
+    log.error('normalizeUrl ERROR', err);
+    await showNavigationBlockedMessage(`URL "${url}" is invalid.`, parent);
+    return;
+  }
+
+  const urlShellSafety = isUrlShellSafe(normalizedUrl);
+  if (urlShellSafety.blocked) {
+    await showNavigationBlockedMessage(
+      `Navigation blocked to ${normalizedUrl}\n\n${urlShellSafety.reason}`,
+      parent,
+    );
+    return;
+  }
+
+  await loadUrl(parent, normalizedUrl);
 }
 
 export function hideWindow(

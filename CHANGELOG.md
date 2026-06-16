@@ -9,6 +9,7 @@
   * `--inject` scripts must **not** use `require('electron')` or `ipcRenderer`. Use the global `nativefier` bridge, especially `nativefier.session` (see [API.md](API.md#accessing-the-electron-session)).
   * Injected JS runs in the **preload** isolated world; it cannot expose globals to the loaded site's page scripts. Page-world changes require main-process `webContents.executeJavaScript` (advanced).
   * HTTP basic-auth login popup: dedicated `loginPreload` bridge (`nativefierLogin.submit`); no `require('electron')` in `login.js`.
+  * **Go to URL:** View menu → **Go to URL…** (`CmdOrCtrl+L` / `Ctrl+L`). Opens a small dialog to navigate the current tab to any URL (subject to the same shell-safety checks as external links). **Copy Current URL** moved to `CmdOrCtrl+Shift+L`.
   * Screen capture: `session.setDisplayMediaRequestHandler` in the main process (preload no longer patches `getDisplayMedia`).
   * Web notifications: main-world shim with per-navigation nonce, `postMessage` → `nativefier-notify` IPC (no `__nativefierNotify`); main validates token, rate-limits badge, and guards click (dock badge / tray hints unchanged).
   * Renderer `params` IPC and persisted `nativefier.json` omit secrets (`basicAuthPassword`, `basicAuthUsername`, `processEnvs`). Basic auth uses in-memory main-process handling only.
