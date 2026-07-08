@@ -1,21 +1,25 @@
 import 'source-map-support/register';
 
-import { buildNativefierApp } from './build/buildNativefierApp';
+import { buildWebholmApp } from './build/buildWebholmApp';
 import { RawOptions } from './buildTimeContract';
 
-export { buildNativefierApp };
+export { buildWebholmApp };
+
+/** @deprecated Use {@link buildWebholmApp}. */
+export { buildNativefierApp } from './build/buildWebholmApp';
 
 /**
  * Only for compatibility with Nativefier <= 7.7.1 !
- * Use the better, modern async `buildNativefierApp` instead if you can!
+ * Use the better, modern async `buildWebholmApp` instead if you can!
  */
-function buildNativefierAppOldCallbackStyle(
+function buildWebholmAppOldCallbackStyle(
   options: RawOptions,
   callback: (err?: Error, result?: string) => void,
 ): void {
-  buildNativefierApp(options)
+  buildWebholmApp(options)
     .then((result) => callback(undefined, result))
     .catch((err: Error) => callback(err));
 }
 
-export default buildNativefierAppOldCallbackStyle;
+/** @deprecated Use {@link buildWebholmApp}. */
+export default buildWebholmAppOldCallbackStyle;

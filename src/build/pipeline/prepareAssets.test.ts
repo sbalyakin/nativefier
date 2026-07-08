@@ -43,7 +43,7 @@ describe('copyIconsIfNecessary', () => {
   test('copies tray icon on darwin when tray is enabled', async () => {
     const options = {
       packager: { platform: 'darwin', icon: '/tmp/icons/app.icns' },
-      nativefier: { tray: 'true' },
+      webholm: { tray: 'true' },
     } as AppOptions;
     await copyIconsIfNecessary(options, '/tmp/app');
     expect(fs.copy).toHaveBeenCalledWith(

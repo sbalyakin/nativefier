@@ -1,8 +1,8 @@
 # Build Commands Catalog
 
-Below you'll find a list of build commands contributed by the Nativefier community. They are here as examples, to help you nativefy "complicated" apps that need a bit of elbow grease to work. We need your help to enrich it, as long as you follow these two guidelines:
+Below you'll find a list of build commands contributed by the Webholm and Nativefier community. They are here as examples, to help you nativefy "complicated" apps that need a bit of elbow grease to work. We need your help to enrich it, as long as you follow these two guidelines:
 
-1. Only add sites that require something special! No need to document here that `simplesite.com` works with a simple `nativefier simplesite.com` 🙂.
+1. Only add sites that require something special! No need to document here that `simplesite.com` works with a simple `webholm simplesite.com` 🙂.
 2. Please add commands with the _strict necessary_ to make an app work. For example,
    - Yes to mention that `--widevine` or some `--browserwindow-options` are necessary...
    - ... but don't add other flags that are pure personal preference (e.g. `--disable-dev-tools` or `--disk-cache-size`).
@@ -22,7 +22,7 @@ For those, try passing the [`--widevine`](API.md#widevine) option.
 You might be surprised to see settings persist after rebuilding your app.
 This occurs because the app cache lives separately from the app.
 
-Try deleting your app's cache, found at `<your_app_name_lower_case>-nativefier-<random_id>` in your OS’s "App Data" directory (Linux: `$XDG_CONFIG_HOME` or `~/.config` , MacOS: `~/Library/Application Support/` , Windows: `%APPDATA%` or `C:\Users\yourprofile\AppData\Roaming`)
+Try deleting your app's cache, found at `<your_app_name_lower_case>-webholm-<random_id>` in your OS’s "App Data" directory (Linux: `$XDG_CONFIG_HOME` or `~/.config` , MacOS: `~/Library/Application Support/` , Windows: `%APPDATA%` or `C:\Users\yourprofile\AppData\Roaming`)
 
 ### Window size and position
 
@@ -30,7 +30,7 @@ This allows the last set window size and position to be remembered and applied
 after your app is restarted. Note: PR welcome for a built-in fix for that :) .
 
 ```sh
-nativefier 'https://open.google.com/'
+webholm 'https://open.google.com/'
   --inject window.js
 ```
 
@@ -58,14 +58,14 @@ This example documents Google Sheets, but is applicable to other Google apps,
 e.g. Google Calendar, GMail, etc. If `firefox` doesn’t work, try `safari` .
 
 ```sh
-nativefier 'https://docs.google.com/spreadsheets' \
+webholm 'https://docs.google.com/spreadsheets' \
   --user-agent firefox
 ```
 
 ### Outlook
 
 ```sh
-nativefier 'https://outlook.office.com/mail'
+webholm 'https://outlook.office.com/mail'
   --internal-urls '.*?(outlook.live.com|outlook.office365.com).*?'
   --file-download-options '{"saveAs": true}'
   --browserwindow-options '{"webPreferences": { "webviewTag": true, "nodeIntegration": true, "nodeIntegrationInSubFrames": true } }'
@@ -76,7 +76,7 @@ Note: `--browserwindow-options` is needed to allow pop-outs when creating/editin
 ### Udemy
 
 ```sh
-nativefier 'https://www.udemy.com/'
+webholm 'https://www.udemy.com/'
   --internal-urls '.*?udemy.*?'
   --file-download-options '{"saveAs": true}'
   --widevine
@@ -87,7 +87,7 @@ Note: most videos will work, but to play some DRMed videos you must pass `--wide
 ### HBO Max
 
 ```sh
-nativefier 'https://play.hbomax.com/'
+webholm 'https://play.hbomax.com/'
   --widevine
   --enable-es3-apis
 && python -m castlabs_evs.vmp sign-pkg 'name_of_the_generated_hbo_app'
@@ -98,7 +98,7 @@ Note: as for Udemy, `--widevine` + [app signing](https://github.com/nativefier/n
 ### WhatsApp
 
 ```sh
-nativefier 'https://web.whatsapp.com/'
+webholm 'https://web.whatsapp.com/'
   --inject whatsapp.js
 ```
 
@@ -117,7 +117,7 @@ if ('serviceWorker' in navigator) {
 Another option to see WhatsApp or WhatsApp Business more macOS-like (macos only):
 
 ```sh
-nativefier https://web.whatsapp.com --name 'WhatsApp Business' --counter true --darwin-dark-mode-support true --title-bar-style hidden --inject whatsappmacos.css
+webholm https://web.whatsapp.com --name 'WhatsApp Business' --counter true --darwin-dark-mode-support true --title-bar-style hidden --inject whatsappmacos.css
 ```
 
 with this `whatsappmacos.css` to make the window draggable, and move the user avatar to the right:
@@ -140,7 +140,7 @@ div#app > div.os-mac > span:first-child {
 ### Spotify
 
 ```sh
-nativefier 'https://open.spotify.com/'
+webholm 'https://open.spotify.com/'
   --widevine
   --inject spotify.js
   --inject spotify.css
@@ -214,19 +214,19 @@ a[href='/download'] {
 
 ### Notion
 
-You can use Notion pages with Nativefier without much hassle, but Notion itself does not present an easy way to use HTML buttons. As such, if you want to use Notion Pages as a quick way to make dashboards and interactive panels, you will be restricted to only plain links and standard components. 
+You can use Notion pages with Webholm without much hassle, but Notion itself does not present an easy way to use HTML buttons. As such, if you want to use Notion Pages as a quick way to make dashboards and interactive panels, you will be restricted to only plain links and standard components. 
 
-With Nativefier you can now extend Notion's functionality and possibilities by adding HTML buttons that can call other javascript functions, since it enables you to inject custom Javascript and CSS.
+With Webholm you can now extend Notion's functionality and possibilities by adding HTML buttons that can call other javascript functions, since it enables you to inject custom Javascript and CSS.
 
 ```sh
-nativefier 'YOUR_NOTION_PAGE_SHARE_URL'
+webholm 'YOUR_NOTION_PAGE_SHARE_URL'
   --inject notion.js
   --inject notion.css
 ```
 
 Notes:
 
-- You can inject the notion.js and notion.css files by copying them to the resources/app/inject folder of your nativefier app.
+- You can inject the notion.js and notion.css files by copying them to the resources/app/inject folder of your webholm app.
 - In your Notion page, use [notionbutton]BUTTON_TEXT|BUTTON_ACTION[/notionbutton], where BUTTON_TEXT is the text contained in your button and BUTTON_ACTION is the action which will be called in your JS function.
 ```javascript
 /* notion.js */
@@ -285,7 +285,7 @@ After that, set your css file as follows:
 You can get an almost macOS look-alike using this:
 
 ```sh
-nativefier https://teams.microsoft.com --name 'Microsoft Teams' --counter true --darwin-dark-mode-support true --title-bar-style hidden --internal-urls "(.*)" --inject teamsapp.css
+webholm https://teams.microsoft.com --name 'Microsoft Teams' --counter true --darwin-dark-mode-support true --title-bar-style hidden --internal-urls "(.*)" --inject teamsapp.css
 ```
 Note that the `--internal-urls` argument is necessary to login.
 

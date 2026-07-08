@@ -18,7 +18,7 @@ const minimalAppOptions = (): AppOptions =>
       electronVersion: '42.1.0',
       quiet: true,
     },
-    nativefier: {
+    webholm: {
       accessibilityPrompt: true,
       alwaysOnTop: false,
       blockExternalUrls: false,
@@ -38,7 +38,7 @@ const minimalAppOptions = (): AppOptions =>
       inject: [],
       insecure: false,
       maximize: false,
-      nativefierVersion: '1.0.0',
+      webholmVersion: '1.0.0',
       showMenuBar: false,
       singleInstance: false,
       persistSessionCookies: false,

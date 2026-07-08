@@ -89,7 +89,7 @@
 - [Programmatic API](#programmatic-api)
 - [Accessing The Electron Session](#accessing-the-electron-session)
   - [Migration from `require('electron')` (breaking)](#migration-from-requireelectron-breaking)
-  - [`nativefier.session` API](#nativefiersession-api)
+  - [`webholm.session` API](#nativefiersession-api)
   - [Important Note On funcArgs](#important-note-on-funcargs)
   - [Errors](#errors)
   - [Complex Return Values](#complex-return-values)
@@ -98,12 +98,12 @@
 
 ## Packaging Squirrel-based installers
 
-See [PR #744 - Support packaging nativefier applications into Squirrel-based installers](https://github.com/nativefier/nativefier/pull/744)
+See [PR #744 - Support packaging webholm applications into Squirrel-based installers](https://github.com/nativefier/nativefier/pull/744)
 
 ## Command Line
 
 ```bash
-nativefier [options] [targetUrl] [dest]
+webholm [options] [targetUrl] [dest]
 ```
 
 You must provide:
@@ -121,11 +121,11 @@ The url to point the application at.
 
 Specifies the destination directory to build the app to.
 If no parameter is passed, defaults to the current working directory,
-or _[New in 46.0.5]_ the `NATIVEFIER_APPS_DIR` environment variable if set.
+or _[New in 46.0.5]_ the `WEBHOLM_APPS_DIR` environment variable if set.
 
-**Tip:** Add `export NATIVEFIER_APPS_DIR=~/Applications/` to your
+**Tip:** Add `export WEBHOLM_APPS_DIR=~/Applications/` to your
 `~/.bashrc` (or `~/.zshrc` or similar) to set the default app destination
-if none is passed. This lets you simply run `nativefier example.com` and
+if none is passed. This lets you simply run `webholm example.com` and
 have the app automatically built in your Applications folder.
 
 #### Help
@@ -142,7 +142,7 @@ Prints the usage information.
 -v, --version
 ```
 
-Prints the version of your `nativefier` install.
+Prints the version of your `webholm` install.
 
 ### App Creation Options
 
@@ -193,7 +193,7 @@ Notes:
 - When packaging for Windows, must be a path to a `.ico` file.
 - When packaging for Linux, must be a path to a `.png` file.
 - When packaging for macOS, must be a `.icns` or a `.png` file if the [optional dependencies](../README.md#optional-dependencies) are installed.
-  If your `PATH` has our image-conversion dependencies (`iconutil`, and either ImageMagick `convert` + `identify`, or GraphicsMagick `gm`), Nativefier will automatically convert the `.png` to a `.icns` for you.
+  If your `PATH` has our image-conversion dependencies (`iconutil`, and either ImageMagick `convert` + `identify`, or GraphicsMagick `gm`), Webholm will automatically convert the `.png` to a `.icns` for you.
 
 Alternative to macOS users: [iConvertIcons](https://iconverticons.com/online/) can be used to convert `.pngs`, though it can be quite cumbersome.
 
@@ -259,11 +259,11 @@ _IMPORTANT SECURITY NOTICE_: when creating a portable app, all data accumulated 
 --upgrade <pathToExistingApp>
 ```
 
-_[New in 43.1.0]_ This option will attempt to extract all existing options from the old app, and upgrade it using the current Nativefier CLI.
+_[New in 43.1.0]_ This option will attempt to extract all existing options from the old app, and upgrade it using the current Webholm CLI.
 
 _Important data safety note_: This action is an in-place upgrade, and will REPLACE the current application. In case this feature does not work as intended or as the user may wish, it is advised to make a backup of the app to be upgraded before using, or specify an alternate directory as you would when creating a new file.\*\*
 
-The provided path must be the "executable" of an application packaged with a previous version of Nativefier, and to be upgraded to the latest version of Nativefier. "Executable" means: the `.exe` file on Windows, the executable on Linux, or the `.app` on macOS. The executable must be living in the original context where it was generated (i.e., on Windows and Linux, the exe file must still be in the folder containing the generated `resources` directory).
+The provided path must be the "executable" of an application packaged with a previous version of Webholm, and to be upgraded to the latest version of Webholm. "Executable" means: the `.exe` file on Windows, the executable on Linux, or the `.app` on macOS. The executable must be living in the original context where it was generated (i.e., on Windows and Linux, the exe file must still be in the folder containing the generated `resources` directory).
 
 #### [widevine]
 
@@ -273,7 +273,7 @@ The provided path must be the "executable" of an application packaged with a pre
 
 _[New in 11.0.2]_ Use a Widevine-enabled version of Electron for DRM playback, see https://github.com/castlabs/electron-releases.
 
-Note: some sites using Widevine (like Udemy or HBO Max) may still refuse to load videos, and require EVS-signing your Nativefier app to work. Try signing your app using CastLabs tools. See https://github.com/castlabs/electron-releases/wiki/EVS and [#1147](https://github.com/nativefier/nativefier/issues/1147#issuecomment-828750362). TL;DR:
+Note: some sites using Widevine (like Udemy or HBO Max) may still refuse to load videos, and require EVS-signing your Webholm app to work. Try signing your app using CastLabs tools. See https://github.com/castlabs/electron-releases/wiki/EVS and [#1147](https://github.com/nativefier/nativefier/issues/1147#issuecomment-828750362). TL;DR:
 
 ```bash
 # Install CastLabs tools:
@@ -360,10 +360,10 @@ See [Electron's BrowserWindow API Documentation](https://electronjs.org/docs/api
 Example:
 
 ```bash
-nativefier <your-website> --browserwindow-options '{ "webPreferences": { "defaultFontFamily": { "standard": "Comic Sans MS", "serif": "Comic Sans MS" } } }'
+webholm <your-website> --browserwindow-options '{ "webPreferences": { "defaultFontFamily": { "standard": "Comic Sans MS", "serif": "Comic Sans MS" } } }'
 ```
 
-**Merge order (54.0.0+):** Nativefier applies secure `webPreferences` first, then merges your `webPreferences` object, then spreads the rest of your BrowserWindow options. Keys you set in `--browserwindow-options` → `webPreferences` **override** the defaults. That is intentional for advanced cases (custom fonts, `webviewTag`, legacy integrations) but can weaken security if you set `contextIsolation: false`, `nodeIntegration: true`, or `sandbox: false`.
+**Merge order (54.0.0+):** Webholm applies secure `webPreferences` first, then merges your `webPreferences` object, then spreads the rest of your BrowserWindow options. Keys you set in `--browserwindow-options` → `webPreferences` **override** the defaults. That is intentional for advanced cases (custom fonts, `webviewTag`, legacy integrations) but can weaken security if you set `contextIsolation: false`, `nodeIntegration: true`, or `sandbox: false`.
 
 | Default (main window) | Value |
 | --- | --- |
@@ -465,7 +465,7 @@ a JSON string of key/value pairs to be set as environment variables before any b
 Example:
 
 ```bash
-nativefier <your-geolocation-enabled-website> --process-envs '{"GOOGLE_API_KEY": "<your-google-api-key>"}'
+webholm <your-geolocation-enabled-website> --process-envs '{"GOOGLE_API_KEY": "<your-google-api-key>"}'
 ```
 
 #### [show-menu-bar]
@@ -525,7 +525,7 @@ header div:first-child {
 ```
 
 ```sh
-nativefier http://google.com --inject site.css --title-bar-style 'hiddenInset'
+webholm http://google.com --inject site.css --title-bar-style 'hiddenInset'
 ```
 
 #### [tray]
@@ -585,7 +585,7 @@ _[New in 7.6.0]_ A JSON string of key/value pairs to be set as file download opt
 Example:
 
 ```bash
-nativefier <your-website> --file-download-options '{"saveAs": true}'
+webholm <your-website> --file-download-options '{"saveAs": true}'
 ```
 
 #### [global-shortcuts]
@@ -700,7 +700,7 @@ _Note about JS injection:_ injected JS is loaded _after_ `DOMContentLoaded`, so 
 **Inject JavaScript contract (secure renderer):**
 
 - Do **not** use `require('electron')` or `ipcRenderer` in `--inject` scripts.
-- Use the global `nativefier` bridge instead, especially `nativefier.session` for Electron `session` access (see [Accessing The Electron Session](#accessing-the-electron-session)).
+- Use the global `webholm` bridge instead, especially `webholm.session` for Electron `session` access (see [Accessing The Electron Session](#accessing-the-electron-session)).
 - Injected code cannot expose globals to the loaded website's page scripts. To run code in the page world, use main-process `webContents.executeJavaScript` (advanced; rarely needed).
 - CSS injection is unchanged (injected via main process).
 
@@ -709,7 +709,7 @@ _Note about CSS injection:_ to override existing CSS rules, you need to use the 
 Example:
 
 ```bash
-nativefier http://google.com --inject ./some-js-injection.js --inject ./some-css-injection.css ~/Desktop
+webholm http://google.com --inject ./some-js-injection.js --inject ./some-css-injection.css ~/Desktop
 ```
 
 #### [lang]
@@ -740,7 +740,7 @@ _[New in 44.0.0]_ The following short codes are also supported to generate a use
 --user-agent-honest, --honest
 ```
 
-By default, Nativefier uses a preset user agent string for your OS and masquerades as a regular Google Chrome browser, so that for some sites, it will not say that the current browser is unsupported.
+By default, Webholm uses a preset user agent string for your OS and masquerades as a regular Google Chrome browser, so that for some sites, it will not say that the current browser is unsupported.
 
 If this flag is passed, it will not override the user agent, and use Electron's default generated one for your app.
 
@@ -775,7 +775,7 @@ Forbid navigation to URLs not considered "internal" (see '--internal-urls'). Ins
 Example:
 
 ```bash
-nativefier https://google.com --internal-urls ".*?\.google\.*?" --block-external-urls
+webholm https://google.com --internal-urls ".*?\.google\.*?" --block-external-urls
 ```
 
 Blocks navigation to any URLs except Google and its subdomains.
@@ -787,7 +787,7 @@ Blocks navigation to any URLs except Google and its subdomains.
 ```
 
 Regular expression of URLs to consider "internal" while following a hyperlink.
-Internal URLs will open in Nativefier, other URLs will open in your preferred browser.
+Internal URLs will open in Webholm, other URLs will open in your preferred browser.
 
 Defaults to view as "internal" two URLs that share the same base domain,
 once stripped of `www.`. For example, by default,
@@ -798,13 +798,13 @@ once stripped of `www.`. For example, by default,
 Example of `--internal-urls` causing all links to Google to be considered internal:
 
 ```bash
-nativefier https://google.com --internal-urls ".*?\.google\.*?"
+webholm https://google.com --internal-urls ".*?\.google\.*?"
 ```
 
-To turn off base domain matching, use [`--strict-internal-urls`](#strict-internal-urls).  Or, if you never expect Nativefier to open an "external" page in your OS browser,
+To turn off base domain matching, use [`--strict-internal-urls`](#strict-internal-urls).  Or, if you never expect Webholm to open an "external" page in your OS browser,
 
 ```bash
-nativefier https://google.com --internal-urls ".*?"
+webholm https://google.com --internal-urls ".*?"
 ```
 
 ##### Internal Login Pages
@@ -856,7 +856,7 @@ _[New in 7.7.1]_ See [Electron proxyRules](https://electronjs.org/docs/api/sessi
 Example:
 
 ```bash
-nativefier https://google.com --proxy-rules http://127.0.0.1:1080
+webholm https://google.com --proxy-rules http://127.0.0.1:1080
 ```
 
 ### Auth Options
@@ -899,7 +899,7 @@ _[New in 7.4.1]_ Passes the ignore-gpu-blacklist flag to the Chrome engine, to a
 
 ### Secure renderer (54.0.0+)
 
-From Nativefier **54.0.0**, packaged apps use Electron's recommended renderer isolation by default. This section summarizes behavior that changed from 53.x and earlier; see [CHANGELOG.md](CHANGELOG.md) for the full list.
+From Webholm **54.0.0**, packaged apps use Electron's recommended renderer isolation by default. This section summarizes behavior that changed from 53.x and earlier; see [CHANGELOG.md](CHANGELOG.md) for the full list.
 
 #### Main window `webPreferences`
 
@@ -907,15 +907,15 @@ From Nativefier **54.0.0**, packaged apps use Electron's recommended renderer is
 | --- | --- | --- |
 | `contextIsolation` | `true` | Preload runs in an isolated world; page scripts do not see preload globals except via `contextBridge`. |
 | `nodeIntegration` | `false` | No Node.js in the page or preload beyond what preload explicitly loads. |
-| `sandbox` | `true` | Set to `false` only when `flashPluginDir` is present in runtime config (legacy Flash / PPAPI). If Flash is inferred at runtime but not stored in `nativefier.json`, sandbox stays `true`. |
+| `sandbox` | `true` | Set to `false` only when `flashPluginDir` is present in runtime config (legacy Flash / PPAPI). If Flash is inferred at runtime but not stored in `webholm.json`, sandbox stays `true`. |
 | `webSecurity` | `true` | `--insecure` sets this to `false` only; isolation flags are unchanged. |
-| `preload` | `preload.js` | Sets up `nativefier` bridge, inject scripts, and IPC helpers. |
+| `preload` | `preload.js` | Sets up `webholm` bridge, inject scripts, and IPC helpers. |
 
 Child windows created for internal navigation inherit the same defaults via `getDefaultWindowOptions`.
 
 #### Login window (HTTP basic auth)
 
-The small login popup uses its own preload (`loginPreload.js`) and `contextBridge` API `nativefierLogin.submit(...)`. It does not use `require('electron')` in page scripts. This is internal to Nativefier; you only need to know it if you fork the runtime template.
+The small login popup uses its own preload (`loginPreload.js`) and `contextBridge` API `webholmLogin.submit(...)`. It does not use `require('electron')` in page scripts. This is internal to Webholm; you only need to know it if you fork the runtime template.
 
 #### Application menu (navigation)
 
@@ -931,13 +931,13 @@ For OAuth or login redirects triggered by the site (not this dialog), use [`--in
 #### Screen share and notifications
 
 * **Display capture:** handled in the main process with `session.setDisplayMediaRequestHandler` (picker UI injected in the requesting page when needed). Preload no longer patches `navigator.mediaDevices.getDisplayMedia`.
-* **Notifications:** a main-world shim wraps the site `Notification` API. Each navigation gets a fresh nonce token (injected only inside the shim closure, not on `window`). The shim sends `postMessage` to the isolated preload, which forwards `nativefier-notify` IPC. Main validates the token, rate-limits badge updates, and requires a prior valid `create` before honoring `click`. There is no `__nativefierNotify` global. Untrusted sites and XSS can still abuse badge hints within those limits; see [architecture.md](docs/architecture.md#notification-channel-known-limitation). OS notifications still fire as before.
+* **Notifications:** a main-world shim wraps the site `Notification` API. Each navigation gets a fresh nonce token (injected only inside the shim closure, not on `window`). The shim sends `postMessage` to the isolated preload, which forwards `webholm-notify` IPC. Main validates the token, rate-limits badge updates, and requires a prior valid `create` before honoring `click`. There is no `__nativefierNotify` global. Untrusted sites and XSS can still abuse badge hints within those limits; see [architecture.md](docs/architecture.md#notification-channel-known-limitation). OS notifications still fire as before.
 
 #### Inject scripts and secrets
 
 * **`--inject`:** see [inject](#inject) and [Accessing The Electron Session](#accessing-the-electron-session). Do not use `require('electron')`.
 * **Renderer config:** the `params` IPC channel sends a whitelist of UI/URL fields only (no passwords or `processEnvs`).
-* **Disk config:** when runtime settings are rewritten, `basicAuthPassword`, `basicAuthUsername`, and `processEnvs` are stripped from `nativefier.json`.
+* **Disk config:** when runtime settings are rewritten, `basicAuthPassword`, `basicAuthUsername`, and `processEnvs` are stripped from `webholm.json`.
 
 #### Override defaults (`--browserwindow-options`)
 
@@ -947,11 +947,11 @@ If you must relax isolation (e.g. a site that needs `webviewTag` and `nodeIntegr
 
 #### [disable-old-build-warning-yesiknowitisinsecure]
 
-Disables the warning shown when opening a Nativefier app made a long time ago, using an old and probably insecure Electron. Nativefier uses the Chrome browser (through Electron), and remaining on an old version is A. performance sub-optimal and B. dangerous.
+Disables the warning shown when opening a Webholm app made a long time ago, using an old and probably insecure Electron. Webholm uses the Chrome browser (through Electron), and remaining on an old version is A. performance sub-optimal and B. dangerous.
 
-However, there are legitimate use cases to disable such a warning. For example, if you are using Nativefier to ship a kiosk app exposing an internal site (over which you have control). Under those circumstances, it is reasonable to disable this warning that you definitely don't want end-users to see.
+However, there are legitimate use cases to disable such a warning. For example, if you are using Webholm to ship a kiosk app exposing an internal site (over which you have control). Under those circumstances, it is reasonable to disable this warning that you definitely don't want end-users to see.
 
-More description about the options for `nativefier` can be found at the above [section](#command-line).
+More description about the options for `webholm` can be found at the above [section](#command-line).
 
 #### [ignore-certificate]
 
@@ -1040,7 +1040,7 @@ Enables crash reporting and set the URL to submit crash reports to
 Example:
 
 ```bash
-nativefier http://google.com --crash-reporter https://electron-crash-reporter.appspot.com/PROJECT_ID/create/
+webholm http://google.com --crash-reporter https://electron-crash-reporter.appspot.com/PROJECT_ID/create/
 ```
 
 #### [verbose]
@@ -1070,14 +1070,14 @@ a JSON string of key/value pairs of application metadata (ProductName, InternalN
 Example:
 
 ```bash
-nativefier <your-geolocation-enabled-website> --win32metadata '{"ProductName": "Your Product Name", "InternalName", "Your Internal Name", "FileDescription": "Your File Description"}'
+webholm <your-geolocation-enabled-website> --win32metadata '{"ProductName": "Your Product Name", "InternalName", "Your Internal Name", "FileDescription": "Your File Description"}'
 ```
 
 ### Flash Options (DEPRECATED)
 
 #### [flash] and [flash-path] (DEPRECATED)
 
-_DEPRECATED as of 2021-03-10, will be removed at some point_: There's nothing Nativefier can do to stop this treadmill, so here it goes.
+_DEPRECATED as of 2021-03-10, will be removed at some point_: There's nothing Webholm can do to stop this treadmill, so here it goes.
 Flash is triply dead upstream: at Adobe, in Chrome, and now in Electron.
 Nativefier 43.0.0 was just released, and defaults to Electron 12, which
 [removes support for Flash](https://www.electronjs.org/blog/electron-12-0#breaking-changes):
@@ -1101,7 +1101,7 @@ when maintaining compatibility with old Electrons becomes impossible.
 --flash
 ```
 
-If `--flash` is specified, Nativefier will automatically try to determine the
+If `--flash` is specified, Webholm will automatically try to determine the
 location of your Google Chrome flash binary. Take note that the version of Chrome
 on your computer should be the same as the version used by the version of Electron
 for the Nativefied package.
@@ -1123,13 +1123,13 @@ In addition to CLI flags, Nativefier offers a programmatic Node.js API.
 
 ```bash
 # install and save to package.json
-npm install --save nativefier
+npm install --save webholm
 ```
 
 In your `.js` file:
 
 ```javascript
-var nativefier = require('nativefier').default;
+var webholm = require('webholm').default;
 
 // possible options, defaults unless specified otherwise
 var options = {
@@ -1179,7 +1179,7 @@ nativefier(options, function (error, appPath) {
 
 ## Accessing The Electron Session
 
-Sometimes there are Electron features that are exposed via the [Electron `session` API](https://www.electronjs.org/docs/api/session), that may not be exposed via Nativefier options. These can be accessed from an injected JavaScript file (via `--inject`) through the `nativefier.session` bridge exposed in the preload context.
+Sometimes there are Electron features that are exposed via the [Electron `session` API](https://www.electronjs.org/docs/api/session), that may not be exposed via Nativefier options. These can be accessed from an injected JavaScript file (via `--inject`) through the `webholm.session` bridge exposed in the preload context.
 
 **Warning**: using this feature means relying on Electron's `session` API, which is not a standard web API and subject to potential [Breaking Changes](https://www.electronjs.org/docs/breaking-changes) at each major Electron upgrade.
 
@@ -1187,40 +1187,40 @@ Sometimes there are Electron features that are exposed via the [Electron `sessio
 
 | Before (removed) | After |
 | --- | --- |
-| `const electron = require('electron')` | Use global `nativefier` (no import) |
-| `electron.ipcRenderer.send('session-interaction', { property: 'x' })` | `await nativefier.session.get('x')` |
-| `electron.ipcRenderer.send('session-interaction', { property: 'x', propertyValue: v })` | `await nativefier.session.set('x', v)` |
-| `electron.ipcRenderer.send('session-interaction', { func: 'f', funcArgs: [a] })` | `await nativefier.session.call('f', [a])` |
+| `const electron = require('electron')` | Use global `webholm` (no import) |
+| `electron.ipcRenderer.send('session-interaction', { property: 'x' })` | `await webholm.session.get('x')` |
+| `electron.ipcRenderer.send('session-interaction', { property: 'x', propertyValue: v })` | `await webholm.session.set('x', v)` |
+| `electron.ipcRenderer.send('session-interaction', { func: 'f', funcArgs: [a] })` | `await webholm.session.call('f', [a])` |
 | `ipcRenderer.on('session-interaction-reply', ...)` | `await` on the promise returned by `get` / `set` / `call` |
-| `ipcRenderer.sendSync('session-interaction', ...)` | Not supported; use async `nativefier.session.*` |
+| `ipcRenderer.sendSync('session-interaction', ...)` | Not supported; use async `webholm.session.*` |
 
-### `nativefier.session` API
+### `webholm.session` API
 
 All methods return a `Promise`. Optional `{ id: 'my-step' }` correlates concurrent operations (same as the legacy `session-interaction` request `id`).
 
 **Get** a `session` property:
 
 ```javascript
-const languages = await nativefier.session.get('availableSpellCheckerLanguages');
+const languages = await webholm.session.get('availableSpellCheckerLanguages');
 ```
 
 **Set** a `session` property:
 
 ```javascript
-await nativefier.session.set('spellCheckerEnabled', true);
+await webholm.session.set('spellCheckerEnabled', true);
 ```
 
 **Call** a `session` function:
 
 ```javascript
-await nativefier.session.call('clearCache');
+await webholm.session.call('clearCache');
 ```
 
 **Call** with arguments (`funcArgs` is always an array of arguments, even for a single argument):
 
 ```javascript
-await nativefier.session.call('setDownloadPath', ['/home/user/downloads']);
-await nativefier.session.call('setSpellCheckerLanguages', [['fr']]);
+await webholm.session.call('setDownloadPath', ['/home/user/downloads']);
+await webholm.session.call('setSpellCheckerLanguages', [['fr']]);
 ```
 
 If neither a function nor a property is provided internally, the bridge rejects the promise.
@@ -1235,7 +1235,7 @@ Failed interactions reject the promise:
 
 ```javascript
 try {
-  await nativefier.session.call('thisFunctionDoesNotExist');
+  await webholm.session.call('thisFunctionDoesNotExist');
 } catch (err) {
   console.error('session call failed', err);
 }
@@ -1249,7 +1249,7 @@ For example, reading `cookies` as a property returns an error instead of a usabl
 
 ```javascript
 try {
-  await nativefier.session.get('cookies');
+  await webholm.session.get('cookies');
 } catch (err) {
   console.error(err);
 }
@@ -1261,20 +1261,20 @@ This script, injected via `--inject`, enables spell check, reads available langu
 
 ```javascript
 (async () => {
-  const enabled = await nativefier.session.call('isSpellCheckerEnabled');
+  const enabled = await webholm.session.call('isSpellCheckerEnabled');
   console.log('SpellChecker enabled?', enabled);
 
   if (!enabled) {
-    await nativefier.session.set('spellCheckerEnabled', true);
+    await webholm.session.set('spellCheckerEnabled', true);
   }
 
-  const languages = await nativefier.session.get(
+  const languages = await webholm.session.get(
     'availableSpellCheckerLanguages',
   );
   console.log('Available spellChecker languages:', languages);
 
   if (languages.indexOf('fr') > -1) {
-    await nativefier.session.call('setSpellCheckerLanguages', [['fr']]);
+    await webholm.session.call('setSpellCheckerLanguages', [['fr']]);
     console.log('SpellChecker language was set to fr.');
   } else {
     console.log("Not changing spellChecker language. 'fr' is not supported.");
@@ -1284,4 +1284,4 @@ This script, injected via `--inject`, enables spell check, reads available langu
 
 ### Legacy IPC (internal)
 
-The main process still handles `session-interaction` / `session-interaction-reply` IPC. Inject scripts must use `nativefier.session` only; direct `ipcRenderer` access from inject is not supported.
+The main process still handles `session-interaction` / `session-interaction-reply` IPC. Inject scripts must use `webholm.session` only; direct `ipcRenderer` access from inject is not supported.

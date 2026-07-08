@@ -73,12 +73,12 @@ export function createMenu(
 export function generateMenu(
   options: {
     disableDevTools: boolean;
-    nativefierVersion: string;
+    webholmVersion: string;
     zoom?: number;
   },
   mainWindow: BrowserWindow,
 ): MenuItemConstructorOptions[] {
-  const { nativefierVersion, zoom, disableDevTools } = options;
+  const { webholmVersion, zoom, disableDevTools } = options;
   const zoomResetLabel =
     !zoom || zoom === 1.0
       ? 'Reset Zoom'
@@ -318,12 +318,12 @@ export function generateMenu(
     role: 'help',
     submenu: [
       {
-        label: `Built with Nativefier v${nativefierVersion}`,
+        label: `Built with Webholm v${webholmVersion}`,
         click: (): void => {
           openExternal('https://github.com/nativefier/nativefier').catch(
             (err: unknown): void =>
               log.error(
-                'Built with Nativefier v${nativefierVersion}.click ERROR',
+                'Built with Webholm v${webholmVersion}.click ERROR',
                 err,
               ),
           );

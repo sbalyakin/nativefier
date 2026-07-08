@@ -42,10 +42,10 @@ function request_feedback() {
 
 printf "\n***** SMOKE TEST 1: Setting up test and building app... *****\n"
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-nativefier_dir="$script_dir/.."
-pushd "$nativefier_dir"
-tmp_dir=$(mktemp -d -t nativefier-manual-test-XXXXX)
-name="nativefier-smoke-test-1"
+webholm_dir="$script_dir/.."
+pushd "$webholm_dir"
+tmp_dir=$(mktemp -d -t webholm-manual-test-XXXXX)
+name="webholm-smoke-test-1"
 resources_dir="$tmp_dir/resources"
 mkdir "$resources_dir"
 injected_css="$resources_dir/inject.css"
@@ -70,8 +70,8 @@ request_feedback "$tmp_dir"
 # ------------------------------------------------------------------------------
 
 printf '\n***** SMOKE TEST 2: Setting up test and building app... *****\n'
-tmp_dir=$(mktemp -d -t nativefier-manual-test-tray-XXXXX)
-name='nativefier-smoke-test-2'
+tmp_dir=$(mktemp -d -t webholm-manual-test-tray-XXXXX)
+name='webholm-smoke-test-2'
 node ./lib/cli.js 'https://google.com/' \
   --name "$name" \
   --tray \
@@ -87,8 +87,8 @@ request_feedback "$tmp_dir"
 # ------------------------------------------------------------------------------
 
 printf '\n***** SMOKE TEST 3: Setting up test and building app... *****\n'
-tmp_dir=$(mktemp -d -t nativefier-manual-test-start-in-tray-XXXXX)
-name='nativefier-smoke-test-3'
+tmp_dir=$(mktemp -d -t webholm-manual-test-start-in-tray-XXXXX)
+name='webholm-smoke-test-3'
 node ./lib/cli.js 'https://google.com/' \
   --name "$name" \
   --tray start-in-tray \
@@ -105,9 +105,9 @@ request_feedback "$tmp_dir"
 # ------------------------------------------------------------------------------
 
 printf '\n***** SMOKE TEST 4: Setting up test and building app... *****\n'
-tmp_dir=$(mktemp -d -t nativefier-manual-test-get-media-devices)
-name='nativefier-smoke-test-4'
-node ./lib/cli.js 'https://meet.jit.si/nativefier-test' \
+tmp_dir=$(mktemp -d -t webholm-manual-test-get-media-devices)
+name='webholm-smoke-test-4'
+node ./lib/cli.js 'https://meet.jit.si/webholm-test' \
   --name "$name" \
   "$tmp_dir"
 

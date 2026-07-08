@@ -4,5 +4,5 @@ document.getElementById('login-form').addEventListener('submit', (event) => {
   const username = usernameInput.value;
   const passwordInput = document.getElementById('password-input');
   const password = passwordInput.value;
-  window.nativefierLogin.submit(username, password);
+  window.webholmLogin.submit(username, password);
 });

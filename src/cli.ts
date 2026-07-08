@@ -11,7 +11,7 @@ import {
   getProcessEnvs,
   isArgFormatInvalid,
 } from './helpers/helpers';
-import { buildNativefierApp } from './main';
+import { buildWebholmApp } from './main';
 import { RawOptions } from './buildTimeContract';
 import { applyOptionSchemaToYargs } from './options/optionSchema';
 import { parseJson } from './utils/parseUtils';
@@ -32,7 +32,7 @@ type YargsArgvSync<T> = {
 export function initArgs(argv: string[]): yargs.Argv<RawOptions> {
   const sanitizedArgs = sanitizeArgs(argv);
   let args = yargsFactory(sanitizedArgs)
-    .scriptName('nativefier')
+    .scriptName('webholm')
     .usage(
       '$0 <targetUrl> [outputDirectory] [other options]\nor\n$0 --upgrade <pathToExistingApp> [other options]',
     )
@@ -42,7 +42,7 @@ export function initArgs(argv: string[]): yargs.Argv<RawOptions> {
     )
     .example(
       '$0 --upgrade <pathToExistingApp>',
-      'Upgrade (in place) the existing Nativefier app at <pathToExistingApp>',
+      'Upgrade (in place) the existing Webholm app at <pathToExistingApp>',
     )
     .example(
       '$0 <targetUrl> -p <platform> -a <arch>',
@@ -59,7 +59,7 @@ export function initArgs(argv: string[]): yargs.Argv<RawOptions> {
     })
     .positional('outputDirectory', {
       defaultDescription:
-        'defaults to the current directory, or env. var. NATIVEFIER_APPS_DIR if set',
+        'defaults to the current directory, or env. var. WEBHOLM_APPS_DIR (or legacy NATIVEFIER_APPS_DIR) if set',
       description: 'the directory to generate the app in',
       normalize: true,
       type: 'string',
@@ -124,14 +124,14 @@ export function parseArgs(args: yargs.Argv<RawOptions>): RawOptions {
 
     if (targetAndUpgrade) {
       throw new Error(
-        'ERROR: Nativefier must be called with either a targetUrl or the --upgrade option, not both.\n',
+        'ERROR: Webholm must be called with either a targetUrl or the --upgrade option, not both.\n',
       );
     }
   }
 
   if (!parsed.targetUrl && !parsed.upgrade) {
     throw new Error(
-      'ERROR: Nativefier must be called with either a targetUrl or the --upgrade option.\n',
+      'ERROR: Webholm must be called with either a targetUrl or the --upgrade option.\n',
     );
   }
 
@@ -147,7 +147,7 @@ export function parseArgs(args: yargs.Argv<RawOptions>): RawOptions {
     if (parsed[arg] && typeof parsed[arg] === 'string') {
       parsed[arg] = parseJson(parsed[arg] as string);
       // sets fileDownloadOptions and browserWindowOptions
-      // as parsed object as they were still strings in `nativefier.json`
+      // as parsed object as they were still strings in `webholm.json`
       // because only their snake-cased variants were being parsed above
       parsed[camelCased(arg)] = parsed[arg];
     }
@@ -164,7 +164,7 @@ function sanitizeArgs(argv: string[]): string[] {
   argv.forEach((arg) => {
     if (isArgFormatInvalid(arg)) {
       throw new Error(
-        `Invalid argument passed: ${arg} .\nNativefier supports short options (like "-n") and long options (like "--name"), all lowercase. Run "nativefier --help" for help.\nAborting`,
+        `Invalid argument passed: ${arg} .\nWebholm supports short options (like "-n") and long options (like "--name"), all lowercase. Run "webholm --help" for help.\nAborting`,
       );
     }
     const isLastArg = sanitizedArgs.length + 1 === argv.length;
@@ -235,11 +235,15 @@ if (require.main === module) {
 
   checkInternet();
 
-  if (!options.out && process.env.NATIVEFIER_APPS_DIR) {
-    options.out = process.env.NATIVEFIER_APPS_DIR;
+  if (!options.out) {
+    if (process.env.WEBHOLM_APPS_DIR) {
+      options.out = process.env.WEBHOLM_APPS_DIR;
+    } else if (process.env.NATIVEFIER_APPS_DIR) {
+      options.out = process.env.NATIVEFIER_APPS_DIR;
+    }
   }
 
-  buildNativefierApp(options)
+  buildWebholmApp(options)
     .then(() => {
       process.exit(0);
     })

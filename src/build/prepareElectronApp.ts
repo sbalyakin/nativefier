@@ -12,7 +12,8 @@ const execFileAsync = promisify(execFile);
 import { generateRandomSuffix } from '../helpers/helpers';
 import {
   AppOptions,
-  NATIVEFIER_JSON_FILENAME,
+  LEGACY_NATIVEFIER_JSON_FILENAME,
+  WEBHOLM_JSON_FILENAME,
   PackageJSON,
 } from '../buildTimeContract';
 import { parseJson } from '../utils/parseUtils';
@@ -33,7 +34,7 @@ async function maybeCopyScripts(
   for (const src of srcs) {
     if (!fs.existsSync(src)) {
       throw new Error(
-        `File ${src} not found. Note that Nativefier expects *local* files, not URLs.`,
+        `File ${src} not found. Note that Webholm expects *local* files, not URLs.`,
       );
     }
 
@@ -64,7 +65,7 @@ export function normalizeAppName(appName: string, url: string): string {
     .toLowerCase()
     .replace(/[,:.]/g, '')
     .replace(/[\s_]/g, '-');
-  return `${normalized}-nativefier-${postFixHash}`;
+  return `${normalized}-webholm-${postFixHash}`;
 }
 
 const DARWIN_ENTITLEMENTS_IN_APP =
@@ -216,22 +217,22 @@ export async function prepareElectronApp(
     }`;
   }
 
-  const appJsonPath = path.join(dest, NATIVEFIER_JSON_FILENAME);
+  const appJsonPath = path.join(dest, WEBHOLM_JSON_FILENAME);
   const pickedOptions = mapAppOptionsToOutputOptions(options);
   log.debug(`Writing app config to ${appJsonPath}`, pickedOptions);
   await fs.writeFile(appJsonPath, JSON.stringify(pickedOptions));
 
-  if (options.nativefier.bookmarksMenu) {
+  if (options.webholm.bookmarksMenu) {
     const bookmarksJsonPath = path.join(dest, '/bookmarks.json');
     try {
-      await fs.copy(options.nativefier.bookmarksMenu, bookmarksJsonPath);
+      await fs.copy(options.webholm.bookmarksMenu, bookmarksJsonPath);
     } catch (err: unknown) {
       log.error('Error copying bookmarks menu config file.', err);
     }
   }
 
   try {
-    await maybeCopyScripts(options.nativefier.inject, dest);
+    await maybeCopyScripts(options.webholm.inject, dest);
   } catch (err: unknown) {
     log.error('Error copying injection files.', err);
   }
@@ -240,6 +241,6 @@ export async function prepareElectronApp(
     options.packager.name as string,
     options.packager.targetUrl,
   );
-  options.packager.appBundleId = `com.electron.nativefier.${normalizedAppName}`;
+  options.packager.appBundleId = `one.hatte.webholm.${normalizedAppName}`;
   applyDarwinPackagerDefaults(src, dest, options);
 }

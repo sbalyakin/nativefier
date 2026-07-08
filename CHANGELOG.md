@@ -1,4 +1,14 @@
 
+## Unreleased (Webholm fork)
+
+### Rebrand: Nativefier → Webholm
+
+- **Webholm** is a fork of [Nativefier](https://github.com/nativefier/nativefier), maintained independently.
+- CLI / npm package renamed to `webholm` (`buildWebholmApp`; deprecated `buildNativefierApp` alias).
+- Runtime config file: `webholm.json` (`webholmVersion`). Legacy `nativefier.json` / `nativefierVersion` still read for upgrade.
+- Preload bridge: `window.webholm` (legacy `window.nativefier` dual-exposed). IPC: `webholm-notify` (legacy `nativefier-notify` still handled).
+- Bundle ID prefix for new builds: `one.hatte.webholm.*`. App slug suffix: `-webholm-{hash}`.
+
 54.0.0 / 2026-05-20
 ===================
   **[BREAKING] Secure Electron renderer**

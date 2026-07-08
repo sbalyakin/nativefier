@@ -17,7 +17,7 @@ src/
 app/*
 !app/lib/
 !app/inject/
-!app/nativefier.json
+!app/webholm.json
 !app/package.json
 !app/npm-shrinkwrap.json
 .vscode/

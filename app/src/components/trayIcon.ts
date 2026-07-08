@@ -83,7 +83,7 @@ export function createTrayIcon(
           if (counterValue) {
             setTrayToolTip(
               appIcon,
-              `(${counterValue})  ${options.name ?? 'Nativefier'}`,
+              `(${counterValue})  ${options.name ?? 'Webholm'}`,
             );
           } else {
             setTrayToolTip(appIcon, options.name ?? '');

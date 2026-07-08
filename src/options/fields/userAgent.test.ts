@@ -10,7 +10,7 @@ jest.mock('./../../infer/browsers/inferSafariVersion');
 test('when a userAgent parameter is passed', async () => {
   const params = {
     packager: {},
-    nativefier: { userAgent: 'valid user agent' },
+    webholm: { userAgent: 'valid user agent' },
   };
   await expect(userAgent(params)).resolves.toBeUndefined();
 });
@@ -18,7 +18,7 @@ test('when a userAgent parameter is passed', async () => {
 test('no userAgent parameter is passed', async () => {
   const params = {
     packager: { platform: 'mac' },
-    nativefier: {},
+    webholm: {},
   };
   await expect(userAgent(params)).resolves.toBeUndefined();
 });
@@ -29,12 +29,12 @@ test('edge userAgent parameter is passed', async () => {
   );
   const params = {
     packager: { platform: 'darwin' },
-    nativefier: { userAgent: 'edge' },
+    webholm: { userAgent: 'edge' },
   };
 
   const parsedUserAgent = await userAgent(params);
 
-  expect(parsedUserAgent).not.toBe(params.nativefier.userAgent);
+  expect(parsedUserAgent).not.toBe(params.webholm.userAgent);
   expect(parsedUserAgent).toContain('Edg/99.0.0');
 });
 
@@ -44,12 +44,12 @@ test('firefox userAgent parameter is passed', async () => {
   );
   const params = {
     packager: { platform: 'win32' },
-    nativefier: { userAgent: 'firefox' },
+    webholm: { userAgent: 'firefox' },
   };
 
   const parsedUserAgent = await userAgent(params);
 
-  expect(parsedUserAgent).not.toBe(params.nativefier.userAgent);
+  expect(parsedUserAgent).not.toBe(params.webholm.userAgent);
   expect(parsedUserAgent).toContain('Firefox/100.0.0');
 });
 
@@ -63,12 +63,12 @@ test('safari userAgent parameter is passed', async () => {
   );
   const params = {
     packager: { platform: 'linux' },
-    nativefier: { userAgent: 'safari' },
+    webholm: { userAgent: 'safari' },
   };
 
   const parsedUserAgent = await userAgent(params);
 
-  expect(parsedUserAgent).not.toBe(params.nativefier.userAgent);
+  expect(parsedUserAgent).not.toBe(params.webholm.userAgent);
   expect(parsedUserAgent).toContain('Version/101.0.0 Safari');
 });
 
@@ -79,12 +79,12 @@ test('short userAgent parameter is passed with an electronVersion', async () => 
 
   const params = {
     packager: { electronVersion: '16.0.0', platform: 'darwin' },
-    nativefier: { userAgent: 'edge' },
+    webholm: { userAgent: 'edge' },
   };
 
   const parsedUserAgent = await userAgent(params);
 
-  expect(parsedUserAgent).not.toBe(params.nativefier.userAgent);
+  expect(parsedUserAgent).not.toBe(params.webholm.userAgent);
   expect(parsedUserAgent).toContain('102.0.0');
   expect(getChromeVersionForElectronVersion).toHaveBeenCalledWith('16.0.0');
 });

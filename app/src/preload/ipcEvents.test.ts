@@ -19,7 +19,7 @@ test('setupIpcEvents registers params and debug handlers', () => {
   expect(ipcRenderer.on).toHaveBeenCalledWith('debug', expect.any(Function));
 
   handlers.params('event', '{"name":"App"}');
-  expect(log.info).toHaveBeenCalledWith('nativefier.json', { name: 'App' });
+  expect(log.info).toHaveBeenCalledWith('webholm.json', { name: 'App' });
 
   handlers.debug('event', 'trace');
   expect(log.debug).toHaveBeenCalledWith('ipcRenderer.debug', {

@@ -11,7 +11,7 @@ export type UserAgentOpts = {
     electronVersion?: string;
     platform?: string;
   };
-  nativefier: {
+  webholm: {
     userAgent?: string;
   };
 };
@@ -34,19 +34,19 @@ const USER_AGENT_SHORT_CODE_MAPS: Record<
 export async function userAgent(
   options: UserAgentOpts,
 ): Promise<string | undefined> {
-  if (!options.nativefier.userAgent) {
+  if (!options.webholm.userAgent) {
     // No user agent got passed. Let's handle it with the app.userAgentFallback
     return undefined;
   }
 
   if (
     !Object.keys(USER_AGENT_SHORT_CODE_MAPS).includes(
-      options.nativefier.userAgent.toLowerCase(),
+      options.webholm.userAgent.toLowerCase(),
     )
   ) {
     // Real user agent got passed. No need to translate it.
     log.debug(
-      `${options.nativefier.userAgent.toLowerCase()} not found in`,
+      `${options.webholm.userAgent.toLowerCase()} not found in`,
       Object.keys(USER_AGENT_SHORT_CODE_MAPS),
     );
     return undefined;
@@ -59,7 +59,7 @@ export async function userAgent(
       options.packager.platform === 'mas' ? 'darwin' : options.packager.platform
     ];
 
-  const mapFunction = USER_AGENT_SHORT_CODE_MAPS[options.nativefier.userAgent];
+  const mapFunction = USER_AGENT_SHORT_CODE_MAPS[options.webholm.userAgent];
 
   return await mapFunction(
     userAgentPlatform,

@@ -1,12 +1,12 @@
 # Development Guide
 
 Welcome, soon-to-be contributor 🙂! This document sums up
-what you need to know to get started hacking on Nativefier.
+what you need to know to get started hacking on Webholm.
 
 ## Architecture
 
 Layer boundaries (`src/` vs `app/src/` vs `shared/`), import rules, and how
-`nativefier.json` connects the builder to the packaged app are documented in
+`webholm.json` connects the builder to the packaged app are documented in
 [docs/architecture.md](docs/architecture.md). Secure renderer layout (preload bridge,
 display media, notifications, login window) is in
 [docs/architecture.md#secure-renderer-540](docs/architecture.md#secure-renderer-540).
@@ -22,7 +22,7 @@ Post-stabilization infrastructure (ESM path, dependency policy, packager alterna
    create a **[RFC](https://en.wikipedia.org/wiki/Request_for_Comments)**
    issue to enable a good peer review.
 
-2. Do your best to **avoid adding new Nativefier command-line options**.
+2. Do your best to **avoid adding new Webholm command-line options**.
    If a new option is inevitable for what you want to do, sure,
    but as much as possible try to see if you change works without.
    Nativefier already has a ton of them, making it hard to use.
@@ -64,7 +64,7 @@ First, clone the project:
 
 ```bash
 git clone https://github.com/nativefier/nativefier.git
-cd nativefier
+cd webholm
 ```
 
 Install dependencies (for both the CLI and the Electron app):
@@ -74,28 +74,28 @@ npm ci
 ```
 
 The above `npm ci` will build automatically (through the `prepare` hook).
-When you need to re-build Nativefier,
+When you need to re-build Webholm,
 
 ```bash
 npm run build
 ```
 
-Set up a symbolic link so that running `nativefier` calls your dev version with your changes:
+Set up a symbolic link so that running `webholm` calls your dev version with your changes:
 
 ```bash
 npm link
-which nativefier
+which webholm
 # -> Should return a path, e.g. /home/youruser/.node_modules/lib/node_modules/nativefier
 # If not, be sure your `npm_config_prefix` env var is set and in your `PATH`
 ```
 
-After doing so, you can run Nativefier with your test parameters:
+After doing so, you can run Webholm with your test parameters:
 
 ```bash
-nativefier --your-awesome-new-flag 'https://your-test-site.com'
+webholm --your-awesome-new-flag 'https://your-test-site.com'
 ```
 
-Then run your nativefier app _through the command line too_ (to see logs & errors):
+Then run your webholm app _through the command line too_ (to see logs & errors):
 
 ```bash
 # Under Linux
@@ -110,14 +110,14 @@ your-test-site-win32-x64/your-test-site.exe
 
 ## Linting & formatting
 
-Nativefier uses [Prettier](https://prettier.io/), which will shout at you for
+Webholm uses [Prettier](https://prettier.io/), which will shout at you for
 not formatting code exactly like it expects. This guarantees a homogenous style,
 but is painful to do manually. Do yourself a favor and install a
 [Prettier plugin for your editor](https://prettier.io/docs/en/editors.html).
 
 ## Tests
 
-Test layers (unit, `nativefier.json` contract, integration, Playwright) are described in [docs/testing.md](docs/testing.md).
+Test layers (unit, `webholm.json` contract, integration, Playwright) are described in [docs/testing.md](docs/testing.md).
 
 - To run all tests, `npm t`
 - To run only unit tests, `npm run test:unit`
@@ -136,7 +136,7 @@ Test layers (unit, `nativefier.json` contract, integration, Playwright) are desc
 
 When a new major [Electron release](https://github.com/electron/electron/releases) occurs,
 
-1. Wait a few weeks to let it stabilize. Never upgrade Nativefier to a `.0.0`.
+1. Wait a few weeks to let it stabilize. Never upgrade Webholm to a `.0.0`.
 2. Thoroughly digest the new version's [breaking changes](https://www.electronjs.org/docs/breaking-changes)
    (also via the [Releases page](https://github.com/electron/electron/releases) and [the blog](https://www.electronjs.org/blog/), the content is different),
    grepping our codebase for every changed API.
@@ -150,7 +150,7 @@ When a new major [Electron release](https://github.com/electron/electron/release
    2. With extra manual testing
 5. When confident enough, release it in a regression-spelunking-friendly way:
    1. If `master` has unreleased commits, make a patch/minor release with them, but without the major Electron bump.
-   2. Commit your Electron major bump and release it as a major new Nativefier version. Help users identify the breaking change by using a bold **[BREAKING]** marker in `CHANGELOG.md` and in the GitHub release.
+   2. Commit your Electron major bump and release it as a major new Webholm version. Help users identify the breaking change by using a bold **[BREAKING]** marker in `CHANGELOG.md` and in the GitHub release.
 
 ### Deps updates
 

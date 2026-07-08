@@ -4,47 +4,64 @@ import * as path from 'path';
 import * as log from 'loglevel';
 
 import {
-  NATIVEFIER_JSON_FILENAME,
-  NativefierOptions,
+  LEGACY_NATIVEFIER_JSON_FILENAME,
+  WEBHOLM_JSON_FILENAME,
+  WebholmOptions,
   RawOptions,
 } from '../../buildTimeContract';
+import { normalizeLegacyOutputConfig } from '../../legacyConfig';
 import { dirExists, fileExists } from '../fsHelpers';
 import { extractBoolean, extractString } from './plistInfoXMLHelpers';
 import { getOptionsFromExecutable } from './executableHelpers';
 import { parseJson } from '../../utils/parseUtils';
 
+/** @deprecated Use {@link WebholmOptions}. */
+export type NativefierOptions = WebholmOptions;
+
 export type UpgradeAppInfo = {
   appResourcesDir: string;
   appRoot: string;
-  options: NativefierOptions;
+  options: WebholmOptions;
 };
+
+function configExistsInDir(searchDir: string): boolean {
+  return (
+    fileExists(path.join(searchDir, WEBHOLM_JSON_FILENAME)) ||
+    fileExists(path.join(searchDir, LEGACY_NATIVEFIER_JSON_FILENAME))
+  );
+}
 
 function findUpgradeAppResourcesDir(searchDir: string): string | null {
   searchDir = dirExists(searchDir) ? searchDir : path.dirname(searchDir);
-  log.debug(`Searching for nativfier.json in ${searchDir}`);
+  log.debug(`Searching for runtime config in ${searchDir}`);
   const children = fs.readdirSync(searchDir, { withFileTypes: true });
-  if (fileExists(path.join(searchDir, NATIVEFIER_JSON_FILENAME))) {
-    // Found nativefier config, so this must be it!
+  if (configExistsInDir(searchDir)) {
     return path.resolve(searchDir);
   }
   const childDirectories = children.filter((c) => c.isDirectory());
   for (const childDir of childDirectories) {
-    // We must go deeper!
     const result = findUpgradeAppResourcesDir(
-      path.join(searchDir, childDir.name, NATIVEFIER_JSON_FILENAME),
+      path.join(searchDir, childDir.name),
     );
     if (result !== null) {
       return path.resolve(result);
     }
   }
 
-  // Didn't find it down here
   return null;
+}
+
+function resolveRuntimeConfigPath(appResourcesDir: string): string {
+  const webholmPath = path.join(appResourcesDir, WEBHOLM_JSON_FILENAME);
+  if (fileExists(webholmPath)) {
+    return webholmPath;
+  }
+  return path.join(appResourcesDir, LEGACY_NATIVEFIER_JSON_FILENAME);
 }
 
 function getAppRoot(
   appResourcesDir: string,
-  options: NativefierOptions,
+  options: WebholmOptions,
 ): string {
   switch (options.platform) {
     case 'darwin':
@@ -84,10 +101,9 @@ function getIconPath(appResourcesDir: string): string | undefined {
 
 function getInfoPListOptions(
   appResourcesDir: string,
-  priorOptions: NativefierOptions,
-): NativefierOptions {
+  priorOptions: WebholmOptions,
+): WebholmOptions {
   if (!fileExists(path.join(appResourcesDir, '..', '..', 'Info.plist'))) {
-    // Not a darwin/mas app, so this is irrelevant
     return priorOptions;
   }
 
@@ -98,7 +114,6 @@ function getInfoPListOptions(
     .toString();
 
   if (newOptions.appCopyright === undefined) {
-    // https://github.com/electron/electron-packager/blob/0d3f84374e9ab3741b171610735ebc6be3e5e75f/src/mac.js#L230-L232
     newOptions.appCopyright = extractString(
       infoPlistXML,
       'NSHumanReadableCopyright',
@@ -111,11 +126,9 @@ function getInfoPListOptions(
   }
 
   if (newOptions.appVersion === undefined) {
-    // https://github.com/electron/electron-packager/blob/0d3f84374e9ab3741b171610735ebc6be3e5e75f/src/mac.js#L214-L216
-    // This could also be the buildVersion, but since they end up in the same place, that SHOULDN'T matter
     const bundleVersion = extractString(infoPlistXML, 'CFBundleVersion');
     newOptions.appVersion =
-      bundleVersion === undefined || bundleVersion === '1.0.0' // If it's 1.0.0, that's just the default
+      bundleVersion === undefined || bundleVersion === '1.0.0'
         ? undefined
         : bundleVersion;
     newOptions.darwinDarkModeSupport =
@@ -130,7 +143,6 @@ function getInfoPListOptions(
   }
 
   if (newOptions.darwinDarkModeSupport === undefined) {
-    // https://github.com/electron/electron-packager/blob/0d3f84374e9ab3741b171610735ebc6be3e5e75f/src/mac.js#L234-L236
     newOptions.darwinDarkModeSupport = extractBoolean(
       infoPlistXML,
       'NSRequiresAquaSystemAppearance',
@@ -177,25 +189,26 @@ export function findUpgradeApp(upgradeFrom: string): UpgradeAppInfo | null {
   log.debug(`Looking for old options file in ${searchDir}`);
   const appResourcesDir = findUpgradeAppResourcesDir(searchDir);
   if (appResourcesDir === null) {
-    log.debug(`No ${NATIVEFIER_JSON_FILENAME} file found in ${searchDir}`);
+    log.debug(
+      `No ${WEBHOLM_JSON_FILENAME} or ${LEGACY_NATIVEFIER_JSON_FILENAME} file found in ${searchDir}`,
+    );
     return null;
   }
 
-  const nativefierJSONPath = path.join(
-    appResourcesDir,
-    NATIVEFIER_JSON_FILENAME,
+  const configJSONPath = resolveRuntimeConfigPath(appResourcesDir);
+
+  log.debug(`Loading ${configJSONPath}`);
+  const rawConfig = parseJson<Record<string, unknown>>(
+    fs.readFileSync(configJSONPath, 'utf8'),
   );
 
-  log.debug(`Loading ${nativefierJSONPath}`);
-  let options = parseJson<NativefierOptions>(
-    fs.readFileSync(nativefierJSONPath, 'utf8'),
-  );
-
-  if (!options) {
-    throw new Error(
-      `Could not read Nativefier options from ${nativefierJSONPath}`,
-    );
+  if (!rawConfig) {
+    throw new Error(`Could not read Webholm options from ${configJSONPath}`);
   }
+
+  let options = normalizeLegacyOutputConfig(
+    rawConfig,
+  ) as WebholmOptions;
 
   options.electronVersion = undefined;
 
@@ -224,7 +237,6 @@ export function useOldAppOptions(
   oldApp: UpgradeAppInfo,
 ): RawOptions {
   if (rawOptions.targetUrl !== undefined && dirExists(rawOptions.targetUrl)) {
-    // You got your ouput dir in my targetUrl!
     rawOptions.out = rawOptions.targetUrl;
   }
 

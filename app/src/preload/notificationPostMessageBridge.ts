@@ -2,9 +2,9 @@ import type { IpcRenderer } from 'electron';
 
 import {
   NOTIFY_IPC_CHANNEL,
-  NOTIFY_POST_MESSAGE_CHANNEL,
-  type NativefierNotifyIpcPayload,
-  type NativefierNotifyOp,
+  NOTIFY_POST_MESSAGE_CHANNELS,
+  type WebholmNotifyIpcPayload,
+  type WebholmNotifyOp,
 } from './notificationChannel';
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -16,7 +16,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   );
 }
 
-function isValidOp(op: unknown): op is NativefierNotifyOp {
+function isValidOp(op: unknown): op is WebholmNotifyOp {
   return op === 'create' || op === 'click';
 }
 
@@ -29,10 +29,14 @@ export function handleNotificationPostMessage(
   }
 
   const data = event.data;
+  if (typeof data !== 'object' || data === null) {
+    return;
+  }
+
   if (
-    typeof data !== 'object' ||
-    data === null ||
-    data.channel !== NOTIFY_POST_MESSAGE_CHANNEL
+    !NOTIFY_POST_MESSAGE_CHANNELS.includes(
+      data.channel as (typeof NOTIFY_POST_MESSAGE_CHANNELS)[number],
+    )
   ) {
     return;
   }
@@ -50,7 +54,7 @@ export function handleNotificationPostMessage(
     }
   }
 
-  const payload: NativefierNotifyIpcPayload = {
+  const payload: WebholmNotifyIpcPayload = {
     token: data.token,
     op: data.op,
   };

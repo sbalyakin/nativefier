@@ -10,7 +10,7 @@ import { stripSensitiveOutputOptions } from './runtimeSecrets';
 const validJson = JSON.stringify({
   name: 'TestApp',
   targetUrl: 'https://example.com/',
-  nativefierVersion: '54.0.0',
+  webholmVersion: '54.0.0',
   buildDate: STABLE_CONTRACT_TEST_BUILD_DATE,
   blockExternalUrls: false,
   disableDevTools: false,
@@ -61,7 +61,7 @@ test('applyCommandLineTargetUrlOverride keeps config when argv url invalid', () 
 });
 
 test('parseRuntimeConfigJson throws on invalid config', () => {
-  expect(() => parseRuntimeConfigJson('{}')).toThrow(/Invalid nativefier.json/);
+  expect(() => parseRuntimeConfigJson('{}')).toThrow(/Invalid webholm\.json/);
 });
 
 test('stripSensitiveOutputOptions keeps parsed config except secrets', () => {
@@ -78,6 +78,23 @@ test('stripSensitiveOutputOptions keeps parsed config except secrets', () => {
   expect(stripped.processEnvs).toBeUndefined();
 });
 
+test('parseRuntimeConfigJson maps legacy nativefierVersion to webholmVersion', () => {
+  const config = parseRuntimeConfigJson(
+    JSON.stringify({
+      name: 'LegacyApp',
+      targetUrl: 'https://example.com/',
+      nativefierVersion: '50.0.0',
+      buildDate: STABLE_CONTRACT_TEST_BUILD_DATE,
+      blockExternalUrls: false,
+      disableDevTools: false,
+      isUpgrade: false,
+      strictInternalUrls: false,
+      oldBuildWarningText: '',
+    }),
+  );
+  expect(config.webholmVersion).toBe('50.0.0');
+});
+
 test('parseRuntimeConfigJson merges playwright defaults when requested', () => {
   const config = parseRuntimeConfigJson(
     JSON.stringify({ targetUrl: 'https://example.com/' }),
@@ -85,7 +102,7 @@ test('parseRuntimeConfigJson merges playwright defaults when requested', () => {
   );
   expect(config.name).toBe('PlaywrightTest');
   expect(config.targetUrl).toBe('https://example.com/');
-  expect(config.nativefierVersion).toBe('0.0.0-test');
+  expect(config.webholmVersion).toBe('0.0.0-test');
   expect(config.disableOldBuildWarning).toBe(true);
   const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
   expect(Date.now() - config.buildDate).toBeLessThan(ninetyDaysMs);

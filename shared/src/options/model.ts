@@ -24,13 +24,13 @@ export interface ElectronPackagerOptions extends Omit<
   targetUrl: string;
   upgrade: boolean;
   upgradeFrom?: string;
-  /** Nativefier always uses a single filesystem path for the app icon. */
+  /** Webholm always uses a single filesystem path for the app icon. */
   icon?: string;
 }
 
 export interface AppOptions {
   packager: ElectronPackagerOptions;
-  nativefier: {
+  webholm: {
     accessibilityPrompt: boolean;
     alwaysOnTop: boolean;
     backgroundColor?: string;
@@ -63,7 +63,7 @@ export interface AppOptions {
     internalUrls?: string;
     lang?: string;
     maximize: boolean;
-    nativefierVersion: string;
+    webholmVersion: string;
     processEnvs?: string;
     persistSessionCookies: boolean;
     proxyRules?: string;
@@ -112,11 +112,14 @@ export type GlobalShortcut = {
   }[];
 };
 
-export type NativefierOptions = Partial<
-  AppOptions['packager'] & AppOptions['nativefier']
+export type WebholmOptions = Partial<
+  AppOptions['packager'] & AppOptions['webholm']
 >;
 
-export type OutputOptions = NativefierOptions & {
+/** @deprecated Use {@link WebholmOptions}. */
+export type NativefierOptions = WebholmOptions;
+
+export type OutputOptions = WebholmOptions & {
   blockExternalUrls: boolean;
   browserwindowOptions?: BrowserWindowOptions;
   buildDate: number;
@@ -126,7 +129,7 @@ export type OutputOptions = NativefierOptions & {
   internalUrls: string | RegExp | undefined;
   isUpgrade: boolean;
   name: string;
-  nativefierVersion: string;
+  webholmVersion: string;
   oldBuildWarningText: string;
   strictInternalUrls: boolean;
   tabbingIdentifier?: string;
@@ -189,6 +192,8 @@ export type RawOptions = {
   minHeight?: number;
   minWidth?: number;
   name?: string;
+  webholmVersion?: string;
+  /** @deprecated Legacy upstream field; use webholmVersion. */
   nativefierVersion?: string;
   out?: string;
   overwrite?: boolean;

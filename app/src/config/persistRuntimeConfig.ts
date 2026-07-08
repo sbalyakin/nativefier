@@ -13,7 +13,7 @@ export function persistRuntimeConfig(newAppArgs: OutputOptions): void {
     );
   } catch (err: unknown) {
     log.warn(
-      `WARNING: Ignored nativefier.json rewrital (${(err as Error).message})`,
+      `WARNING: Ignored webholm.json rewrital (${(err as Error).message})`,
     );
   }
 }

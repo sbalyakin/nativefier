@@ -18,7 +18,7 @@ This document records decisions and prerequisites for infrastructure work that s
 
 1. Jest and `npm test` stay green without `createRequire` workarounds for Electron tooling (or Jest runs against ESM output natively).
 2. `npm run build` and `prepare` / `npm ci` workflows unchanged for contributors.
-3. Published `nativefier` bin remains installable on supported Node LTS without experimental flags for **end users** (test-only flags are acceptable).
+3. Published `webholm` bin remains installable on supported Node LTS without experimental flags for **end users** (test-only flags are acceptable).
 4. Document dual-package or subpath export strategy if CLI stays CJS while dependencies are ESM-only.
 
 ### Recommended order (when started)
@@ -89,7 +89,7 @@ No build-time bottleneck justifies a second language today (icon conversion, ASA
 
 **Trigger to reconsider:** measured hotspot in profiling (e.g. repeated large ASAR walks, icon pipeline on CI) where a small CLI binary would cut wall time significantly.
 
-**Constraint:** utilities must remain optional dev/CI tools; the published `nativefier` npm package stays Node.js for installability on conservative distros (see `package.json` `engines`).
+**Constraint:** utilities must remain optional dev/CI tools; the published `webholm` npm package stays Node.js for installability on conservative distros (see `package.json` `engines`).
 
 ## Related docs
 

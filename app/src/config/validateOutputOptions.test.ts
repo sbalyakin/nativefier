@@ -7,7 +7,7 @@ import {
 const validConfig = {
   name: 'TestApp',
   targetUrl: 'https://example.com/',
-  nativefierVersion: '54.0.0',
+  webholmVersion: '54.0.0',
   buildDate: STABLE_CONTRACT_TEST_BUILD_DATE,
   blockExternalUrls: false,
   disableDevTools: false,

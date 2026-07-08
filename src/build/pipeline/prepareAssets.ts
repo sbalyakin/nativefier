@@ -24,7 +24,7 @@ export async function copyIconsIfNecessary(
     options.packager.platform === 'darwin' ||
     options.packager.platform === 'mas'
   ) {
-    if (options.nativefier.tray !== 'false') {
+    if (options.webholm.tray !== 'false') {
       log.debug('Copying icon for tray application');
       const trayIconFileName = `tray-icon.png`;
       const destIconPath = path.join(appPath, 'icon.png');

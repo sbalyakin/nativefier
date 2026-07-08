@@ -1,10 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-contextBridge.exposeInMainWorld('nativefierGoToUrl', {
+const goToUrlApi = {
   submit: (url: string): void => {
     void ipcRenderer.invoke('go-to-url-message', url);
   },
   cancel: (): void => {
     void ipcRenderer.invoke('go-to-url-cancel');
   },
-});
+};
+
+contextBridge.exposeInMainWorld('webholmGoToUrl', goToUrlApi);
+contextBridge.exposeInMainWorld('nativefierGoToUrl', goToUrlApi);

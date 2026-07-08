@@ -267,7 +267,7 @@ async function onReady(): Promise<void> {
   ) {
     const oldBuildWarningText =
       appArgs.oldBuildWarningText ||
-      'This app was built a long time ago. Nativefier uses the Chrome browser (through Electron), and it is insecure to keep using an old version of it. Please upgrade Nativefier and rebuild this app.';
+      'This app was built a long time ago. Webholm uses the Chrome browser (through Electron), and it is insecure to keep using an old version of it. Please upgrade Webholm and rebuild this app.';
     showMessageBox(window, {
       type: 'warning',
       message: 'Old build detected',

@@ -1,8 +1,8 @@
 import { onIpcMainEvent } from '../adapters/ipcAdapter';
 import {
-  NOTIFY_IPC_CHANNEL,
-  type NativefierNotifyIpcPayload,
-  type NativefierNotifyOp,
+  NOTIFY_IPC_CHANNELS,
+  type WebholmNotifyIpcPayload,
+  type WebholmNotifyOp,
 } from '../preload/notificationChannel';
 import * as log from '../helpers/loggingHelper';
 import { validateToken } from './notificationTokenStore';
@@ -23,7 +23,7 @@ export type NotificationIpcHandlers = {
   onClick?: () => void;
 };
 
-function isValidOp(op: unknown): op is NativefierNotifyOp {
+function isValidOp(op: unknown): op is WebholmNotifyOp {
   return op === 'create' || op === 'click';
 }
 
@@ -36,7 +36,7 @@ function isJsonSerializable(value: unknown): boolean {
   }
 }
 
-function isValidCreatePayload(msg: NativefierNotifyIpcPayload): boolean {
+function isValidCreatePayload(msg: WebholmNotifyIpcPayload): boolean {
   if (typeof msg.title !== 'string' || msg.title.length > TITLE_MAX_LENGTH) {
     return false;
   }
@@ -50,64 +50,70 @@ function isValidCreatePayload(msg: NativefierNotifyIpcPayload): boolean {
   return serialized.length <= OPT_MAX_JSON_BYTES;
 }
 
+function handleNotifyMessage(
+  event: { sender: { id: number } },
+  msg: WebholmNotifyIpcPayload,
+): void {
+  log.debug('ipcMain.webholm-notify', { msg });
+
+  if (
+    typeof msg !== 'object' ||
+    msg === null ||
+    typeof msg.token !== 'string' ||
+    !isValidOp(msg.op)
+  ) {
+    return;
+  }
+
+  const webContentsId = event.sender.id;
+  if (!validateToken(webContentsId, msg.token)) {
+    log.debug('notificationIpcService: invalid token', { webContentsId });
+    return;
+  }
+
+  if (msg.op === 'create') {
+    if (!isValidCreatePayload(msg)) {
+      log.debug('notificationIpcService: invalid create payload', {
+        webContentsId,
+      });
+      return;
+    }
+
+    const now = Date.now();
+    const lastCreate = lastCreateAtByWebContentsId.get(webContentsId) ?? 0;
+    if (now - lastCreate < CREATE_RATE_LIMIT_MS) {
+      return;
+    }
+    lastCreateAtByWebContentsId.set(webContentsId, now);
+    badgePendingByWebContentsId.set(webContentsId, true);
+
+    for (const handler of onCreateHandlers) {
+      handler(webContentsId);
+    }
+    return;
+  }
+
+  if (!badgePendingByWebContentsId.get(webContentsId)) {
+    return;
+  }
+
+  badgePendingByWebContentsId.delete(webContentsId);
+  for (const handler of onClickHandlers) {
+    handler();
+  }
+}
+
 function ensureIpcHandlerRegistered(): void {
   if (ipcHandlerRegistered) {
     return;
   }
   ipcHandlerRegistered = true;
 
-  onIpcMainEvent(
-    NOTIFY_IPC_CHANNEL,
-    (event, msg: NativefierNotifyIpcPayload) => {
-      log.debug('ipcMain.nativefier-notify', { msg });
-
-      if (
-        typeof msg !== 'object' ||
-        msg === null ||
-        typeof msg.token !== 'string' ||
-        !isValidOp(msg.op)
-      ) {
-        return;
-      }
-
-      const webContentsId = event.sender.id;
-      if (!validateToken(webContentsId, msg.token)) {
-        log.debug('notificationIpcService: invalid token', { webContentsId });
-        return;
-      }
-
-      if (msg.op === 'create') {
-        if (!isValidCreatePayload(msg)) {
-          log.debug('notificationIpcService: invalid create payload', {
-            webContentsId,
-          });
-          return;
-        }
-
-        const now = Date.now();
-        const lastCreate = lastCreateAtByWebContentsId.get(webContentsId) ?? 0;
-        if (now - lastCreate < CREATE_RATE_LIMIT_MS) {
-          return;
-        }
-        lastCreateAtByWebContentsId.set(webContentsId, now);
-        badgePendingByWebContentsId.set(webContentsId, true);
-
-        for (const handler of onCreateHandlers) {
-          handler(webContentsId);
-        }
-        return;
-      }
-
-      if (!badgePendingByWebContentsId.get(webContentsId)) {
-        return;
-      }
-
-      badgePendingByWebContentsId.delete(webContentsId);
-      for (const handler of onClickHandlers) {
-        handler();
-      }
-    },
-  );
+  for (const channel of NOTIFY_IPC_CHANNELS) {
+    onIpcMainEvent(channel, (event, msg: WebholmNotifyIpcPayload) => {
+      handleNotifyMessage(event, msg);
+    });
+  }
 }
 
 export function registerNotificationIpcHandlers(

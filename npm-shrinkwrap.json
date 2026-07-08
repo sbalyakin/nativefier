@@ -1,11 +1,11 @@
 {
-  "name": "nativefier",
+  "name": "webholm",
   "version": "54.0.0",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
-      "name": "nativefier",
+      "name": "webholm",
       "version": "54.0.0",
       "license": "MIT",
       "dependencies": {

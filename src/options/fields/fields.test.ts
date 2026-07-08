@@ -6,7 +6,7 @@ describe('fields', () => {
 
   beforeEach(() => {
     options = {
-      nativefier: {
+      webholm: {
         accessibilityPrompt: false,
         alwaysOnTop: false,
         backgroundColor: undefined,
@@ -42,7 +42,7 @@ describe('fields', () => {
         minWidth: undefined,
         minHeight: undefined,
         maxWidth: undefined,
-        nativefierVersion: '1.0.0',
+        webholmVersion: '1.0.0',
         processEnvs: undefined,
         proxyRules: undefined,
         showMenuBar: false,
@@ -76,12 +76,12 @@ describe('fields', () => {
     options.packager.icon = '/my/icon.png';
     options.packager.name = 'my beautiful app ';
     options.packager.platform = 'darwin';
-    options.nativefier.userAgent = 'random user agent';
+    options.webholm.userAgent = 'random user agent';
     await processOptions(options);
 
     expect(options.packager.icon).toEqual('/my/icon.png');
     expect(options.packager.name).toEqual('my beautiful app');
-    expect(options.nativefier.userAgent).toEqual('random user agent');
+    expect(options.webholm.userAgent).toEqual('random user agent');
   });
 
   test('name has spaces stripped in linux', async () => {
@@ -95,13 +95,13 @@ describe('fields', () => {
   test('user agent is ignored if not provided', async () => {
     await processOptions(options);
 
-    expect(options.nativefier.userAgent).toBeUndefined();
+    expect(options.webholm.userAgent).toBeUndefined();
   });
 
   test('user agent short code is populated', async () => {
-    options.nativefier.userAgent = 'edge';
+    options.webholm.userAgent = 'edge';
     await processOptions(options);
 
-    expect(options.nativefier.userAgent).not.toBe('edge');
+    expect(options.webholm.userAgent).not.toBe('edge');
   });
 });

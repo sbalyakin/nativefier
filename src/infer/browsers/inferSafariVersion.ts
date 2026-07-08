@@ -4,7 +4,7 @@ import * as log from 'loglevel';
 import packageJson from '../../../package.json';
 import { DEFAULT_SAFARI_VERSION } from '../../constants';
 
-const WIKIPEDIA_USER_AGENT = `Nativefier/${packageJson.version} (https://github.com/nativefier/nativefier; +https://github.com/nativefier/nativefier/issues)`;
+const WIKIPEDIA_USER_AGENT = `Webholm/${packageJson.version} (https://github.com/nativefier/nativefier; +https://github.com/nativefier/nativefier/issues)`;
 
 export type SafariVersion = {
   majorVersion: number;

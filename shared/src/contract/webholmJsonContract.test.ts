@@ -2,14 +2,14 @@ import {
   BUILDER_INJECTED_OUTPUT_FIELDS,
   RUNTIME_REQUIRED_BOOLEAN_FIELDS,
   RUNTIME_REQUIRED_STRING_FIELDS,
-  validateNativefierJsonContract,
-} from './nativefierJsonContract';
+  validateWebholmJsonContract,
+} from './webholmJsonContract';
 import { STABLE_CONTRACT_TEST_BUILD_DATE } from './testFixtures';
 
 const validConfig = {
   name: 'TestApp',
   targetUrl: 'https://example.com/',
-  nativefierVersion: '54.0.0',
+  webholmVersion: '54.0.0',
   buildDate: STABLE_CONTRACT_TEST_BUILD_DATE,
   blockExternalUrls: false,
   disableDevTools: false,
@@ -18,26 +18,26 @@ const validConfig = {
   oldBuildWarningText: '',
 };
 
-test('validateNativefierJsonContract accepts minimal valid config', () => {
-  expect(validateNativefierJsonContract(validConfig)).toEqual([]);
+test('validateWebholmJsonContract accepts minimal valid config', () => {
+  expect(validateWebholmJsonContract(validConfig)).toEqual([]);
 });
 
-test('validateNativefierJsonContract rejects non-object root', () => {
-  const errors = validateNativefierJsonContract(null);
+test('validateWebholmJsonContract rejects non-object root', () => {
+  const errors = validateWebholmJsonContract(null);
   expect(errors).toHaveLength(1);
   expect(errors[0].message).toContain('JSON object');
 });
 
-test('validateNativefierJsonContract rejects invalid targetUrl', () => {
-  const errors = validateNativefierJsonContract({
+test('validateWebholmJsonContract rejects invalid targetUrl', () => {
+  const errors = validateWebholmJsonContract({
     ...validConfig,
     targetUrl: 'not-a-url',
   });
   expect(errors.some((e) => e.field === 'targetUrl')).toBe(true);
 });
 
-test('validateNativefierJsonContract rejects invalid tray', () => {
-  const errors = validateNativefierJsonContract({
+test('validateWebholmJsonContract rejects invalid tray', () => {
+  const errors = validateWebholmJsonContract({
     ...validConfig,
     tray: 'maybe',
   });

@@ -24,7 +24,7 @@ export type OptionScope = 'packager' | 'runtime' | 'cliOnly' | 'deprecated';
 export type OptionValueType = 'string' | 'number' | 'boolean' | 'array';
 
 export type OptionMapTarget = {
-  namespace: 'packager' | 'nativefier';
+  namespace: 'packager' | 'webholm';
   field: string;
 };
 
@@ -37,7 +37,7 @@ export type OptionDefinition = {
   description: string;
   /** camelCase key on {@link RawOptions} after yargs parsing. */
   rawKey?: string;
-  /** Field under `AppOptions.packager` or `AppOptions.nativefier`. */
+  /** Field under `AppOptions.packager` or `AppOptions.webholm`. */
   targetField?: string;
   /**
    * Raw argv → AppOptions destination when `rawKey` differs from `targetField`
@@ -213,7 +213,7 @@ export const OPTION_DEFINITIONS: readonly OptionDefinition[] = [
     yargsGroup: YARGS_GROUP_TITLES.appCreation,
     normalize: true,
     description:
-      'upgrade an app built by an older version of Nativefier\nYou must pass the full path to the existing app executable (app will be overwritten with upgraded version by default)',
+      'upgrade an app built by an older version of Webholm\nYou must pass the full path to the existing app executable (app will be overwritten with upgraded version by default)',
   }),
   def({
     cliFlag: 'widevine',
@@ -608,12 +608,12 @@ export const OPTION_DEFINITIONS: readonly OptionDefinition[] = [
     cliFlag: 'disable-old-build-warning-yesiknowitisinsecure',
     scope: 'runtime',
     rawKey: 'disableOldBuildWarningYesiknowitisinsecure',
-    mapTo: { namespace: 'nativefier', field: 'disableOldBuildWarning' },
+    mapTo: { namespace: 'webholm', field: 'disableOldBuildWarning' },
     type: 'boolean',
     default: false,
     yargsGroup: YARGS_GROUP_TITLES.security,
     description:
-      'disable warning shown when opening an app made too long ago; Nativefier uses the Chrome browser (through Electron), and it is dangerous to keep using an old version of it',
+      'disable warning shown when opening an app made too long ago; Webholm uses the Chrome browser (through Electron), and it is dangerous to keep using an old version of it',
   }),
   def({
     cliFlag: 'ignore-certificate',
@@ -650,7 +650,7 @@ export const OPTION_DEFINITIONS: readonly OptionDefinition[] = [
     cliFlag: 'flash-path',
     scope: 'deprecated',
     rawKey: 'flashPath',
-    mapTo: { namespace: 'nativefier', field: 'flashPluginDir' },
+    mapTo: { namespace: 'webholm', field: 'flashPluginDir' },
     type: 'string',
     deprecated: true,
     hidden: true,
@@ -818,7 +818,7 @@ function getMappingTarget(
     definition.targetField
   ) {
     const namespace =
-      definition.scope === 'packager' ? 'packager' : 'nativefier';
+      definition.scope === 'packager' ? 'packager' : 'webholm';
     return { namespace, field: definition.targetField };
   }
   return undefined;
@@ -858,7 +858,7 @@ function resolveWithDefault<T>(
 
 function assignMappedFields(
   packager: Record<string, unknown>,
-  nativefier: Record<string, unknown>,
+  webholm: Record<string, unknown>,
   rawOptions: RawOptions,
 ): void {
   for (const definition of OPTION_DEFINITIONS) {
@@ -869,7 +869,7 @@ function assignMappedFields(
     const rawValue = readRawValue(rawOptions, definition);
     const value = resolveWithDefault(rawValue, definition.default);
     if (value !== undefined) {
-      const bucket = target.namespace === 'packager' ? packager : nativefier;
+      const bucket = target.namespace === 'packager' ? packager : webholm;
       bucket[target.field] = value;
     }
   }
@@ -883,9 +883,9 @@ export function buildAppOptionsFromSchema(
   packageVersion: string,
 ): AppOptions {
   const packagerPartial: Record<string, unknown> = {};
-  const nativefierPartial: Record<string, unknown> = {};
+  const webholmPartial: Record<string, unknown> = {};
 
-  assignMappedFields(packagerPartial, nativefierPartial, rawOptions);
+  assignMappedFields(packagerPartial, webholmPartial, rawOptions);
 
   const packager = {
     ...packagerPartial,
@@ -922,19 +922,19 @@ export function buildAppOptionsFromSchema(
       } as AppOptions['packager']['win32metadata']),
   } as AppOptions['packager'];
 
-  const nativefier = {
-    ...nativefierPartial,
+  const webholm = {
+    ...webholmPartial,
     accessibilityPrompt:
-      (nativefierPartial.accessibilityPrompt as boolean | undefined) ?? true,
+      (webholmPartial.accessibilityPrompt as boolean | undefined) ?? true,
     globalShortcuts: undefined,
     inject: rawOptions.inject ?? [],
-    nativefierVersion: packageVersion,
+    webholmVersion: packageVersion,
     quiet: rawOptions.quiet ?? false,
     tray: rawOptions.tray ?? 'false',
     versionString: rawOptions.versionString,
-  } as AppOptions['nativefier'];
+  } as AppOptions['webholm'];
 
-  return { packager, nativefier };
+  return { packager, webholm };
 }
 
 function decorateYargOptionGroup(value: string): string {
@@ -1031,9 +1031,9 @@ export function assertValidMappedOptions(options: AppOptions): void {
     );
   }
 
-  if (options.nativefier.zoom !== undefined && options.nativefier.zoom <= 0) {
+  if (options.webholm.zoom !== undefined && options.webholm.zoom <= 0) {
     throw new Error(
-      `Invalid zoom factor "${options.nativefier.zoom}". Must be positive.`,
+      `Invalid zoom factor "${options.webholm.zoom}". Must be positive.`,
     );
   }
 

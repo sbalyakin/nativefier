@@ -2,10 +2,14 @@
  * Runtime contract entrypoint for the packaged Electron app under `app/src/`.
  *
  * Import option types and cross-layer constants from here (or from `shared/src`),
- * never from `src/` (builder/CLI). The builder writes {@link NATIVEFIER_JSON_FILENAME};
+ * never from `src/` (builder/CLI). The builder writes {@link WEBHOLM_JSON_FILENAME};
  * runtime reads it at startup (see `config/loadRuntimeConfig.ts`).
  */
-export { NATIVEFIER_JSON_FILENAME } from '../../shared/src/contract';
+export {
+  LEGACY_NATIVEFIER_JSON_FILENAME,
+  NATIVEFIER_JSON_FILENAME,
+  WEBHOLM_JSON_FILENAME,
+} from '../../shared/src/contract';
 export type {
   BrowserWindowOptions,
   OutputOptions,

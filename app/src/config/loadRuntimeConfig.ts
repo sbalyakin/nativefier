@@ -5,13 +5,16 @@ import { IS_PLAYWRIGHT, PLAYWRIGHT_CONFIG } from '../helpers/playwrightHelpers';
 import type { OutputOptions } from '../../../shared/src/options/model';
 import { recentTestBuildDate } from '../../../shared/lib/src/contract/testFixtures';
 import { getRuntimeConfigPath } from './runtimeConfigPath';
-import { assertValidOutputOptions } from './validateOutputOptions';
+import {
+  assertValidOutputOptions,
+  normalizeLegacyOutputConfig,
+} from './validateOutputOptions';
 
 /** Defaults for PLAYWRIGHT_CONFIG env (partial overrides only). */
 export const PLAYWRIGHT_RUNTIME_CONFIG_DEFAULTS = {
   name: 'PlaywrightTest',
   targetUrl: 'about:blank',
-  nativefierVersion: '0.0.0-test',
+  webholmVersion: '0.0.0-test',
   buildDate: recentTestBuildDate(),
   blockExternalUrls: false,
   disableDevTools: false,
@@ -32,12 +35,16 @@ export function parseRuntimeConfigJson(
   options?: { applyPlaywrightDefaults?: boolean },
 ): OutputOptions {
   const parsed: unknown = JSON.parse(json);
+  const normalized =
+    parsed !== null && typeof parsed === 'object'
+      ? normalizeLegacyOutputConfig(parsed)
+      : parsed;
   const candidate =
     options?.applyPlaywrightDefaults &&
-    parsed !== null &&
-    typeof parsed === 'object'
-      ? mergePlaywrightRuntimeDefaults(parsed as Record<string, unknown>)
-      : parsed;
+    normalized !== null &&
+    typeof normalized === 'object'
+      ? mergePlaywrightRuntimeDefaults(normalized as Record<string, unknown>)
+      : normalized;
   assertValidOutputOptions(candidate);
   return candidate;
 }

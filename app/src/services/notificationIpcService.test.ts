@@ -41,11 +41,11 @@ describe('notificationIpcService', () => {
     resetNotificationTokensForTests();
   });
 
-  test('registerNotificationIpcHandlers installs nativefier-notify listener once', () => {
+  test('registerNotificationIpcHandlers installs webholm-notify listeners once', () => {
     registerNotificationIpcHandlers({ onCreate: jest.fn() });
     registerNotificationIpcHandlers({ onClick: jest.fn() });
 
-    expect(mockOnIpcMainEvent).toHaveBeenCalledTimes(1);
+    expect(mockOnIpcMainEvent).toHaveBeenCalledTimes(2);
     expect(mockOnIpcMainEvent).toHaveBeenCalledWith(
       NOTIFY_IPC_CHANNEL,
       expect.any(Function),

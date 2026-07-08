@@ -20,7 +20,7 @@ function makeDarwinOptions(
       dir: '/tmp/template',
       ...overrides,
     },
-    nativefier: {},
+    webholm: {},
   } as AppOptions;
 }
 
@@ -46,7 +46,7 @@ describe('applyDarwinPackagerDefaults', () => {
     );
 
     const options = makeDarwinOptions({
-      appBundleId: 'com.electron.nativefier.gmailseb-nativefier-804458',
+      appBundleId: 'one.hatte.webholm.gmailseb-webholm-804458',
     });
     applyDarwinPackagerDefaults(src, dest, options);
 
@@ -80,7 +80,7 @@ describe('applyDarwinPackagerDefaults', () => {
   test('no-op on linux', () => {
     const options = {
       packager: { platform: 'linux', dir: '/tmp' },
-      nativefier: {},
+      webholm: {},
     } as AppOptions;
     applyDarwinPackagerDefaults(tmpDir, tmpDir, options);
     expect(options.packager.osxSign).toBeUndefined();
@@ -118,6 +118,6 @@ describe('normalizeAppName', () => {
     // at each app regen, thus a different appData folder, which would cause
     // losing user state, including login state through cookies.
     const normalizedTrello = normalizeAppName('Trello', 'https://trello.com');
-    expect(normalizedTrello).toBe('trello-nativefier-679e8e');
+    expect(normalizedTrello).toBe('trello-webholm-679e8e');
   });
 });

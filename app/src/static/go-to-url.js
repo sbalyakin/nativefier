@@ -10,13 +10,13 @@ document.getElementById('go-to-url-form').addEventListener('submit', (event) => 
   event.preventDefault();
   const url = urlInput.value;
   if (url.trim()) {
-    window.nativefierGoToUrl.submit(url.trim());
+    window.webholmGoToUrl.submit(url.trim());
   }
 });
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     event.preventDefault();
-    window.nativefierGoToUrl.cancel();
+    window.webholmGoToUrl.cancel();
   }
 });

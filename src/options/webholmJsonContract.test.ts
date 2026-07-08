@@ -1,4 +1,4 @@
-import { validateNativefierJsonContract } from '../../shared/lib/src/contract/nativefierJsonContract';
+import { validateWebholmJsonContract } from '../../shared/lib/src/contract/webholmJsonContract';
 import type { AppOptions } from '../buildTimeContract';
 import { buildAppOptionsFromSchema } from './optionSchema';
 import {
@@ -19,7 +19,7 @@ test('OUTPUT_FIELD_MAPPINGS has unique output keys', () => {
 
 test('builder output satisfies shared nativefier.json contract', () => {
   const output = mapAppOptionsToOutputOptions(minimalAppOptions());
-  expect(validateNativefierJsonContract(output)).toEqual([]);
+  expect(validateWebholmJsonContract(output)).toEqual([]);
 });
 
 test('schema defaults produce runtime-valid nativefier.json', () => {
@@ -31,5 +31,5 @@ test('schema defaults produce runtime-valid nativefier.json', () => {
   expect(output.blockExternalUrls).toBe(false);
   expect(output.disableDevTools).toBe(false);
   expect(output.strictInternalUrls).toBe(false);
-  expect(validateNativefierJsonContract(output)).toEqual([]);
+  expect(validateWebholmJsonContract(output)).toEqual([]);
 });

@@ -6,7 +6,7 @@ import { AppOptions, RawOptions } from '../buildTimeContract';
 
 let asyncConfigMock: jest.SpyInstance;
 const mockedAsyncConfig: AppOptions = {
-  nativefier: {
+  webholm: {
     accessibilityPrompt: false,
     alwaysOnTop: false,
     backgroundColor: undefined,
@@ -42,7 +42,7 @@ const mockedAsyncConfig: AppOptions = {
     minWidth: undefined,
     minHeight: undefined,
     maxWidth: undefined,
-    nativefierVersion: '1.0.0',
+    webholmVersion: '1.0.0',
     processEnvs: undefined,
     proxyRules: undefined,
     showMenuBar: false,
@@ -86,7 +86,7 @@ test('it should call the async config', async () => {
   expect(asyncConfigMock).toHaveBeenCalledWith(
     expect.objectContaining({
       packager: expect.anything() as AppOptions['packager'],
-      nativefier: expect.anything() as AppOptions['nativefier'],
+      webholm: expect.anything() as AppOptions['webholm'],
     }),
   );
   expect(result.packager.targetUrl).toEqual(params.targetUrl);
@@ -100,12 +100,12 @@ test('it should set the accessibility prompt option to true by default', async (
   const result = await getOptions(params);
   expect(asyncConfigMock).toHaveBeenCalledWith(
     expect.objectContaining({
-      nativefier: expect.objectContaining({
+      webholm: expect.objectContaining({
         accessibilityPrompt: true,
-      }) as AppOptions['nativefier'],
+      }) as AppOptions['webholm'],
     }),
   );
-  expect(result.nativefier.accessibilityPrompt).toEqual(true);
+  expect(result.webholm.accessibilityPrompt).toEqual(true);
 });
 
 test.each([

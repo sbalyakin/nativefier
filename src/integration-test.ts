@@ -8,11 +8,11 @@ import { getChromeVersionForElectronVersion } from './infer/browsers/inferChrome
 import { getLatestFirefoxVersion } from './infer/browsers/inferFirefoxVersion';
 import { getLatestSafariVersion } from './infer/browsers/inferSafariVersion';
 import { inferArch } from './infer/inferOs';
-import { buildNativefierApp } from './main';
+import { buildWebholmApp } from './main';
 import { userAgent } from './options/fields/userAgent';
 import {
   GlobalShortcut,
-  NATIVEFIER_JSON_FILENAME,
+  WEBHOLM_JSON_FILENAME,
   NativefierOptions,
   RawOptions,
 } from './buildTimeContract';
@@ -55,7 +55,7 @@ async function checkApp(
 
   const appPath = path.join(appRoot, relativeResourcesDir, 'app');
 
-  const configPath = path.join(appPath, NATIVEFIER_JSON_FILENAME);
+  const configPath = path.join(appPath, WEBHOLM_JSON_FILENAME);
   const nativefierConfig: NativefierOptions | undefined =
     parseJson<NativefierOptions>(fs.readFileSync(configPath).toString());
   expect(nativefierConfig).not.toBeUndefined();
@@ -96,7 +96,7 @@ async function checkApp(
         electronVersion:
           inputOptions.electronVersion || DEFAULT_ELECTRON_VERSION,
       },
-      nativefier: { userAgent: inputOptions.userAgent },
+      webholm: { userAgent: inputOptions.userAgent },
     });
     inputOptions.userAgent = translatedUserAgent || inputOptions.userAgent;
   }
@@ -135,7 +135,7 @@ describe('Nativefier', () => {
         platform,
         targetUrl: 'https://npmjs.com/',
       };
-      const appPath = await buildNativefierApp(options);
+      const appPath = await buildWebholmApp(options);
       expect(appPath).not.toBeUndefined();
       await checkApp(appPath, options);
     },
@@ -197,7 +197,7 @@ describe('Nativefier upgrade', () => {
         targetUrl: 'https://npmjs.com/',
         ...baseAppOptions,
       };
-      const appPath = await buildNativefierApp(options);
+      const appPath = await buildWebholmApp(options);
       expect(appPath).not.toBeUndefined();
       await checkApp(appPath, options);
 
@@ -206,7 +206,7 @@ describe('Nativefier upgrade', () => {
         overwrite: true,
       };
 
-      const upgradeAppPath = await buildNativefierApp(upgradeOptions);
+      const upgradeAppPath = await buildWebholmApp(upgradeOptions);
       options.electronVersion = DEFAULT_ELECTRON_VERSION;
       options.userAgent = baseAppOptions.userAgent;
       expect(upgradeAppPath).not.toBeUndefined();

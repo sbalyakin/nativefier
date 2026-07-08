@@ -8,7 +8,7 @@ export type SessionInteractionResult = {
   error?: Error | { message?: string };
 };
 
-export type NativefierSessionBridge = {
+export type WebholmSessionBridge = {
   get<T = unknown>(property: string, options?: { id?: string }): Promise<T>;
   set(
     property: string,
@@ -22,14 +22,20 @@ export type NativefierSessionBridge = {
   ): Promise<T>;
 };
 
-export type NativefierBridge = {
-  session: NativefierSessionBridge;
+export type WebholmBridge = {
+  session: WebholmSessionBridge;
 };
+
+/** @deprecated Use {@link WebholmSessionBridge}. */
+export type NativefierSessionBridge = WebholmSessionBridge;
+
+/** @deprecated Use {@link WebholmBridge}. */
+export type NativefierBridge = WebholmBridge;
 
 let sessionRequestCounter = 0;
 
 function createSessionRequestId(explicit?: string): string {
-  return explicit ?? `nativefier-session-${++sessionRequestCounter}`;
+  return explicit ?? `webholm-session-${++sessionRequestCounter}`;
 }
 
 function rejectSessionError(
@@ -79,9 +85,9 @@ export function sendSessionInteraction(
   });
 }
 
-export function createNativefierSessionBridge(
+export function createWebholmSessionBridge(
   ipcRenderer: IpcRenderer,
-): NativefierSessionBridge {
+): WebholmSessionBridge {
   return {
     get<T = unknown>(property: string, options?: { id?: string }): Promise<T> {
       return sendSessionInteraction(ipcRenderer, {
@@ -114,35 +120,54 @@ export function createNativefierSessionBridge(
   };
 }
 
-export function createNativefierBridge(
-  ipcRenderer: IpcRenderer,
-): NativefierBridge {
+/** @deprecated Use {@link createWebholmSessionBridge}. */
+export const createNativefierSessionBridge = createWebholmSessionBridge;
+
+export function createWebholmBridge(ipcRenderer: IpcRenderer): WebholmBridge {
   return {
-    session: createNativefierSessionBridge(ipcRenderer),
+    session: createWebholmSessionBridge(ipcRenderer),
   };
 }
 
-export function exposeNativefierBridge(bridge: NativefierBridge): void {
+/** @deprecated Use {@link createWebholmBridge}. */
+export const createNativefierBridge = createWebholmBridge;
+
+export function exposeWebholmBridge(bridge: WebholmBridge): void {
   if (process.contextIsolated) {
+    contextBridge.exposeInMainWorld('webholm', bridge);
     contextBridge.exposeInMainWorld('nativefier', bridge);
     return;
   }
   const w = window as Window &
-    typeof globalThis & { nativefier?: NativefierBridge };
+    typeof globalThis & {
+      webholm?: WebholmBridge;
+      nativefier?: WebholmBridge;
+    };
+  w.webholm = bridge;
   w.nativefier = bridge;
 }
 
-export function assignPreloadNativefierGlobal(bridge: NativefierBridge): void {
-  (
-    globalThis as typeof globalThis & { nativefier?: NativefierBridge }
-  ).nativefier = bridge;
+/** @deprecated Use {@link exposeWebholmBridge}. */
+export const exposeNativefierBridge = exposeWebholmBridge;
+
+export function assignPreloadWebholmGlobal(bridge: WebholmBridge): void {
+  const g = globalThis as typeof globalThis & {
+    webholm?: WebholmBridge;
+    nativefier?: WebholmBridge;
+  };
+  g.webholm = bridge;
+  g.nativefier = bridge;
 }
 
-export function setupNativefierBridge(
-  ipcRenderer: IpcRenderer,
-): NativefierBridge {
-  const bridge = createNativefierBridge(ipcRenderer);
-  exposeNativefierBridge(bridge);
-  assignPreloadNativefierGlobal(bridge);
+/** @deprecated Use {@link assignPreloadWebholmGlobal}. */
+export const assignPreloadNativefierGlobal = assignPreloadWebholmGlobal;
+
+export function setupWebholmBridge(ipcRenderer: IpcRenderer): WebholmBridge {
+  const bridge = createWebholmBridge(ipcRenderer);
+  exposeWebholmBridge(bridge);
+  assignPreloadWebholmGlobal(bridge);
   return bridge;
 }
+
+/** @deprecated Use {@link setupWebholmBridge}. */
+export const setupNativefierBridge = setupWebholmBridge;

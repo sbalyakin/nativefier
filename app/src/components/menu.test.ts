@@ -69,7 +69,7 @@ describe('generateMenu', () => {
   test('has Go to URL in the View menu', () => {
     const menu = generateMenu(
       {
-        nativefierVersion: '1.0.0',
+        webholmVersion: '1.0.0',
         zoom: 1.0,
         disableDevTools: false,
       },
@@ -96,7 +96,7 @@ describe('generateMenu', () => {
 
     const menu = generateMenu(
       {
-        nativefierVersion: '1.0.0',
+        webholmVersion: '1.0.0',
         zoom: 1.0,
         disableDevTools: false,
       },
@@ -123,7 +123,7 @@ describe('generateMenu', () => {
 
     const menu = generateMenu(
       {
-        nativefierVersion: '1.0.0',
+        webholmVersion: '1.0.0',
         zoom: 1.0,
         disableDevTools: false,
       },
@@ -153,7 +153,7 @@ describe('generateMenu', () => {
 
       const menu = generateMenu(
         {
-          nativefierVersion: '1.0.0',
+          webholmVersion: '1.0.0',
           zoom: 1.0,
           disableDevTools: false,
         },
@@ -190,7 +190,7 @@ describe('generateMenu', () => {
 
       const menu = generateMenu(
         {
-          nativefierVersion: '1.0.0',
+          webholmVersion: '1.0.0',
           zoom: 1.0,
           disableDevTools: false,
         },

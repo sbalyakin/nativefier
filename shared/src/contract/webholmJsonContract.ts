@@ -1,10 +1,10 @@
 import type { TrayValue } from '../options/model';
 
-/** Fields the runtime loader requires in every packaged {@link NATIVEFIER_JSON_FILENAME}. */
+/** Fields the runtime loader requires in every packaged {@link WEBHOLM_JSON_FILENAME}. */
 export const RUNTIME_REQUIRED_STRING_FIELDS = [
   'name',
   'targetUrl',
-  'nativefierVersion',
+  'webholmVersion',
 ] as const;
 
 export const RUNTIME_REQUIRED_BOOLEAN_FIELDS = [
@@ -14,7 +14,7 @@ export const RUNTIME_REQUIRED_BOOLEAN_FIELDS = [
   'strictInternalUrls',
 ] as const;
 
-/** Fields the builder always injects when writing nativefier.json (not from OUTPUT_FIELD_MAPPINGS). */
+/** Fields the builder always injects when writing webholm.json (not from OUTPUT_FIELD_MAPPINGS). */
 export const BUILDER_INJECTED_OUTPUT_FIELDS = [
   'buildDate',
   'name',
@@ -33,17 +33,39 @@ export type OutputOptionsValidationError = {
 };
 
 /**
+ * Maps legacy upstream Nativefier config fields into Webholm shape before validation.
+ */
+export function normalizeLegacyOutputConfig(
+  value: unknown,
+): Record<string, unknown> {
+  if (value === null || typeof value !== 'object') {
+    return {};
+  }
+  const record = { ...(value as Record<string, unknown>) };
+  if (
+    (record.webholmVersion === undefined ||
+      (typeof record.webholmVersion === 'string' &&
+        record.webholmVersion.length === 0)) &&
+    typeof record.nativefierVersion === 'string' &&
+    record.nativefierVersion.length > 0
+  ) {
+    record.webholmVersion = record.nativefierVersion;
+  }
+  return record;
+}
+
+/**
  * Validates the JSON shape written by the builder and read at runtime.
  * Shared so build-time and runtime contract tests use one ruleset.
  */
-export function validateNativefierJsonContract(
+export function validateWebholmJsonContract(
   value: unknown,
 ): OutputOptionsValidationError[] {
+  const record = normalizeLegacyOutputConfig(value);
   if (value === null || typeof value !== 'object') {
     return [{ field: '', message: 'Config must be a JSON object' }];
   }
 
-  const record = value as Record<string, unknown>;
   const errors: OutputOptionsValidationError[] = [];
 
   for (const field of RUNTIME_REQUIRED_STRING_FIELDS) {
@@ -101,4 +123,11 @@ export function validateNativefierJsonContract(
   }
 
   return errors;
+}
+
+/** @deprecated Use {@link validateWebholmJsonContract}. */
+export function validateNativefierJsonContract(
+  value: unknown,
+): OutputOptionsValidationError[] {
+  return validateWebholmJsonContract(value);
 }

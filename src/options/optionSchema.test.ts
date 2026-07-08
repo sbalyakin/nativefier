@@ -39,12 +39,12 @@ test('buildAppOptionsFromSchema applies runtime defaults', () => {
     tray: 'false',
   };
   const options = buildAppOptionsFromSchema(raw, '99.0.0');
-  expect(options.nativefier.accessibilityPrompt).toBe(true);
-  expect(options.nativefier.width).toBe(1280);
-  expect(options.nativefier.height).toBe(800);
-  expect(options.nativefier.zoom).toBe(1);
-  expect(options.nativefier.tray).toBe('false');
-  expect(options.nativefier.nativefierVersion).toBe('99.0.0');
+  expect(options.webholm.accessibilityPrompt).toBe(true);
+  expect(options.webholm.width).toBe(1280);
+  expect(options.webholm.height).toBe(800);
+  expect(options.webholm.zoom).toBe(1);
+  expect(options.webholm.tray).toBe('false');
+  expect(options.webholm.webholmVersion).toBe('99.0.0');
   expect(options.packager.asar).toBe(false);
 });
 
@@ -64,7 +64,7 @@ test('disable-old-build-warning CLI key maps to disableOldBuildWarning', () => {
     },
     '1.0.0',
   );
-  expect(options.nativefier.disableOldBuildWarning).toBe(true);
+  expect(options.webholm.disableOldBuildWarning).toBe(true);
 });
 
 test('flash-path maps to flashPluginDir', () => {
@@ -72,7 +72,7 @@ test('flash-path maps to flashPluginDir', () => {
     { targetUrl: 'https://a.test', flashPath: '/tmp/flash' },
     '1.0.0',
   );
-  expect(options.nativefier.flashPluginDir).toBe('/tmp/flash');
+  expect(options.webholm.flashPluginDir).toBe('/tmp/flash');
 });
 
 test('registered yargs flags match schema CLI flags and positionals', () => {
@@ -130,8 +130,8 @@ test('runtime scope maps argv into nativefier bucket', () => {
     { targetUrl: 'https://a.test', width: 640, blockExternalUrls: true },
     '1.0.0',
   );
-  expect(options.nativefier.width).toBe(640);
-  expect(options.nativefier.blockExternalUrls).toBe(true);
+  expect(options.webholm.width).toBe(640);
+  expect(options.webholm.blockExternalUrls).toBe(true);
 });
 
 test('cliOnly conceal does not set packager asar until mapped in buildAppOptionsFromSchema', () => {
