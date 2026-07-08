@@ -6,7 +6,9 @@ import type { AppOptions } from '../buildTimeContract';
 import {
   appendDarwinAdhocCodesignHook,
   applyDarwinPackagerDefaults,
+  generateAppBundleId,
   normalizeAppName,
+  normalizeSafeAppName,
   resolveDarwinAppBundlePath,
 } from './prepareElectronApp';
 
@@ -46,7 +48,7 @@ describe('applyDarwinPackagerDefaults', () => {
     );
 
     const options = makeDarwinOptions({
-      appBundleId: 'one.hatte.webholm.gmailseb-webholm-804458',
+      appBundleId: 'one.hatte.webholm.gmailseb-c57db1d8',
     });
     applyDarwinPackagerDefaults(src, dest, options);
 
@@ -119,5 +121,26 @@ describe('normalizeAppName', () => {
     // losing user state, including login state through cookies.
     const normalizedTrello = normalizeAppName('Trello', 'https://trello.com');
     expect(normalizedTrello).toBe('trello-webholm-679e8e');
+  });
+});
+
+describe('normalizeSafeAppName', () => {
+  test('normalizes display name for bundle id segments', () => {
+    expect(normalizeSafeAppName('Gmail, SEB')).toBe('gmail-seb');
+    expect(normalizeSafeAppName('My_App.Name')).toBe('my-appname');
+  });
+});
+
+describe('generateAppBundleId', () => {
+  test('uses one.hatte.webholm prefix with safe name and 8-char url hash', () => {
+    const bundleId = generateAppBundleId('Trello', 'https://trello.com');
+    expect(bundleId).toBe('one.hatte.webholm.trello-679e8eaa');
+  });
+
+  test('it is stable for the same app name and url', () => {
+    const first = generateAppBundleId('GmailSEB', 'https://mail.google.com');
+    const second = generateAppBundleId('GmailSEB', 'https://mail.google.com');
+    expect(first).toBe(second);
+    expect(first).toBe('one.hatte.webholm.gmailseb-c57db1d8');
   });
 });

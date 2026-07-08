@@ -51,6 +51,19 @@ async function maybeCopyScripts(
   }
 }
 
+export function normalizeSafeAppName(appName: string): string {
+  return appName
+    .toLowerCase()
+    .replace(/[,:.]/g, '')
+    .replace(/[\s_]/g, '-');
+}
+
+export function deterministicUrlHash(url: string, length: number): string {
+  const hash = crypto.createHash('md5');
+  hash.update(url);
+  return hash.digest('hex').substring(0, length);
+}
+
 /**
  * Use a basic 6-character hash to prevent collisions. The hash is deterministic url & name,
  * so that an upgrade (same URL) of an app keeps using the same appData folder.
@@ -58,14 +71,18 @@ async function maybeCopyScripts(
  *          changing appData folder, and users will get logged out of their apps after an upgrade.
  */
 export function normalizeAppName(appName: string, url: string): string {
-  const hash = crypto.createHash('md5');
-  hash.update(url);
-  const postFixHash = hash.digest('hex').substring(0, 6);
-  const normalized = appName
-    .toLowerCase()
-    .replace(/[,:.]/g, '')
-    .replace(/[\s_]/g, '-');
+  const postFixHash = deterministicUrlHash(url, 6);
+  const normalized = normalizeSafeAppName(appName);
   return `${normalized}-webholm-${postFixHash}`;
+}
+
+const APP_BUNDLE_ID_PREFIX = 'one.hatte.webholm.';
+const APP_BUNDLE_ID_SUFFIX_LENGTH = 8;
+
+export function generateAppBundleId(appName: string, url: string): string {
+  const safeName = normalizeSafeAppName(appName);
+  const suffix = deterministicUrlHash(url, APP_BUNDLE_ID_SUFFIX_LENGTH);
+  return `${APP_BUNDLE_ID_PREFIX}${safeName}-${suffix}`;
 }
 
 const DARWIN_ENTITLEMENTS_IN_APP =
@@ -241,6 +258,9 @@ export async function prepareElectronApp(
     options.packager.name as string,
     options.packager.targetUrl,
   );
-  options.packager.appBundleId = `one.hatte.webholm.${normalizedAppName}`;
+  options.packager.appBundleId = generateAppBundleId(
+    options.packager.name as string,
+    options.packager.targetUrl,
+  );
   applyDarwinPackagerDefaults(src, dest, options);
 }
