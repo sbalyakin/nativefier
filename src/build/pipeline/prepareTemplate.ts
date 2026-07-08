@@ -8,7 +8,7 @@ import type { PreparedTemplate } from './types';
 export async function prepareTemplate(
   options: AppOptions,
 ): Promise<PreparedTemplate> {
-  log.info('\nPreparing Electron app...');
+  log.debug('Preparing Electron app template');
   const templatePath = getTempDir('app', 0o755);
   await prepareElectronApp(options.packager.dir, templatePath, options);
   options.packager.dir = templatePath;

@@ -50,7 +50,7 @@ export async function prepareAssets(
   templatePath: string,
   rawOptions: RawOptions,
 ): Promise<AppOptions> {
-  log.info('\nConverting icons...');
+  log.info('Converting icons...');
   convertIconIfNecessary(options);
   await copyIconsIfNecessary(options, templatePath);
   options.packager.quiet = !rawOptions.verbose;

@@ -1,4 +1,9 @@
+import * as fs from 'fs';
+import * as path from 'path';
+
 import * as log from 'loglevel';
+
+import type { AppOptions } from '../../buildTimeContract';
 
 /**
  * Checks the app path array to determine if packaging completed successfully
@@ -20,6 +25,43 @@ export function getAppPath(appPath: string | string[]): string | undefined {
   }
 
   return appPath[0];
+}
+
+export function resolveRunnableAppPath(
+  appRoot: string,
+  packager: Pick<AppOptions['packager'], 'name' | 'platform'>,
+): string {
+  const name = String(packager.name ?? 'Nativefier');
+  const platform = packager.platform;
+
+  if (platform === 'darwin') {
+    return path.join(appRoot, `${name}.app`);
+  }
+  if (platform === 'win32') {
+    return path.join(appRoot, `${name}.exe`);
+  }
+
+  const linuxBinary = path.join(appRoot, name, name);
+  if (fs.existsSync(linuxBinary)) {
+    return linuxBinary;
+  }
+  return path.join(appRoot, name);
+}
+
+export function formatLaunchCommand(
+  runnablePath: string,
+  platform?: string,
+): string {
+  if (platform === 'darwin') {
+    return `open "${runnablePath}"`;
+  }
+  if (platform === 'win32') {
+    return `start "" "${runnablePath}"`;
+  }
+  if (platform === 'linux') {
+    return `"${runnablePath}"`;
+  }
+  return runnablePath;
 }
 
 export function getOSRunHelp(platform?: string): string {

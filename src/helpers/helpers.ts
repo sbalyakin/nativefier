@@ -70,11 +70,13 @@ export function getTempDir(prefix: string, mode?: number): string {
 
 export function downloadFile(
   fileUrl: string,
+  timeoutMs = 15_000,
 ): Promise<DownloadResult | undefined> {
   log.debug(`Downloading ${fileUrl}`);
   return axios
     .get<Buffer>(fileUrl, {
       responseType: 'arraybuffer',
+      timeout: timeoutMs,
     })
     .then((response) => {
       if (!response.data) {

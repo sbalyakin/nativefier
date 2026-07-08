@@ -3,8 +3,9 @@ import { writeFile } from 'fs';
 import { promisify } from 'util';
 
 import gitCloud = require('gitcloud');
-import pageIcon from 'page-icon';
 
+import { logBuildStep } from '../build/buildProgress';
+import { fetchPageIcon } from './fetchPageIcon';
 import {
   downloadFile,
   DownloadResult,
@@ -12,9 +13,13 @@ import {
   getTempDir,
 } from '../helpers/helpers';
 import { getHostnameFromUrl } from '../helpers/urlHelpers';
+import { withTimeout } from '../utils/withTimeout';
 import * as log from 'loglevel';
 
 const writeFileAsync = promisify(writeFile);
+
+const PAGE_ICON_TIMEOUT_MS = 10_000;
+const GITCLOUD_TIMEOUT_MS = 15_000;
 
 const GITCLOUD_SPACE_DELIMITER = '-';
 const GITCLOUD_URL = 'https://nativefier.github.io/nativefier-icons/';
@@ -75,7 +80,11 @@ async function inferIconFromStore(
     getAllowedIconFormats(platform),
   );
 
-  const cloudIcons = await gitCloud(GITCLOUD_URL);
+  const cloudIcons = await withTimeout(
+    gitCloud(GITCLOUD_URL),
+    GITCLOUD_TIMEOUT_MS,
+    `Icon library request timed out after ${GITCLOUD_TIMEOUT_MS}ms`,
+  );
   log.debug(`Got ${cloudIcons.length} icons from gitcloud`);
   const iconWithScores = mapIconWithMatchScore(cloudIcons, targetUrl);
   const maxScore = getMaxMatchScore(iconWithScores);
@@ -121,6 +130,7 @@ async function inferIconFromFaviconService(
     };
   } catch (err: unknown) {
     log.debug('Favicon service failed:', err);
+    logBuildStep(targetUrl, 'Google favicon failed, continuing without icon.');
     return undefined;
   }
 }
@@ -132,21 +142,32 @@ export async function inferIcon(
   log.debug(`Inferring icon for ${targetUrl} on ${platform}`);
   const tmpDirPath = getTempDir('iconinfer');
 
-  let icon: { ext: string; data: Buffer } | undefined =
-    await inferIconFromStore(targetUrl, platform);
+  logBuildStep(targetUrl, 'Checking built-in icon library...');
+  let icon: { ext: string; data: Buffer } | undefined;
+  try {
+    icon = await inferIconFromStore(targetUrl, platform);
+  } catch (err: unknown) {
+    log.debug('Icon library lookup failed:', err);
+    logBuildStep(targetUrl, 'Icon library unavailable, skipping.');
+  }
+
   if (!icon) {
     const ext = platform === 'win32' ? '.ico' : '.png';
-    log.debug(`Trying to extract a ${ext} icon from the page.`);
-    try {
-      icon = await pageIcon(targetUrl, { ext });
-    } catch (err: unknown) {
-      log.debug('Page icon extraction failed:', err);
+    logBuildStep(
+      targetUrl,
+      `No library match, trying page favicon (${PAGE_ICON_TIMEOUT_MS / 1000}s limit)...`,
+    );
+    icon = await fetchPageIcon(targetUrl, ext, PAGE_ICON_TIMEOUT_MS);
+    if (!icon) {
+      logBuildStep(targetUrl, 'Page did not respond, trying Google favicon...');
+      icon = await inferIconFromFaviconService(targetUrl);
     }
+  } else {
+    logBuildStep(targetUrl, 'Found icon in built-in library.');
   }
+
   if (!icon) {
-    icon = await inferIconFromFaviconService(targetUrl);
-  }
-  if (!icon) {
+    logBuildStep(targetUrl, 'No icon found, app will use the default.');
     return undefined;
   }
   log.debug(`Got an icon from the page.`);
@@ -156,5 +177,9 @@ export async function inferIcon(
     `Writing ${(icon.data.length / 1024).toFixed(1)} kb icon to ${iconPath}`,
   );
   await writeFileAsync(iconPath, icon.data);
+  logBuildStep(
+    targetUrl,
+    `Icon ready (${(icon.data.length / 1024).toFixed(1)} KB).`,
+  );
   return iconPath;
 }

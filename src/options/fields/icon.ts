@@ -1,5 +1,6 @@
 import * as log from 'loglevel';
 
+import { logBuildStep } from '../../build/buildProgress';
 import { inferIcon } from '../../infer/inferIcon';
 
 type IconParams = {
@@ -12,7 +13,10 @@ type IconParams = {
 
 export async function icon(options: IconParams): Promise<string | undefined> {
   if (options.packager.icon) {
-    log.debug('Got icon from options. Using it, no inferring needed');
+    logBuildStep(
+      options.packager.targetUrl,
+      `Using icon from --icon: ${options.packager.icon}`,
+    );
     return undefined;
   }
 

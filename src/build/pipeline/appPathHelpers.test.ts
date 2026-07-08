@@ -1,4 +1,4 @@
-import { getAppPath, getOSRunHelp } from './appPathHelpers';
+import { getAppPath, getOSRunHelp, resolveRunnableAppPath } from './appPathHelpers';
 
 describe('getAppPath', () => {
   test('returns string path unchanged', () => {
@@ -20,5 +20,25 @@ describe('getOSRunHelp', () => {
     expect(getOSRunHelp('linux')).toContain('executable');
     expect(getOSRunHelp('darwin')).toContain('app bundle');
     expect(getOSRunHelp('unknown')).toBe('');
+  });
+});
+
+describe('resolveRunnableAppPath', () => {
+  test('resolves darwin app bundle inside plain output directory', () => {
+    expect(
+      resolveRunnableAppPath('/Users/me/Applications', {
+        name: 'ProgressMe',
+        platform: 'darwin',
+      }),
+    ).toBe('/Users/me/Applications/ProgressMe.app');
+  });
+
+  test('resolves darwin app bundle inside packager subfolder', () => {
+    expect(
+      resolveRunnableAppPath('/tmp/out/ProgressMe-darwin-arm64', {
+        name: 'ProgressMe',
+        platform: 'darwin',
+      }),
+    ).toBe('/tmp/out/ProgressMe-darwin-arm64/ProgressMe.app');
   });
 });

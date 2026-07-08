@@ -1,6 +1,8 @@
 import axios from 'axios';
 import * as log from 'loglevel';
 
+const PAGE_TITLE_TIMEOUT_MS = 10_000;
+
 const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.4 Safari/605.1.15';
 
@@ -10,6 +12,7 @@ export async function inferTitle(url: string): Promise<string> {
       // Fake user agent for pages like http://messenger.com
       'User-Agent': USER_AGENT,
     },
+    timeout: PAGE_TITLE_TIMEOUT_MS,
   });
   log.debug(`Fetched ${(data.length / 1024).toFixed(1)} kb page at`, url);
   const inferredTitle =

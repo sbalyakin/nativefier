@@ -1,5 +1,6 @@
 import * as log from 'loglevel';
 
+import { logBuildStep } from '../../build/buildProgress';
 import { sanitizeFilename } from '../../utils/sanitizeFilename';
 import { inferTitle } from '../../infer/inferTitle';
 import { DEFAULT_APP_NAME } from '../../constants';
@@ -18,13 +19,17 @@ type NameParams = {
 
 async function tryToInferName(targetUrl: string): Promise<string> {
   try {
-    log.debug('Inferring name for', targetUrl);
+    logBuildStep(targetUrl, 'Reading page title...');
     const pageTitle = await inferTitle(targetUrl);
     return pageTitle || DEFAULT_APP_NAME;
   } catch (err: unknown) {
     const hostname = getHostnameFromUrl(targetUrl);
     if (hostname) {
       const nameFromHostname = getAppNameFromHostname(hostname);
+      logBuildStep(
+        targetUrl,
+        `Page did not respond, using app name "${nameFromHostname}" from hostname.`,
+      );
       log.warn(
         `Unable to automatically determine app name from page title, using '${nameFromHostname}' from hostname.`,
         err,

@@ -46,7 +46,7 @@ export async function packageElectronApp(
   packagerFn?: ElectronPackagerFn,
 ): Promise<PackagedAppResult> {
   log.info(
-    "\nPackaging... This will take a few seconds, maybe minutes if the requested Electron isn't cached yet...",
+    'Packaging app (first run may download Electron, this can take a few minutes)...',
   );
   trimUnprocessableOptions(options);
   const appPathArray = await runElectronPackager(options.packager, packagerFn);

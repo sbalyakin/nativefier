@@ -1,10 +1,9 @@
-import pageIcon from 'page-icon';
-
 import { downloadFile, getTempDir } from '../helpers/helpers';
+import { fetchPageIcon } from './fetchPageIcon';
 import { inferIcon } from './inferIcon';
 
 jest.mock('gitcloud', () => jest.fn().mockResolvedValue([]));
-jest.mock('page-icon');
+jest.mock('./fetchPageIcon');
 jest.mock('fs', () => {
   const actualFs = jest.requireActual<typeof import('fs')>('fs');
   return {
@@ -30,9 +29,7 @@ describe('inferIcon', () => {
   });
 
   test('uses favicon service when page icon extraction fails', async () => {
-    (pageIcon as jest.Mock).mockRejectedValueOnce(
-      new Error('Request failed with status code 403'),
-    );
+    (fetchPageIcon as jest.Mock).mockResolvedValueOnce(undefined);
     (downloadFile as jest.Mock).mockResolvedValueOnce({
       data: Buffer.from('fake-png'),
       ext: '',
@@ -47,10 +44,28 @@ describe('inferIcon', () => {
     expect(getTempDir).toHaveBeenCalledWith('iconinfer');
   });
 
-  test('returns undefined when all icon sources fail', async () => {
-    (pageIcon as jest.Mock).mockRejectedValueOnce(
-      new Error('Request failed with status code 403'),
+  test('uses favicon service when page icon extraction times out', async () => {
+    (fetchPageIcon as jest.Mock).mockResolvedValueOnce(undefined);
+    (downloadFile as jest.Mock).mockResolvedValueOnce({
+      data: Buffer.from('fake-png'),
+      ext: '',
+    });
+
+    const iconPath = await inferIcon('https://progressme.ru/', 'darwin');
+
+    expect(fetchPageIcon).toHaveBeenCalledWith(
+      'https://progressme.ru/',
+      '.png',
+      10_000,
     );
+    expect(downloadFile).toHaveBeenCalledWith(
+      'https://www.google.com/s2/favicons?domain=progressme.ru&sz=128',
+    );
+    expect(iconPath).toBe('/tmp/nativefier-iconinfer-test/icon.png');
+  });
+
+  test('returns undefined when all icon sources fail', async () => {
+    (fetchPageIcon as jest.Mock).mockResolvedValueOnce(undefined);
     (downloadFile as jest.Mock).mockRejectedValueOnce(
       new Error('favicon service failed'),
     );

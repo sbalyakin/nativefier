@@ -239,7 +239,12 @@ if (require.main === module) {
     options.out = process.env.NATIVEFIER_APPS_DIR;
   }
 
-  buildNativefierApp(options).catch((error) => {
-    log.error('Error during build. Run with --verbose for details.', error);
-  });
+  buildNativefierApp(options)
+    .then(() => {
+      process.exit(0);
+    })
+    .catch((error) => {
+      log.error('Error during build. Run with --verbose for details.', error);
+      process.exit(1);
+    });
 }
