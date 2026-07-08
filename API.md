@@ -296,6 +296,8 @@ python -m castlabs_evs.vmp sign-pkg Udemy-win32-x64
 
 _[New in 7.6.0]_ Enable always on top for the packaged application.
 
+This is just the default at launch. Users can toggle it at runtime from **View menu → Pin on Top** (`Cmd+Shift+P` / `Ctrl+Shift+P`); the choice is persisted to `webholm.json` and used as the default on the next launch.
+
 #### [background-color]
 
 ```
@@ -923,10 +925,13 @@ The small login popup uses its own preload (`loginPreload.js`) and `contextBridg
 | --- | --- |
 | **Go to URL…** (View menu) | `Cmd+L` / `Ctrl+L` |
 | **Copy Current URL** (Edit menu) | `Cmd+Shift+L` / `Ctrl+Shift+L` |
+| **Pin on Top** (View menu) | `Cmd+Shift+P` / `Ctrl+Shift+P` |
 
 **Go to URL…** opens a dialog prefilled with the current page URL. Enter any `http:` or `https:` address to load it in the **same tab** that opened the menu (not whichever window happens to be focused afterward). URLs without a scheme default to `https://`. The same shell-safety rules as [external navigation](#block-external-urls) apply before loading.
 
 For OAuth or login redirects triggered by the site (not this dialog), use [`--internal-urls`](#internal-urls) and [known internal login pages](#internal-login-pages) so auth pages stay in the app.
+
+**Pin on Top** is a checkbox toggling [`--always-on-top`](#always-on-top) at runtime for the focused window. The new state is written to `webholm.json` and becomes the default for future launches. Since the checkbox is shared by the application menu, its checked state is resynced to whichever window's own always-on-top state applies each time a window gains focus (so windows with different pin states show correctly).
 
 #### Screen share and notifications
 

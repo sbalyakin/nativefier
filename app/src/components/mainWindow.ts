@@ -131,7 +131,10 @@ export async function createMainWindow(
     options,
     nativeTabsSupported(),
   );
-  createMenu(options, mainWindow);
+  createMenu(options, mainWindow, (pinned) => {
+    options.alwaysOnTop = pinned;
+    persistRuntimeConfig(options);
+  });
   createContextMenu(options, mainWindow);
   setupNativefierWindow(windowOptions, mainWindow);
 

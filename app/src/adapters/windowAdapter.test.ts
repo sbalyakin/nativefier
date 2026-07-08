@@ -9,6 +9,8 @@ const mockWindowShow = jest.fn();
 const mockWindowEmit = jest.fn(() => true);
 const mockIsFullScreen = jest.fn(() => false);
 const mockSetFullScreen = jest.fn();
+const mockIsAlwaysOnTop = jest.fn(() => false);
+const mockSetAlwaysOnTop = jest.fn();
 const mockMoveTabToNewWindow = jest.fn();
 const mockLoadURL = jest.fn(() => Promise.resolve());
 const mockIsVisible = jest.fn(() => true);
@@ -26,6 +28,8 @@ class MockBrowserWindow {
   isDestroyed = jest.fn(() => false);
   isFullScreen = mockIsFullScreen;
   setFullScreen = mockSetFullScreen;
+  isAlwaysOnTop = mockIsAlwaysOnTop;
+  setAlwaysOnTop = mockSetAlwaysOnTop;
   moveTabToNewWindow = mockMoveTabToNewWindow;
   loadURL = mockLoadURL;
   webContents = {
@@ -49,6 +53,7 @@ import {
   goBack,
   hideBrowserWindow,
   insertCSS,
+  isAlwaysOnTop,
   isBrowserWindow,
   isBrowserWindowFocused,
   isBrowserWindowVisible,
@@ -56,6 +61,7 @@ import {
   onBrowserWindowEvent,
   onceBrowserWindowEvent,
   sendToWebContents,
+  setAlwaysOnTop,
   showBrowserWindow,
 } from './windowAdapter';
 
@@ -137,5 +143,15 @@ describe('windowAdapter', () => {
 
     adjustZoomFactor(window, 0.1);
     expect(window.webContents.zoomFactor).toBeCloseTo(1.6);
+  });
+
+  it('isAlwaysOnTop and setAlwaysOnTop delegate to BrowserWindow', () => {
+    const window = createBrowserWindow({});
+
+    mockIsAlwaysOnTop.mockReturnValue(true);
+    expect(isAlwaysOnTop(window)).toBe(true);
+
+    setAlwaysOnTop(window, false);
+    expect(mockSetAlwaysOnTop).toHaveBeenCalledWith(false);
   });
 });

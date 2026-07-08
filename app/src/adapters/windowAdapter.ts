@@ -122,6 +122,14 @@ export function setFullScreen(window: BrowserWindow, flag: boolean): void {
   window.setFullScreen(flag);
 }
 
+export function isAlwaysOnTop(window: BrowserWindow): boolean {
+  return window.isAlwaysOnTop();
+}
+
+export function setAlwaysOnTop(window: BrowserWindow, flag: boolean): void {
+  window.setAlwaysOnTop(flag);
+}
+
 export function moveTabToNewWindow(window: BrowserWindow): void {
   window.moveTabToNewWindow();
 }

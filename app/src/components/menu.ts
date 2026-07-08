@@ -13,9 +13,15 @@ import {
 } from '../adapters/clipboardAdapter';
 import {
   buildApplicationMenu,
+  getApplicationMenu,
+  getMenuItemById,
   setApplicationMenu,
 } from '../adapters/menuAdapter';
-import { toggleDevTools } from '../adapters/windowAdapter';
+import {
+  isAlwaysOnTop,
+  setAlwaysOnTop,
+  toggleDevTools,
+} from '../adapters/windowAdapter';
 
 import { cleanupPlainText, isOSX, openExternal } from '../helpers/helpers';
 import * as log from '../helpers/loggingHelper';
@@ -50,6 +56,30 @@ type BookmarksMenuConfig = {
   bookmarks: BookmarkConfig[];
 };
 
+// The application menu is shared across all of the app's windows (see
+// Menu.setApplicationMenu), so the "Pin on Top" checkbox can't just read its
+// checked state once at menu-build time: whichever window happened to be
+// focused at that point would "win" for every other window too. Instead, we
+// give the item a stable id and resync its checked state whenever a
+// (possibly different) window gains focus, via `syncPinOnTopMenuItemChecked`.
+export const PIN_ON_TOP_MENU_ITEM_ID = 'pin-on-top';
+
+/**
+ * Re-reads `window`'s alwaysOnTop state into the "Pin on Top" checkbox of the
+ * current application menu. Call this whenever a browser window gains focus,
+ * since Electron's application menu is shared across windows and does not
+ * refresh checkbox state on its own (`menu-will-show` never fires for it).
+ */
+export function syncPinOnTopMenuItemChecked(window: BrowserWindow): void {
+  const menu = getApplicationMenu();
+  const pinOnTopItem = menu
+    ? getMenuItemById(menu, PIN_ON_TOP_MENU_ITEM_ID)
+    : null;
+  if (pinOnTopItem) {
+    pinOnTopItem.checked = isAlwaysOnTop(window);
+  }
+}
+
 function focusedBrowserWindow(
   focusedWindow: BaseWindow | undefined,
   fallback: BrowserWindow,
@@ -60,9 +90,10 @@ function focusedBrowserWindow(
 export function createMenu(
   options: OutputOptions,
   mainWindow: BrowserWindow,
+  onPinOnTopChange?: (pinned: boolean) => void,
 ): void {
   log.debug('createMenu', { options });
-  const menuTemplate = generateMenu(options, mainWindow);
+  const menuTemplate = generateMenu(options, mainWindow, onPinOnTopChange);
 
   injectBookmarks(menuTemplate);
 
@@ -77,6 +108,7 @@ export function generateMenu(
     zoom?: number;
   },
   mainWindow: BrowserWindow,
+  onPinOnTopChange?: (pinned: boolean) => void,
 ): MenuItemConstructorOptions[] {
   const { webholmVersion, zoom, disableDevTools } = options;
   const zoomResetLabel =
@@ -239,6 +271,25 @@ export function generateMenu(
           } else if (isOSX()) {
             w.setSimpleFullScreen(!w.isSimpleFullScreen());
           }
+        },
+      },
+      {
+        type: 'separator',
+      },
+      {
+        id: PIN_ON_TOP_MENU_ITEM_ID,
+        label: 'Pin on Top',
+        type: 'checkbox',
+        checked: isAlwaysOnTop(mainWindow),
+        accelerator: isOSX() ? 'Cmd+Shift+P' : 'Ctrl+Shift+P',
+        click: (
+          item: MenuItem,
+          focusedWindow: BaseWindow | undefined,
+        ): void => {
+          const target = focusedBrowserWindow(focusedWindow, mainWindow);
+          log.debug('Pin on Top.click()', { item, focusedWindow });
+          setAlwaysOnTop(target, item.checked);
+          onPinOnTopChange?.(item.checked);
         },
       },
       {

@@ -18,6 +18,7 @@ import {
 import { registerGlobalShortcut } from './adapters/globalShortcutAdapter';
 import { createLoginWindow } from './components/loginWindow';
 import { createMainWindow } from './components/mainWindow';
+import { syncPinOnTopMenuItemChecked } from './components/menu';
 import { createTrayIcon } from './components/trayIcon';
 import { persistRuntimeConfig } from './config/persistRuntimeConfig';
 import { loadRuntimeConfig } from './config/loadRuntimeConfig';
@@ -319,6 +320,7 @@ onAppEvent('browser-window-created', () => {
   log.debug('app.browser-window-created');
 });
 
-onAppEvent('browser-window-focus', () => {
+onAppEvent<[Event, BrowserWindow]>('browser-window-focus', (event, window) => {
   log.debug('app.browser-window-focus');
+  syncPinOnTopMenuItemChecked(window);
 });

@@ -1,6 +1,10 @@
 
 ## Unreleased (Webholm fork)
 
+### Pin on Top
+
+- Added a **Pin on Top** checkbox to the View menu (`Cmd+Shift+P` / `Ctrl+Shift+P`) to toggle always-on-top at runtime, independent of the `--always-on-top` build flag. The chosen state is persisted to `webholm.json` and used as the default on the next launch. The checkbox resyncs to the focused window's own state on every window focus change, since the app menu is shared across windows.
+
 ### Rebrand: Nativefier → Webholm
 
 - **Webholm** is a fork of [Nativefier](https://github.com/nativefier/nativefier), maintained independently.
