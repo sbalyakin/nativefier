@@ -5,6 +5,10 @@ import * as log from 'loglevel';
 
 import type { AppOptions } from '../../buildTimeContract';
 
+function isMacAppBundlePlatform(platform: string | undefined): boolean {
+  return platform === 'darwin' || platform === 'mas';
+}
+
 /**
  * Checks the app path array to determine if packaging completed successfully
  */
@@ -34,7 +38,7 @@ export function resolveRunnableAppPath(
   const name = String(packager.name ?? 'Nativefier');
   const platform = packager.platform;
 
-  if (platform === 'darwin') {
+  if (isMacAppBundlePlatform(platform)) {
     return path.join(appRoot, `${name}.app`);
   }
   if (platform === 'win32') {
@@ -52,7 +56,7 @@ export function formatLaunchCommand(
   runnablePath: string,
   platform?: string,
 ): string {
-  if (platform === 'darwin') {
+  if (isMacAppBundlePlatform(platform)) {
     return `open "${runnablePath}"`;
   }
   if (platform === 'win32') {
@@ -69,7 +73,7 @@ export function getOSRunHelp(platform?: string): string {
     return `the contained .exe file.`;
   } else if (platform === 'linux') {
     return `the contained executable file (prefixing with ./ if necessary)\nMenu/desktop shortcuts are up to you, because Nativefier cannot know where you're going to move the app. Search for "linux .desktop file" for help, or see https://wiki.archlinux.org/index.php/Desktop_entries`;
-  } else if (platform === 'darwin') {
+  } else if (isMacAppBundlePlatform(platform)) {
     return `the app bundle.`;
   }
   return '';

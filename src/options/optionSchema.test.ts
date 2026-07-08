@@ -94,6 +94,20 @@ test('assertValidMappedOptions rejects invalid electron version', () => {
   );
 });
 
+test('assertValidMappedOptions requires targetUrl for new builds', () => {
+  const options = buildAppOptionsFromSchema({}, '1.0.0');
+  expect(() => assertValidMappedOptions(options)).toThrow(
+    /targetUrl is required when building a new app/,
+  );
+});
+
+test('assertValidMappedOptions requires targetUrl when upgrading', () => {
+  const options = buildAppOptionsFromSchema({ upgrade: true }, '1.0.0');
+  expect(() => assertValidMappedOptions(options)).toThrow(
+    /Could not determine targetUrl from the app being upgraded/,
+  );
+});
+
 test('definitions with mapTo document rawKey → AppOptions field', () => {
   const mapped = OPTION_DEFINITIONS.filter((d) => d.mapTo);
   const flags = mapped.map((d) => d.cliFlag).sort();

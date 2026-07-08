@@ -1023,6 +1023,14 @@ export function applyOptionSchemaToYargs<T>(argv: Argv<T>): Argv<T> {
  * Validation after RawOptions → AppOptions mapping (throws on invalid input).
  */
 export function assertValidMappedOptions(options: AppOptions): void {
+  if (!options.packager.targetUrl) {
+    throw new Error(
+      options.packager.upgrade
+        ? 'Could not determine targetUrl from the app being upgraded.'
+        : 'targetUrl is required when building a new app.',
+    );
+  }
+
   if (options.nativefier.zoom !== undefined && options.nativefier.zoom <= 0) {
     throw new Error(
       `Invalid zoom factor "${options.nativefier.zoom}". Must be positive.`,

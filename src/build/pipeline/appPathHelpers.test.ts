@@ -1,4 +1,9 @@
-import { getAppPath, getOSRunHelp, resolveRunnableAppPath } from './appPathHelpers';
+import {
+  formatLaunchCommand,
+  getAppPath,
+  getOSRunHelp,
+  resolveRunnableAppPath,
+} from './appPathHelpers';
 
 describe('getAppPath', () => {
   test('returns string path unchanged', () => {
@@ -19,6 +24,7 @@ describe('getOSRunHelp', () => {
     expect(getOSRunHelp('win32')).toContain('.exe');
     expect(getOSRunHelp('linux')).toContain('executable');
     expect(getOSRunHelp('darwin')).toContain('app bundle');
+    expect(getOSRunHelp('mas')).toContain('app bundle');
     expect(getOSRunHelp('unknown')).toBe('');
   });
 });
@@ -40,5 +46,22 @@ describe('resolveRunnableAppPath', () => {
         platform: 'darwin',
       }),
     ).toBe('/tmp/out/ProgressMe-darwin-arm64/ProgressMe.app');
+  });
+
+  test('resolves mas app bundle like darwin', () => {
+    expect(
+      resolveRunnableAppPath('/Users/me/Applications', {
+        name: 'ProgressMe',
+        platform: 'mas',
+      }),
+    ).toBe('/Users/me/Applications/ProgressMe.app');
+  });
+});
+
+describe('formatLaunchCommand', () => {
+  test('formats mas launch command like darwin', () => {
+    expect(
+      formatLaunchCommand('/Users/me/Applications/ProgressMe.app', 'mas'),
+    ).toBe('open "/Users/me/Applications/ProgressMe.app"');
   });
 });

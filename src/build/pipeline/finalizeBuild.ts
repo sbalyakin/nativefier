@@ -5,8 +5,13 @@ import {
   formatLaunchCommand,
   resolveRunnableAppPath,
 } from './appPathHelpers';
+import { touchPackagedAppCreationDate } from './touchPackagedAppCreationDate';
 
-export function finalizeBuild(appPath: string, options: AppOptions): string {
+export async function finalizeBuild(
+  appPath: string,
+  options: AppOptions,
+): Promise<string> {
+  await touchPackagedAppCreationDate(appPath, options.packager);
   const runnablePath = resolveRunnableAppPath(appPath, options.packager);
   log.info(`App ready: ${runnablePath}`);
   log.info(

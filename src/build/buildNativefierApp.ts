@@ -13,10 +13,9 @@ import { resolveBuildOptions } from './pipeline/resolveBuildOptions';
 export async function buildNativefierApp(
   rawOptions: RawOptions,
 ): Promise<string> {
-  const targetUrl = rawOptions.targetUrl ?? 'url';
-  log.info(`\nBuilding desktop app for ${targetUrl}`);
   log.info('Reading build options...');
   const resolved = await resolveBuildOptions(rawOptions);
+  log.info(`\nBuilding desktop app for ${resolved.options.packager.targetUrl}`);
   log.info('Preparing app shell...');
   const { templatePath, options } = await prepareTemplate(resolved.options);
   await prepareAssets(options, templatePath, resolved.rawOptions);
@@ -31,5 +30,5 @@ export async function buildNativefierApp(
     options,
     resolved.finalOutDirectory,
   );
-  return finalizeBuild(appPath, options);
+  return await finalizeBuild(appPath, options);
 }
