@@ -28,12 +28,7 @@ export async function processOptions(options: AppOptions): Promise<AppOptions> {
   );
 
   for (const { namespace, option, result } of processedOptions) {
-    if (
-      result &&
-      namespace in options &&
-      options[namespace] &&
-      option in options[namespace]
-    ) {
+    if (result && namespace in options && options[namespace]) {
       // @ts-expect-error We're fiddling with objects at the string key level, which TS doesn't support well.
       options[namespace][option] = result;
     }

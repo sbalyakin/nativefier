@@ -5,29 +5,64 @@ import { spawnSync } from 'child_process';
 import { isWindows, isOSX, getTempDir } from './helpers';
 import * as log from 'loglevel';
 
-function runSips(args: string[]): void {
-  const { status, stderr } = spawnSync('sips', args, { encoding: 'utf8' });
+const MACOS_ICON_CONTENT_SCALE = 0.8;
+
+function runSips(args: string[]): string {
+  const { status, stdout, stderr } = spawnSync('sips', args, {
+    encoding: 'utf8',
+  });
   if (status) {
     throw new Error(
       `sips ${args.join(' ')} failed with status ${status}: ${stderr}`,
     );
   }
+  return stdout;
+}
+
+function getImageDimensions(imagePath: string): {
+  width: number;
+  height: number;
+} {
+  const output = runSips(['-g', 'pixelWidth', '-g', 'pixelHeight', imagePath]);
+  const width = /pixelWidth:\s*(\d+)/.exec(output)?.[1];
+  const height = /pixelHeight:\s*(\d+)/.exec(output)?.[1];
+  if (!width || !height) {
+    throw new Error(`Could not determine image dimensions for ${imagePath}`);
+  }
+  return { width: Number(width), height: Number(height) };
+}
+
+export function getMacOsIconCanvasSize(width: number, height: number): number {
+  return Math.ceil(Math.max(width, height) / MACOS_ICON_CONTENT_SCALE);
 }
 
 /**
- * Indexed-color PNGs from favicon services break iconutil and produce a generic
- * Electron-looking .icns on recent macOS. Re-encode as RGB via a JPEG roundtrip.
+ * Keep favicon artwork inside the macOS icon safe area, then re-encode indexed
+ * PNGs as RGB because they break iconutil on recent macOS versions.
  */
-export function normalizePngForIcns(pngPath: string): void {
+export function normalizePngForIcns(pngPath: string): string {
   if (!isOSX() || path.extname(pngPath).toLowerCase() !== '.png') {
-    return;
+    return pngPath;
   }
 
-  const jpgPath = `${pngPath}.nativefier-rgb.jpg`;
-  log.debug('Normalizing PNG for .icns conversion:', pngPath);
+  const { width, height } = getImageDimensions(pngPath);
+  const canvasSize = getMacOsIconCanvasSize(width, height);
+  const preparedPngPath = path.join(getTempDir('iconprep'), 'icon.png');
+  const jpgPath = `${preparedPngPath}.nativefier-rgb.jpg`;
+  log.debug('Padding and normalizing PNG for .icns conversion:', pngPath);
   try {
-    runSips(['-s', 'format', 'jpeg', pngPath, '--out', jpgPath]);
-    runSips(['-s', 'format', 'png', jpgPath, '--out', pngPath]);
+    runSips([
+      '--padToHeightWidth',
+      `${canvasSize}`,
+      `${canvasSize}`,
+      '--padColor',
+      'FFFFFF',
+      pngPath,
+      '--out',
+      preparedPngPath,
+    ]);
+    runSips(['-s', 'format', 'jpeg', preparedPngPath, '--out', jpgPath]);
+    runSips(['-s', 'format', 'png', jpgPath, '--out', preparedPngPath]);
   } finally {
     try {
       fs.unlinkSync(jpgPath);
@@ -35,6 +70,7 @@ export function normalizePngForIcns(pngPath: string): void {
       // ignore missing temp file
     }
   }
+  return preparedPngPath;
 }
 
 const SCRIPT_PATHS = {
@@ -113,11 +149,11 @@ export function convertToIcns(icoSrc: string): string {
     throw new Error('macOS is required to convert to a .icns icon');
   }
 
-  normalizePngForIcns(icoSrc);
+  const preparedIconPath = normalizePngForIcns(icoSrc);
 
   return iconShellHelper(
     SCRIPT_PATHS.convertToIcns,
-    icoSrc,
+    preparedIconPath,
     `${getTempDir('iconconv')}/icon.icns`,
   );
 }

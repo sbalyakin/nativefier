@@ -1,10 +1,15 @@
 import type { SupportedArch, SupportedPlatform } from '@electron/packager';
 import { AppOptions } from '../../buildTimeContract';
+import { icon } from './icon';
 import { processOptions } from './fields';
+
+jest.mock('./icon');
+
 describe('fields', () => {
   let options: AppOptions;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     options = {
       webholm: {
         accessibilityPrompt: false,
@@ -90,6 +95,17 @@ describe('fields', () => {
     await processOptions(options);
 
     expect(options.packager.name).toEqual('mybeautifulapp');
+  });
+
+  test('inferred icon is assigned when the option key is absent', async () => {
+    expect('icon' in options.packager).toBe(false);
+    (icon as jest.MockedFunction<typeof icon>).mockResolvedValueOnce(
+      '/tmp/inferred-icon.png',
+    );
+
+    await processOptions(options);
+
+    expect(options.packager.icon).toEqual('/tmp/inferred-icon.png');
   });
 
   test('user agent is ignored if not provided', async () => {
